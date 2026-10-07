@@ -1,0 +1,125 @@
+# ============================================================
+# CRYSTAL / ARMATECH ASSOCIATES
+# ACTIVITY LOG SERVICE
+#
+# Append-only log of user actions (created / status_changed /
+# deleted).  Stored as JSON Lines at data/activity_log.jsonl.
+# ============================================================
+
+import os
+import json
+from datetime import datetime
+
+try:
+    from app.services.user_service import get_current_user
+except Exception:
+    get_current_user = None
+
+
+from app.services.paths import get_data_dir
+
+LOG_PATH = str(get_data_dir() / "activity_log.jsonl")
+
+
+def _ensure_dir():
+    os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+
+
+def _text(v):
+    return "" if v is None else str(v).strip()
+
+
+def log_event(event, quotation_number="", detail="", user=None):
+    """Append an event line to the activity log.
+    Never raises - logging failures must not break the app.
+    """
+    try:
+        _ensure_dir()
+        # ---- resolve user: explicit > logged-in > Windows env ----
+        resolved_user = _text(user)
+        if not resolved_user and get_current_user is not None:
+            try:
+                resolved_user = get_current_user() or ""
+            except Exception:
+                resolved_user = ""
+        if not resolved_user:
+            resolved_user = os.environ.get("USERNAME") or "user"
+
+        entry = {
+            "timestamp": datetime.now().isoformat(timespec="seconds"),
+            "event": _text(event) or "unknown",
+            "quotation_number": _text(quotation_number),
+            "detail": _text(detail),
+            "user": resolved_user,
+        }
+        with open(LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        return True
+    except Exception:
+        return False
+
+
+def _load_raw():
+    if not os.path.exists(LOG_PATH):
+        return []
+    out = []
+    try:
+        with open(LOG_PATH, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    out.append(json.loads(line))
+                except Exception:
+                    continue
+    except Exception:
+        return []
+    return out
+
+
+def list_events(limit=None, search=None, event_type=None):
+    """Return log entries, newest first.
+    search matches quotation_number, detail, event, user.
+    event_type filters on the event field exactly.
+    """
+    records = _load_raw()
+    records = list(reversed(records))
+
+    if event_type and event_type != "All":
+        needle = _text(event_type).lower()
+        records = [r for r in records
+                   if _text(r.get("event")).lower() == needle]
+
+    if search:
+        needle = _text(search).lower()
+        if needle:
+            def _match(r):
+                hay = " ".join([
+                    _text(r.get("quotation_number")),
+                    _text(r.get("detail")),
+                    _text(r.get("event")),
+                    _text(r.get("user")),
+                ]).lower()
+                return needle in hay
+            records = [r for r in records if _match(r)]
+
+    if limit is not None:
+        records = records[: int(limit)]
+
+    return records
+
+
+def count():
+    return len(_load_raw())
+
+
+def clear_log():
+    """Wipe the activity log. Returns True on success."""
+    try:
+        _ensure_dir()
+        with open(LOG_PATH, "w", encoding="utf-8") as f:
+            f.write("")
+        return True
+    except Exception:
+        return False

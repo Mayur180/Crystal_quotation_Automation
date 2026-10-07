@@ -1,0 +1,86 @@
+"""
+Crystal Quotation Automation — Windows Launcher
+
+This is the entry point used by PyInstaller to build the .exe.
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Phase 1 — user login
+try:
+    from app.services.user_service import (
+        get_current_user, set_current_user,
+    )
+except Exception:
+    get_current_user = None
+    set_current_user = None
+
+
+
+def _setup_paths():
+    """Set up sys.path for frozen and script modes."""
+    if getattr(sys, "frozen", False):
+        # Running as .exe
+        base = Path(sys.executable).parent
+    else:
+        # Running as script
+        base = Path(__file__).resolve().parent
+
+    if str(base) not in sys.path:
+        sys.path.insert(0, str(base))
+
+    return base
+
+
+def main():
+    base = _setup_paths()
+    print(f"Crystal Quotation Automation")
+    print(f"Base directory: {base}")
+    print()
+
+    try:
+        from ui.dashboard import Dashboard
+    except Exception as exc:
+        print("ERROR: Could not load dashboard.")
+        print(f"{type(exc).__name__}: {exc}")
+        import traceback
+        traceback.print_exc()
+        input("Press Enter to exit...")
+        return
+
+    _ensure_user_login()
+
+    app = Dashboard()
+    app.mainloop()
+
+
+
+
+def _ensure_user_login():
+    """Show a small dialog asking for the user's name if not already set."""
+    if get_current_user is None or set_current_user is None:
+        return
+    if get_current_user():
+        return  # already logged in
+    try:
+        import tkinter as tk
+        from tkinter import simpledialog
+
+        root = tk.Tk()
+        root.withdraw()
+        name = simpledialog.askstring(
+            "Welcome to CRYSTAL",
+            "Enter your name:",
+            parent=root,
+        )
+        root.destroy()
+        if name:
+            set_current_user(name)
+    except Exception:
+        pass
+
+
+if __name__ == "__main__":
+    main()

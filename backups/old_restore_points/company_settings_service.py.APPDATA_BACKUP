@@ -1,0 +1,162 @@
+"""
+CRYSTAL / ARMATECH ASSOCIATES
+Company Settings Service
+
+File:
+    app/services/company_settings_service.py
+
+Storage:
+    data/company_settings.json
+
+Load order used by app/company.py:
+    1. If data/company_settings.json exists → use its values
+    2. Else → use hardcoded defaults in app/company.py
+"""
+
+import json
+import os
+from pathlib import Path
+
+
+# ============================================================
+# PATHS
+# ============================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = PROJECT_ROOT / "data"
+SETTINGS_FILE = DATA_DIR / "company_settings.json"
+LOGO_DIR = PROJECT_ROOT / "assets" / "logo"
+
+
+# ============================================================
+# DEFAULT VALUES (mirror app/company.py)
+# ============================================================
+
+DEFAULT_SETTINGS = {
+    "name": "ARMATECH ASSOCIATES",
+    "state": "Maharashtra",
+    "state_code": "27",
+    "brand": "CRYSTAL VMM",
+    "address": (
+        "W-174A, 'S' Block, M.I.D.C., "
+        "Bhosari Industrial Estate, "
+        "PUNE - 411 026. (INDIA)"
+    ),
+    "phone": "+91 7020991684 / +91 9699820070",
+    "email": "armatech@gmail.com",
+    "website": "www.armatechassociates.com",
+    "tagline": "Precision Measurement Technology",
+    "logo_path": "assets/logo/armatech_logo.png",
+
+    "prefix": "AA/VMM",
+    "financial_year": "26-27",
+    "validity_days": 60,
+    "packing_percent": 3.5,
+    "cgst_percent": 9,
+    "sgst_percent": 9,
+
+    "payment_terms": "100% advance with purchase order",
+    "warranty": "One year against manufacturing defects",
+    "delivery": "Within 4–6 weeks from confirmed order",
+    "freight": "To pay basis",
+    "installation": "Free by engineers",
+}
+
+
+# ============================================================
+# LOAD / SAVE
+# ============================================================
+
+def _ensure_dir():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def load_settings():
+    """
+    Return the merged dict of defaults + any saved overrides.
+    Never raises — returns defaults on any error.
+    """
+    result = dict(DEFAULT_SETTINGS)
+
+    try:
+        if SETTINGS_FILE.is_file():
+            with open(SETTINGS_FILE, "r", encoding="utf-8") as fh:
+                saved = json.load(fh)
+            if isinstance(saved, dict):
+                for key, value in saved.items():
+                    if value not in (None, ""):
+                        result[key] = value
+    except Exception:
+        pass
+
+    return result
+
+
+def save_settings(settings):
+    """
+    Persist the given dict to data/company_settings.json.
+    Returns (True, "") on success, (False, error_message) on failure.
+    """
+    if not isinstance(settings, dict):
+        return False, "settings must be a dict"
+
+    # Only keep known keys, to avoid accidentally storing junk
+    cleaned = {}
+    for key in DEFAULT_SETTINGS:
+        if key in settings:
+            cleaned[key] = settings[key]
+
+    try:
+        _ensure_dir()
+        tmp = SETTINGS_FILE.with_suffix(".tmp")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(cleaned, fh, indent=2, ensure_ascii=False)
+        os.replace(tmp, SETTINGS_FILE)
+        return True, ""
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+
+def reset_settings():
+    """Delete the saved file — next load falls back to defaults."""
+    try:
+        if SETTINGS_FILE.is_file():
+            SETTINGS_FILE.unlink()
+        return True, ""
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+
+def logo_full_path(settings=None):
+    """Return the absolute path to the configured logo, or None."""
+    if settings is None:
+        settings = load_settings()
+
+    rel = settings.get("logo_path") or ""
+    if not rel:
+        return None
+
+    p = Path(rel)
+    if not p.is_absolute():
+        p = PROJECT_ROOT / p
+
+    return p if p.is_file() else None
+
+
+# ============================================================
+# STANDALONE TEST
+# ============================================================
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("COMPANY SETTINGS SERVICE")
+    print("=" * 60)
+    print(f"File: {SETTINGS_FILE}")
+    print(f"File exists: {SETTINGS_FILE.is_file()}")
+    print()
+    settings = load_settings()
+    for key, value in settings.items():
+        print(f"  {key:<18} {value}")
+    print()
+    print(f"Logo path: {logo_full_path(settings)}")
+    print("=" * 60)

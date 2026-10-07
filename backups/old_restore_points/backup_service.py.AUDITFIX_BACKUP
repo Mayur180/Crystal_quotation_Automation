@@ -1,0 +1,222 @@
+"""
+CRYSTAL / ARMATECH ASSOCIATES
+Backup Service
+
+Full-data backup and restore.
+
+File:
+    app/services/backup_service.py
+
+What it backs up:
+    data/catalog.json
+    data/customers.json
+    data/quotations.json
+    data/custom_terms.json
+    data/company_settings.json
+    data/offer_counter.json
+    assets/logo/armatech_logo.png  (if present)
+
+Backups go to:
+    output/backups/backup_YYYYMMDD_HHMMSS.zip
+"""
+
+import json
+import os
+import shutil
+import zipfile
+from datetime import datetime
+from pathlib import Path
+
+
+# ============================================================
+# PATHS
+# ============================================================
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+DATA_DIR = PROJECT_ROOT / "data"
+OUTPUT_DIR = PROJECT_ROOT / "output"
+BACKUP_DIR = OUTPUT_DIR / "backups"
+ASSETS_LOGO = PROJECT_ROOT / "assets" / "logo"
+
+
+FILES_TO_BACKUP = [
+    "catalog.json",
+    "customers.json",
+    "quotations.json",
+    "custom_terms.json",
+    "company_settings.json",
+    "offer_counter.json",
+]
+
+
+# ============================================================
+# HELPERS
+# ============================================================
+
+def _ensure_dirs():
+    BACKUP_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _timestamp():
+    return datetime.now().strftime("%Y%m%d_%H%M%S")
+
+
+# ============================================================
+# BACKUP
+# ============================================================
+
+def create_backup(label=""):
+    """
+    Create a zip of all data files.
+    Returns (path_str, error_or_empty).
+    """
+
+    _ensure_dirs()
+
+    ts = _timestamp()
+    safe_label = "".join(c for c in str(label) if c.isalnum() or c in "-_")
+    name = f"backup_{ts}"
+    if safe_label:
+        name += f"_{safe_label}"
+    name += ".zip"
+
+    zip_path = BACKUP_DIR / name
+
+    try:
+        with zipfile.ZipFile(zip_path, "w",
+                             compression=zipfile.ZIP_DEFLATED) as zf:
+
+            # Data files
+            for filename in FILES_TO_BACKUP:
+                src = DATA_DIR / filename
+                if src.is_file():
+                    zf.write(src, arcname=f"data/{filename}")
+
+            # Logo, if present
+            if ASSETS_LOGO.is_dir():
+                for logo in ASSETS_LOGO.glob("*"):
+                    if logo.is_file():
+                        zf.write(logo,
+                                 arcname=f"assets/logo/{logo.name}")
+
+            # Metadata
+            meta = {
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "label": str(label),
+                "files": [
+                    f"data/{f}" for f in FILES_TO_BACKUP
+                    if (DATA_DIR / f).is_file()
+                ],
+            }
+            zf.writestr("backup_meta.json",
+                        json.dumps(meta, indent=2))
+
+        return str(zip_path), ""
+
+    except Exception as exc:
+        return "", f"{type(exc).__name__}: {exc}"
+
+
+def list_backups():
+    """Return list of (timestamp_str, Path) sorted newest first."""
+    _ensure_dirs()
+
+    items = []
+    for p in BACKUP_DIR.glob("backup_*.zip"):
+        stem = p.stem.replace("backup_", "")
+        items.append((stem, p))
+
+    items.sort(reverse=True, key=lambda x: x[0])
+    return items
+
+
+def restore_backup(zip_path):
+    """
+    Restore data files from a zip.
+    Creates a fresh snapshot of the current state first.
+    Returns (ok, err).
+    """
+
+    zip_path = Path(zip_path)
+    if not zip_path.is_file():
+        return False, "backup zip not found"
+
+    # Take a safety snapshot of current state
+    snap_path, err = create_backup(label="prerestore")
+    if err:
+        return False, f"could not create safety snapshot: {err}"
+
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zf:
+
+            # List names for safety
+            names = zf.namelist()
+
+            # Restore data files
+            for filename in FILES_TO_BACKUP:
+                arc = f"data/{filename}"
+                if arc not in names:
+                    continue
+
+                data = zf.read(arc)
+
+                target = DATA_DIR / filename
+                # Write atomically
+                tmp = target.with_suffix(target.suffix + ".tmp")
+                with open(tmp, "wb") as fh:
+                    fh.write(data)
+                os.replace(tmp, target)
+
+            # Restore logo if present
+            for name in names:
+                if name.startswith("assets/logo/"):
+                    data = zf.read(name)
+                    target = PROJECT_ROOT / name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    tmp = target.with_suffix(target.suffix + ".tmp")
+                    with open(tmp, "wb") as fh:
+                        fh.write(data)
+                    os.replace(tmp, target)
+
+        return True, ""
+
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+
+def delete_backup(zip_path):
+    """Delete a backup zip. Returns True on success."""
+    try:
+        p = Path(zip_path)
+        if p.is_file():
+            p.unlink()
+            return True
+    except Exception:
+        pass
+    return False
+
+
+# ============================================================
+# STANDALONE TEST
+# ============================================================
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("BACKUP SERVICE")
+    print("=" * 60)
+    print(f"Backup dir: {BACKUP_DIR}")
+    print(f"Existing backups:")
+    for ts, path in list_backups()[:10]:
+        print(f"  {ts}  {path.name}  ({path.stat().st_size} bytes)")
+
+    print()
+    print("Creating test backup…")
+    path, err = create_backup(label="test")
+    if err:
+        print(f"ERROR: {err}")
+    else:
+        print(f"OK: {path}")
+        p = Path(path)
+        print(f"Size: {p.stat().st_size} bytes")
+
+    print("=" * 60)

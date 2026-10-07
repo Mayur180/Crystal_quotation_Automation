@@ -1,0 +1,31 @@
+# app/services/paths.py
+import os
+import sys
+from pathlib import Path
+
+def get_data_dir() -> Path:
+    """Return the folder where CRYSTAL data lives.
+
+    - Frozen (EXE):  %APPDATA%/CRYSTAL/data/
+    - Source:        <project>/data/
+    """
+    if getattr(sys, "frozen", False):
+        base = Path(os.environ.get("APPDATA", Path.home())) / "CRYSTAL"
+    else:
+        base = Path(__file__).resolve().parents[2]
+    data_dir = base / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    return data_dir
+
+def get_output_dir() -> Path:
+    """Where generated DOCX/PDF quotations get saved."""
+    if getattr(sys, "frozen", False):
+        base = Path(os.environ.get("APPDATA", Path.home())) / "CRYSTAL"
+    else:
+        base = Path(__file__).resolve().parents[2]
+    out = base / "output"
+    out.mkdir(parents=True, exist_ok=True)
+    return out
+
+def is_frozen() -> bool:
+    return getattr(sys, "frozen", False)

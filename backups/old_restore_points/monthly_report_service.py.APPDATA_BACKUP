@@ -1,0 +1,356 @@
+# ============================================================
+# CRYSTAL / ARMATECH ASSOCIATES
+# MONTHLY REPORT SERVICE
+#
+# Aggregates quotation records by month/year for reporting.
+# Also provides CSV and PDF export helpers.
+# ============================================================
+
+import os
+import csv
+import json
+from datetime import datetime, date
+
+
+PROJECT_ROOT = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..")
+)
+
+MONTH_NAMES = (
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December",
+)
+
+MONTH_ABBR = (
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+)
+
+
+# ------------------------------------------------------------
+# helpers
+# ------------------------------------------------------------
+
+def _text(v):
+    return "" if v is None else str(v).strip()
+
+
+def parse_date(value):
+    """Parse a quotation date string into a date, or None."""
+    if not value:
+        return None
+    text = _text(value)
+    for fmt in ("%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d %b %Y", "%d %B %Y"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def _to_float(v):
+    try:
+        return float(str(v).replace(",", "").replace("₹", "").strip() or 0)
+    except Exception:
+        return 0.0
+
+
+def _load_records():
+    """Load all quotation records via the history service."""
+    try:
+        from app.services.quotation_history_service import list_quotations
+        return list_quotations(limit=1000000) or []
+    except Exception:
+        return []
+
+
+# ------------------------------------------------------------
+# aggregation
+# ------------------------------------------------------------
+
+def get_monthly_summary(year, month, from_date=None, to_date=None):
+    """Return a summary dict for a specific year/month.
+
+    from_date / to_date (if given) override the month bounds — used
+    when the UI is driven by explicit date pickers instead of the
+    month dropdown.
+    """
+    records = _load_records()
+
+    if from_date is not None or to_date is not None:
+        start = from_date
+        end = to_date
+    else:
+        start = date(year, month, 1)
+        if month == 12:
+            end = date(year, 12, 31)
+        else:
+            next_first = date(year, month + 1, 1)
+            from datetime import timedelta
+            end = next_first - timedelta(days=1)
+
+    in_range = []
+    for r in records:
+        d = parse_date(r.get("date"))
+        if d is None:
+            continue
+        if start and d < start:
+            continue
+        if end and d > end:
+            continue
+        in_range.append(r)
+
+    total_value = 0.0
+    max_value = 0.0
+    customer_counts = {}
+    customer_values = {}
+    model_counts = {}
+    model_values = {}
+
+    for r in in_range:
+        val = _to_float(r.get("grand_total"))
+        total_value += val
+        if val > max_value:
+            max_value = val
+
+        cust = _text(r.get("customer_company")) or _text(r.get("customer_name")) or "(unknown)"
+        customer_counts[cust] = customer_counts.get(cust, 0) + 1
+        customer_values[cust] = customer_values.get(cust, 0.0) + val
+
+        model = _text(r.get("model")) or "(unknown)"
+        model_counts[model] = model_counts.get(model, 0) + 1
+        model_values[model] = model_values.get(model, 0.0) + val
+
+    top_customers = sorted(
+        customer_counts.items(),
+        key=lambda kv: (-kv[1], -customer_values.get(kv[0], 0)),
+    )[:5]
+
+    top_models = sorted(
+        model_counts.items(),
+        key=lambda kv: (-kv[1], -model_values.get(kv[0], 0)),
+    )[:5]
+
+    count = len(in_range)
+    avg = (total_value / count) if count else 0.0
+
+    return {
+        "year": year,
+        "month": month,
+        "month_name": MONTH_NAMES[month - 1] if 1 <= month <= 12 else "",
+        "from": start.isoformat() if start else "",
+        "to": end.isoformat() if end else "",
+        "count": count,
+        "total_value": total_value,
+        "average_value": avg,
+        "max_value": max_value,
+        "top_customers": [
+            {"name": n, "count": customer_counts[n], "value": customer_values[n]}
+            for n, _ in top_customers
+        ],
+        "top_models": [
+            {"name": n, "count": model_counts[n], "value": model_values[n]}
+            for n, _ in top_models
+        ],
+    }
+
+
+def get_year_breakdown(year):
+    """Return a list of 12 dicts (Jan..Dec) for the given year."""
+    records = _load_records()
+
+    counts = [0] * 12
+    values = [0.0] * 12
+
+    for r in records:
+        d = parse_date(r.get("date"))
+        if d is None or d.year != year:
+            continue
+        idx = d.month - 1
+        counts[idx] += 1
+        values[idx] += _to_float(r.get("grand_total"))
+
+    rows = []
+    for i in range(12):
+        rows.append({
+            "month_index": i + 1,
+            "month_name": MONTH_NAMES[i],
+            "month_abbr": MONTH_ABBR[i],
+            "count": counts[i],
+            "total_value": values[i],
+        })
+    return rows
+
+
+def list_years():
+    """Return a sorted list of unique years present in the records."""
+    records = _load_records()
+    years = set()
+    for r in records:
+        d = parse_date(r.get("date"))
+        if d is not None:
+            years.add(d.year)
+    if not years:
+        years.add(date.today().year)
+    return sorted(years)
+
+
+# ------------------------------------------------------------
+# export: CSV
+# ------------------------------------------------------------
+
+def export_csv(year, month, filepath, from_date=None, to_date=None):
+    """Write the current month summary + year breakdown to a CSV."""
+    summary = get_monthly_summary(year, month, from_date=from_date, to_date=to_date)
+    breakdown = get_year_breakdown(year)
+
+    with open(filepath, "w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+
+        w.writerow(["Monthly Report"])
+        w.writerow([])
+        w.writerow(["Period", f"{summary['month_name']} {year}"])
+        w.writerow(["From", summary["from"]])
+        w.writerow(["To", summary["to"]])
+        w.writerow([])
+
+        w.writerow(["Summary"])
+        w.writerow(["Total quotations", summary["count"]])
+        w.writerow(["Total value", f"{summary['total_value']:.2f}"])
+        w.writerow(["Average value", f"{summary['average_value']:.2f}"])
+        w.writerow(["Highest value", f"{summary['max_value']:.2f}"])
+        w.writerow([])
+
+        w.writerow(["Top customers"])
+        w.writerow(["Customer", "Quotations", "Total value"])
+        for c in summary["top_customers"]:
+            w.writerow([c["name"], c["count"], f"{c['value']:.2f}"])
+        w.writerow([])
+
+        w.writerow(["Top models"])
+        w.writerow(["Model", "Quotations", "Total value"])
+        for m in summary["top_models"]:
+            w.writerow([m["name"], m["count"], f"{m['value']:.2f}"])
+        w.writerow([])
+
+        w.writerow([f"12-Month Breakdown — {year}"])
+        w.writerow(["Month", "Quotations", "Total value"])
+        for row in breakdown:
+            w.writerow([row["month_name"], row["count"], f"{row['total_value']:.2f}"])
+
+        total_count = sum(r["count"] for r in breakdown)
+        total_value = sum(r["total_value"] for r in breakdown)
+        w.writerow(["TOTAL", total_count, f"{total_value:.2f}"])
+
+    return True
+
+
+# ------------------------------------------------------------
+# export: PDF (fpdf2)
+# ------------------------------------------------------------
+
+def export_pdf(year, month, filepath, from_date=None, to_date=None):
+    """Write the current month summary + year breakdown to a PDF."""
+    from fpdf import FPDF
+
+    summary = get_monthly_summary(year, month, from_date=from_date, to_date=to_date)
+    breakdown = get_year_breakdown(year)
+
+    def _clean(s):
+        # fpdf2 core fonts are latin-1 only — drop rupee sign etc.
+        s = "" if s is None else str(s)
+        return (s.replace("₹", "Rs.")
+                 .replace("—", "-")
+                 .replace("–", "-")
+                 .replace("·", "-")
+                 .encode("latin-1", "replace")
+                 .decode("latin-1"))
+
+    pdf = FPDF(orientation="P", unit="mm", format="A4")
+    pdf.set_auto_page_break(auto=True, margin=15)
+    pdf.add_page()
+
+    # ---- header ----
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 10, _clean("Monthly Report"), ln=1)
+    pdf.set_font("Helvetica", "", 11)
+    pdf.cell(0, 6, _clean(f"Period: {summary['month_name']} {year}"), ln=1)
+    pdf.cell(0, 6, _clean(f"From: {summary['from']}    To: {summary['to']}"), ln=1)
+    pdf.ln(4)
+
+    # ---- summary box ----
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, _clean("Summary"), ln=1)
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, _clean(f"Total quotations: {summary['count']}"), ln=1)
+    pdf.cell(0, 6, _clean(f"Total value:      Rs. {summary['total_value']:.2f}"), ln=1)
+    pdf.cell(0, 6, _clean(f"Average value:    Rs. {summary['average_value']:.2f}"), ln=1)
+    pdf.cell(0, 6, _clean(f"Highest value:    Rs. {summary['max_value']:.2f}"), ln=1)
+    pdf.ln(4)
+
+    # ---- top customers ----
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, _clean("Top Customers"), ln=1)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(90, 6, "Customer", border="B")
+    pdf.cell(30, 6, "Quotes", border="B", align="R")
+    pdf.cell(40, 6, "Total", border="B", align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 9)
+    if summary["top_customers"]:
+        for c in summary["top_customers"]:
+            pdf.cell(90, 6, _clean(c["name"])[:60])
+            pdf.cell(30, 6, str(c["count"]), align="R")
+            pdf.cell(40, 6, f"Rs. {c['value']:.2f}", align="R")
+            pdf.ln()
+    else:
+        pdf.cell(0, 6, _clean("(no quotations in this period)"), ln=1)
+    pdf.ln(4)
+
+    # ---- top models ----
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, _clean("Top Models"), ln=1)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(90, 6, "Model", border="B")
+    pdf.cell(30, 6, "Quotes", border="B", align="R")
+    pdf.cell(40, 6, "Total", border="B", align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 9)
+    if summary["top_models"]:
+        for m in summary["top_models"]:
+            pdf.cell(90, 6, _clean(m["name"])[:60])
+            pdf.cell(30, 6, str(m["count"]), align="R")
+            pdf.cell(40, 6, f"Rs. {m['value']:.2f}", align="R")
+            pdf.ln()
+    else:
+        pdf.cell(0, 6, _clean("(no quotations in this period)"), ln=1)
+    pdf.ln(4)
+
+    # ---- 12-month breakdown ----
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 12)
+    pdf.cell(0, 8, _clean(f"12-Month Breakdown - {year}"), ln=1)
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(60, 6, "Month", border="B")
+    pdf.cell(30, 6, "Quotes", border="B", align="R")
+    pdf.cell(50, 6, "Total value", border="B", align="R")
+    pdf.ln()
+    pdf.set_font("Helvetica", "", 9)
+
+    total_count = 0
+    total_value = 0.0
+    for row in breakdown:
+        total_count += row["count"]
+        total_value += row["total_value"]
+        pdf.cell(60, 6, _clean(f"{row['month_name']} {year}"))
+        pdf.cell(30, 6, str(row["count"]), align="R")
+        pdf.cell(50, 6, f"Rs. {row['total_value']:.2f}", align="R")
+        pdf.ln()
+
+    pdf.set_font("Helvetica", "B", 9)
+    pdf.cell(60, 6, "TOTAL", border="T")
+    pdf.cell(30, 6, str(total_count), border="T", align="R")
+    pdf.cell(50, 6, f"Rs. {total_value:.2f}", border="T", align="R")
+
+    pdf.output(filepath)
+    return True

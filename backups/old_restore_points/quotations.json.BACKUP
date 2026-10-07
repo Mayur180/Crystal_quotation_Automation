@@ -1,0 +1,156 @@
+[
+  {
+    "quotation_number": "AA/VMM/26-27/004",
+    "date": "2026-09-30",
+    "customer_name": "mayuresh",
+    "customer_company": "myq",
+    "model": "AA-9041AC",
+    "grand_total": "1380600.00",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_004_AA-9041AC.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T16:32:20"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/046",
+    "date": "2026-09-30",
+    "customer_name": "mayuresh",
+    "customer_company": "myq",
+    "model": "AA-9044AC",
+    "grand_total": "2076210.00",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_046_AA-9044AC.docx",
+    "pdf_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_046_AA-9044AC.pdf",
+    "created_at": "2026-09-30T17:40:19"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/051",
+    "date": "30-09-2026",
+    "customer_name": "Amey",
+    "customer_company": "Armatech",
+    "model": "AA-9022SA",
+    "grand_total": "687782.42",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_051_AA-9022SA.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T17:57:30"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/052",
+    "date": "30-09-2026",
+    "customer_name": "Amey",
+    "customer_company": "Armatech",
+    "model": "AA-9022SA",
+    "grand_total": "687782.42",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_052_AA-9022SA.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T18:00:26"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/053",
+    "date": "2026-09-30",
+    "customer_name": "mayuresh",
+    "customer_company": "myq",
+    "model": "AA-9021SA",
+    "grand_total": "568165.28",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_053_AA-9021SA.docx",
+    "pdf_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_053_AA-9021SA.pdf",
+    "created_at": "2026-09-30T18:02:00"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/054",
+    "date": "30-09-2026",
+    "customer_name": "Cleanup Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "D:\\VMM\\VMM\\CRYSTAL_Quotation_Automation\\output\\quotations\\Quotation_AA_VMM_26-27_054_AA-9021SA.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T18:09:20"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/055",
+    "date": "30-09-2026",
+    "customer_name": "Downloads Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\quotations\\Quotation_AA_VMM_26-27_055_AA-9021SA.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T18:33:29"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/056",
+    "date": "30-09-2026",
+    "customer_name": "PDF Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\quotations\\Quotation_AA_VMM_26-27_056_AA-9021SA.docx",
+    "pdf_path": "",
+    "created_at": "2026-09-30T18:34:23"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/057",
+    "date": "30-09-2026",
+    "customer_name": "PDF Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\quotations\\Quotation_AA_VMM_26-27_057_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\quotations\\Quotation_AA_VMM_26-27_057_AA-9021SA.pdf",
+    "created_at": "2026-09-30T18:37:37"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/058",
+    "date": "02-10-2026",
+    "customer_name": "Folder Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\word\\Quotation_AA_VMM_26-27_058_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\pdf\\Quotation_AA_VMM_26-27_058_AA-9021SA.pdf",
+    "created_at": "2026-10-02T11:19:37"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/059",
+    "date": "2026-10-02",
+    "customer_name": "mayuresh",
+    "customer_company": "myq",
+    "model": "AA-9021SA",
+    "grand_total": "568165.28",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\word\\Quotation_AA_VMM_26-27_059_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\pdf\\Quotation_AA_VMM_26-27_059_AA-9021SA.pdf",
+    "created_at": "2026-10-02T11:24:13"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/060",
+    "date": "02-10-2026",
+    "customer_name": "Local-First Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\word\\Quotation_AA_VMM_26-27_060_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\pdf\\Quotation_AA_VMM_26-27_060_AA-9021SA.pdf",
+    "created_at": "2026-10-02T11:53:05"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/061",
+    "date": "02-10-2026",
+    "customer_name": "Local-First Test 2",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\word\\Quotation_AA_VMM_26-27_061_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\pdf\\Quotation_AA_VMM_26-27_061_AA-9021SA.pdf",
+    "created_at": "2026-10-02T11:55:02"
+  },
+  {
+    "quotation_number": "AA/VMM/26-27/062",
+    "date": "02-10-2026",
+    "customer_name": "Lock Test",
+    "customer_company": "TestCo",
+    "model": "AA-9021SA",
+    "grand_total": "563625.06",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\word\\Quotation_AA_VMM_26-27_062_AA-9021SA.docx",
+    "pdf_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\02-10-2026\\pdf\\Quotation_AA_VMM_26-27_062_AA-9021SA.pdf",
+    "created_at": "2026-10-02T12:05:15"
+  }
+]
