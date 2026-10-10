@@ -152,6 +152,14 @@ def save_quotation(result):
         "date":             _text(result.get("quotation_date")),
         "customer_name":    _text(result.get("customer_name")),
         "customer_company": _text(result.get("customer_company")),
+        "customer_phone":   _text(result.get("customer_phone")),
+        "customer_email":   _text(result.get("customer_email")),
+        "customer_address": _text(result.get("customer_address")),
+        "customer_city":    _text(result.get("customer_city")),
+        "customer_state":   _text(result.get("customer_state")),
+        "customer_pincode": _text(result.get("customer_pincode")),
+        "customer_gstin":   _text(result.get("customer_gstin")),
+        "contact_person":   _text(result.get("contact_person")),
         "model":            _text(result.get("model")),
         "grand_total":      _decimal_str(grand),
         "docx_path":        _text(result.get("docx_path") or result.get("path")),
@@ -176,6 +184,37 @@ def save_quotation(result):
         _save_raw(records)
     except Exception:
         return record
+
+    # ---- Send to Google Sheet (fire and forget) ----
+    try:
+        from app.services.google_sheet_service import send_to_sheet
+        # Get current user (falls back to Windows username)
+        try:
+            import os as _os
+            _user = _os.environ.get('USERNAME') or 'user'
+        except Exception:
+            _user = 'user'
+
+        send_to_sheet({
+            'action':           'quotation',
+            'date':             record.get('date', ''),
+            'user':             _user,
+            'quotation_number': record.get('quotation_number', ''),
+            'customer':         record.get('customer_name', ''),
+            'company':          record.get('customer_company', ''),
+            'phone':            record.get('customer_phone', ''),
+            'email':            record.get('customer_email', ''),
+            'address':          record.get('customer_address', ''),
+            'city':             record.get('customer_city', ''),
+            'state':            record.get('customer_state', ''),
+            'pincode':          record.get('customer_pincode', ''),
+            'gstin':            record.get('customer_gstin', ''),
+            'model':            record.get('model', ''),
+            'grand_total':      record.get('grand_total', ''),
+            'status':           record.get('status', 'Draft'),
+        })
+    except Exception as _e:
+        print(f'[google-sheet] hook failed: {_e}')
 
     return record
 

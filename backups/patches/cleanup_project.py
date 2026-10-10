@@ -1,6 +1,6 @@
 """
 Clean up project root — move patches and backups to organized folders.
-Nothing is deleted, everything is moved to backups/.
+Nothing is deleted except __pycache__ and old dist build.
 """
 
 import shutil
@@ -27,9 +27,8 @@ SCRIPT_PATTERNS = [
     "cleanup*.py",
     "build_*.py",
     "audit.py",
-    "test_picker.py",
-    "fix_*.py",
     "test_*.py",
+    "fix_*.py",
 ]
 
 
@@ -37,7 +36,6 @@ def _move(src, dest_dir):
     if not src.exists():
         return False
     dest = dest_dir / src.name
-    # avoid collision
     n = 1
     while dest.exists():
         dest = dest_dir / f"{src.stem}_{n}{src.suffix}"
@@ -51,37 +49,62 @@ def _move(src, dest_dir):
 
 
 print("=" * 68)
-print("Step 1: Moving scripts from root → backups/patches/")
+print("Step 1: Moving patch scripts → backups/patches/")
 print("=" * 68)
 
-moved = 0
+moved_scripts = 0
 for pattern in SCRIPT_PATTERNS:
     for f in sorted(ROOT.glob(pattern)):
-        if f.is_file():
+        if f.is_file() and f.name != "cleanup_project.py":  # don't move self
             if _move(f, PATCHES_DIR):
                 print(f"  [moved] {f.name}")
-                moved += 1
-
-print(f"  total: {moved} scripts moved")
+                moved_scripts += 1
+print(f"  total: {moved_scripts}")
 
 
 # ============================================================
-# 2. Move *.BACKUP files from ui/ and app/ → backups/old_restore_points/
+# 2. Move backup files from root, ui/, app/, data/ → backups/old_restore_points/
 # ============================================================
 
 print()
 print("=" * 68)
-print("Step 2: Moving .BACKUP files from ui/ and app/")
+print("Step 2: Moving backup files")
 print("=" * 68)
 
-backup_count = 0
-
-# Look for backups in these locations
-SCAN_DIRS = [
-    ROOT / "ui",
-    ROOT / "app",
-    ROOT / "app" / "services",
+BACKUP_PATTERNS = [
+    "*.BACKUP",
+    "*.FEATURE*_BACKUP",
+    "*.TERMS_BACKUP",
+    "*.PAGE*_BACKUP",
+    "*.PHASE*_BACKUP",
+    "*.WIZARD_BACKUP",
+    "*.AUTOSAVE*",
+    "*.BUYBACK*",
+    "*.SHORTCUTS*",
+    "*.CLEARLOG*",
+    "*.SIDEBAR*",
+    "*.POLISH*",
+    "*.DUPLICATE*",
+    "*.ROWCOLOR*",
+    "*.WHATSAPP*",
+    "*.EMAIL*",
+    "*.PREFILL*",
+    "*.BEFORE_USERDATA",
+    "*.REMOVE_LOGIN*",
+    "*.CENTER_TITLE*",
+    "*.MANUAL_BACKUP",
+    "*.AUTO_BACKUP",
+    "*.CABINET_BACKUP",
+    "*.VMS_BACKUP",
+    "*.SEMIAUTO_BACKUP",
+    "*.CNC_REMOVE_BACKUP",
+    "*.BUYBACK_FORM_BACKUP",
+    "*.OPTIONAL_FIELDS_BACKUP",
+    "*.CENTER_TITLE_BACKUP",
 ]
+
+SCAN_DIRS = [ROOT, ROOT / "ui", ROOT / "app", ROOT / "app" / "services", ROOT / "data"]
+moved_backups = 0
 
 for scan_dir in SCAN_DIRS:
     if not scan_dir.is_dir():
@@ -90,17 +113,18 @@ for scan_dir in SCAN_DIRS:
         if not f.is_file():
             continue
         name = f.name
-        # Match things like:  file.py.BACKUP, file.py.FEATURE*_BACKUP, etc.
+        # Only move if the file looks like a backup (has backup-ish suffix)
         if (
-            ".BACKUP" in name or
-            "_BACKUP" in name or
-            ".BEFORE_USERDATA" in name
+            ".BACKUP" in name
+            or "_BACKUP" in name
+            or ".BEFORE_USERDATA" in name
+            or ".old" in name
         ):
             if _move(f, RESTORE_DIR):
                 print(f"  [moved] {f.relative_to(ROOT)}")
-                backup_count += 1
+                moved_backups += 1
 
-print(f"  total: {backup_count} backup files moved")
+print(f"  total: {moved_backups}")
 
 
 # ============================================================
@@ -114,7 +138,6 @@ print("=" * 68)
 
 pycache_count = 0
 for p in ROOT.rglob("__pycache__"):
-    # skip .venv
     if ".venv" in p.parts:
         continue
     try:
@@ -123,47 +146,28 @@ for p in ROOT.rglob("__pycache__"):
         pycache_count += 1
     except Exception as e:
         print(f"  [error] {p}: {e}")
-
-print(f"  total: {pycache_count} __pycache__ folders removed")
+print(f"  total: {pycache_count}")
 
 
 # ============================================================
-# 4. Remove test artifacts
+# 4. Remove old dist build (keep the folder, delete contents)
 # ============================================================
 
 print()
 print("=" * 68)
-print("Step 4: Removing test artifacts")
+print("Step 4: Cleaning old dist builds")
 print("=" * 68)
 
-TEST_FILES = [
-    ROOT / "test_report.csv",
-    ROOT / "test_report.pdf",
-    ROOT / "nuitka-crash-report.xml",
-    ROOT / "build_log.txt",
-    ROOT / "run_log.txt",
-]
-
-test_count = 0
-for f in TEST_FILES:
-    if f.exists():
-        try:
-            f.unlink()
-            print(f"  [removed] {f.name}")
-            test_count += 1
-        except Exception as e:
-            print(f"  [error] {f.name}: {e}")
-
-# Also remove data test backups
-for p in ROOT.glob("data.MIGRATION_BACKUP_*"):
-    try:
-        shutil.rmtree(p, ignore_errors=True)
-        print(f"  [removed] {p.name}")
-        test_count += 1
-    except Exception:
-        pass
-
-print(f"  total: {test_count} test artifacts removed")
+DIST = ROOT / "dist"
+if DIST.exists():
+    for item in DIST.iterdir():
+        if item.name.startswith("main."):
+            if item.is_dir():
+                shutil.rmtree(item, ignore_errors=True)
+                print(f"  [removed] dist/{item.name}")
+            else:
+                item.unlink()
+                print(f"  [removed] dist/{item.name}")
 
 
 # ============================================================
@@ -183,8 +187,7 @@ for item in sorted(ROOT.iterdir()):
     print(f"  {kind} {item.name}")
 
 print()
-print("Backups stored in:")
-print(f"  {PATCHES_DIR.relative_to(ROOT)}  ({len(list(PATCHES_DIR.iterdir()))} files)")
-print(f"  {RESTORE_DIR.relative_to(ROOT)}  ({len(list(RESTORE_DIR.iterdir()))} files)")
+print(f"Patches: {len(list(PATCHES_DIR.iterdir()))} files")
+print(f"Backups: {len(list(RESTORE_DIR.iterdir()))} files")
 print()
 print("Done.")

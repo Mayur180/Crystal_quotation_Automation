@@ -1,0 +1,72 @@
+"""
+Crystal Quotation Automation — Windows Launcher
+
+This is the entry point used by PyInstaller to build the .exe.
+"""
+
+import sys
+import os
+from pathlib import Path
+
+def _setup_paths():
+    """Set up sys.path for frozen and script modes."""
+    if getattr(sys, "frozen", False):
+        # Running as .exe
+        base = Path(sys.executable).parent
+    else:
+        # Running as script
+        base = Path(__file__).resolve().parent
+
+    if str(base) not in sys.path:
+        sys.path.insert(0, str(base))
+
+    return base
+
+
+def main():
+    base = _setup_paths()
+    print(f"Crystal Quotation Automation")
+    print(f"Base directory: {base}")
+    print()
+
+    try:
+        from ui.dashboard import Dashboard
+    except Exception as exc:
+        print("ERROR: Could not load dashboard.")
+        print(f"{type(exc).__name__}: {exc}")
+        import traceback
+        traceback.print_exc()
+        input("Press Enter to exit...")
+        return
+
+    _ensure_first_run_setup()
+
+    app = Dashboard()
+    app.mainloop()
+
+
+
+
+def _ensure_first_run_setup():
+    """Show the setup wizard if the app has never been configured."""
+    try:
+        import tkinter as tk
+        from app.services.setup_service import is_configured
+        from ui.setup_wizard import run_wizard
+    except Exception:
+        return
+
+    if is_configured():
+        return
+
+    root = tk.Tk()
+    root.withdraw()
+    result = run_wizard(root)
+    root.destroy()
+    if not result:
+        # user cancelled — app will still run with default setup
+        pass
+
+
+if __name__ == "__main__":
+    main()

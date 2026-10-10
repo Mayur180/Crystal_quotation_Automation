@@ -3629,27 +3629,36 @@ class QuotationForm(tk.Toplevel):
 
         accessories = []
 
+        # Pass ALL accessories (checked + unchecked) so page 4 can
+        # display them, with their 'selected' flag.
+        # The generator's _normalize_accessories() filters out
+        # unchecked ones for page 5 totals.
         for row in self.accessory_rows:
 
-            if row["selected"].get():
+            is_selected = bool(row["selected"].get())
 
-                qty = self._decimal(
-                    row["quantity"].get()
-                )
+            try:
+                qty = float(self._decimal(row["quantity"].get()))
+            except Exception:
+                qty = 1.0
+            if qty <= 0:
+                qty = 1.0
 
-                unit_price = self._decimal(
-                    row["price"].get()
-                )
+            try:
+                unit_price = float(self._decimal(row["price"].get()))
+            except Exception:
+                unit_price = 0.0
 
-                accessories.append(
-                    {
-                        "code": row["code"],
-                        "name": row["name"],
-                        "qty": float(qty),
-                        "unit_price": float(unit_price),
-                        "total": float(qty * unit_price),
-                    }
-                )
+            accessories.append(
+                {
+                    "code": row["code"],
+                    "name": row["name"],
+                    "qty": qty,
+                    "unit_price": unit_price,
+                    "total": qty * unit_price,
+                    "selected": is_selected,
+                }
+            )
 
         selected_terms = []
 

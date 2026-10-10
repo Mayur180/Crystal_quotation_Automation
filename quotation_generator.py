@@ -529,14 +529,31 @@ def _set_table_col_widths(table, widths_mm):
 
 
 def _set_row_min_height(row, height_mm):
-    """Force a minimum row height so tables stretch correctly."""
+    """Force a minimum row height so tables stretch correctly.
+
+    Accepts:
+        - plain number (interpreted as mm)
+        - Length object from docx.shared.Mm()
+    """
+    from docx.shared import Length as _Length
+
+    # Convert to a Length object safely
+    if isinstance(height_mm, _Length):
+        length = height_mm
+    else:
+        try:
+            # Plain number — treat as mm
+            length = Mm(float(height_mm))
+        except Exception:
+            length = Mm(8.0)
+
     tr = row._tr
     trPr = tr.get_or_add_trPr()
     old = trPr.find(qn("w:trHeight"))
     if old is not None:
         trPr.remove(old)
     trHeight = OxmlElement("w:trHeight")
-    trHeight.set(qn("w:val"), str(int(Mm(height_mm).twips)))
+    trHeight.set(qn("w:val"), str(int(length.twips)))
     trHeight.set(qn("w:hRule"), "atLeast")
     trPr.append(trHeight)
 
@@ -885,6 +902,11 @@ def _configure_sections(doc):
     logo = find_logo()
 
     for section in doc.sections:
+        # Explicit A4 page size (python-docx defaults to Letter)
+        from docx.shared import Mm as _Mm
+        section.page_width  = _Mm(210)
+        section.page_height = _Mm(297)
+
         section.top_margin = PAGE_MARGIN_TOP
         section.bottom_margin = PAGE_MARGIN_BOTTOM
         section.left_margin = PAGE_MARGIN_LEFT
@@ -1759,14 +1781,17 @@ def _page1(
     desc_lines = [l.strip() for l in str(description_text).split("\n") if l.strip()]
     n_desc = len(desc_lines)
 
+    # Adaptive image size — shrinks as description grows
     if n_desc <= 2:
-        img_mm = 95
+        img_mm = 90
     elif n_desc <= 4:
-        img_mm = 80
+        img_mm = 75
     elif n_desc <= 6:
-        img_mm = 65
+        img_mm = 60
+    elif n_desc <= 8:
+        img_mm = 50
     else:
-        img_mm = 55
+        img_mm = 42
 
     if image_path:
         gap = doc.add_paragraph()
@@ -1775,12 +1800,38 @@ def _page1(
 
         p = doc.add_paragraph()
         p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-        p.paragraph_format.space_after = Pt(4)
+        p.paragraph_format.space_after = Pt(2)
         p.paragraph_format.space_before = Pt(0)
         p.add_run("\u200b")
         run = p.add_run()
         try:
-            run.add_picture(str(image_path), width=Mm(img_mm))
+            # Constrain by BOTH width and height so tall images
+            # don't overflow page 1
+            from PIL import Image as _PILImage
+            try:
+                _im = _PILImage.open(str(image_path))
+                _w_px, _h_px = _im.size
+                _aspect = _w_px / _h_px if _h_px else 1.0
+            except Exception:
+                _aspect = 1.0
+
+            MAX_IMG_HEIGHT_MM = 60   # keep table on same page
+            if _aspect < 1.0:
+                # Tall image — constrain by height
+                _height_mm = MAX_IMG_HEIGHT_MM
+                _width_mm = _height_mm * _aspect
+                if _width_mm > img_mm:
+                    _width_mm = img_mm
+                    _height_mm = _width_mm / _aspect
+                run.add_picture(str(image_path), height=Mm(_height_mm))
+            else:
+                # Wide image — constrain by width
+                _width_mm = img_mm
+                _height_mm = _width_mm / _aspect
+                if _height_mm > MAX_IMG_HEIGHT_MM:
+                    _height_mm = MAX_IMG_HEIGHT_MM
+                    _width_mm = _height_mm * _aspect
+                run.add_picture(str(image_path), width=Mm(_width_mm))
         except Exception as e:
             print(f"[image-error] {type(e).__name__}: {e}")
 
@@ -1802,6 +1853,13 @@ def _page1(
     # --------------------------------------------------------
     table = doc.add_table(rows=7, cols=4)
     table.alignment = WD_TABLE_ALIGNMENT.CENTER
+
+    # ---- Set fixed column widths (prevents huge rows) ----
+    # 4 columns: Label / Value / Label / Value
+    _set_table_col_widths(
+        table,
+        [28.0, 59.0, 28.0, 59.0],   # total = 174 mm
+    )
 
     seller_name = COMPANY.get("name", "ARMATECH ASSOCIATES")
     seller_contact = "Mr. Amol Lunawat"
@@ -1848,7 +1906,17 @@ def _page1(
             )
             _set_cell_shading(cell, LIGHT_GREY if is_label else WHITE)
             _set_cell_border(cell)
-        _set_row_min_height(table.rows[r_index], PAGE1_ROW_HEIGHT)
+        # Adaptive row height — tighter for longer descriptions
+        # Adaptive row height — tighter for longer content
+        if n_desc <= 3:
+            row_h = PAGE1_ROW_HEIGHT
+        elif n_desc <= 5:
+            row_h = Mm(6)
+        elif n_desc <= 7:
+            row_h = Mm(5)
+        else:
+            row_h = Mm(4.5)
+        _set_row_min_height(table.rows[r_index], row_h)
 
 
 # PAGE 2
@@ -2165,12 +2233,15 @@ def _page4(
 
     _add_section_bar(doc, "Selected Accessories")
 
-    normalized = _normalize_accessories(accessories)
+    # Keep raw items (with 'selected' flag) — do NOT filter out
+    raw = accessories or []
+    if isinstance(raw, dict):
+        raw = [raw]
 
-    if not normalized:
+    if not raw:
         _add_body(
             doc,
-            "No additional accessories have been selected for this quotation.",
+            "No accessories available for this quotation.",
             size=9.5,
             color=MEDIUM_GREY,
             after=8,
@@ -2192,24 +2263,35 @@ def _page4(
             _set_cell_shading(table.cell(0, index), DARK_RED)
             _set_cell_border(table.cell(0, index))
 
-        # Row height so accessory table fills ~80mm
         acc_row_h = PAGE4_ACC_ROW_H
-        for index, item in enumerate(normalized, 1):
+        for index, item in enumerate(raw, 1):
+            if not isinstance(item, dict):
+                continue
+
             cells = table.add_row().cells
-            # Format price: show rupee amount if priced, else 'Extra If Required'
+
+            name = str(item.get("name") or item.get("accessory") or "").strip()
             try:
-                _price_val = float(item.get("price", 0) or 0)
+                qty = float(item.get("qty") or item.get("quantity") or 1)
+            except Exception:
+                qty = 1.0
+            try:
+                _price_val = float(item.get("price") or item.get("unit_price") or 0)
             except Exception:
                 _price_val = 0.0
-            if _price_val > 0:
+
+            selected = bool(item.get("selected", True))
+
+            # Rule: show price only if selected AND priced
+            if selected and _price_val > 0:
                 price_display = f"₹ {_price_val:,.2f}"
             else:
                 price_display = "Extra If Required"
 
             values = [
                 str(index),
-                item["name"],
-                f"{item['qty']:g}",
+                name,
+                f"{qty:g}",
                 price_display,
             ]
             for column, value in enumerate(values):
@@ -3390,29 +3472,26 @@ def generate_quotation(
     # ========================================================
 
     result = {
-        "path": str(
-            output_path
-        ),
-
-        "docx_path": str(
-            output_path
-        ),
-
-        "pdf_path": (
-            str(pdf_path)
-            if pdf_path
-            else None
-        ),
-
+        "path": str(output_path),
+        "docx_path": str(output_path),
+        "pdf_path": (str(pdf_path) if pdf_path else None),
         "quotation_number": quotation_number,
-
         "quotation_date": quotation_date,
-
         "model": model,
 
-        "customer_name": customer_name,
-
+        # ---- customer summary ----
+        "customer_name":    customer_name,
         "customer_company": customer_company,
+
+        # ---- full customer block ----
+        "customer_phone":   (customer_phone or phone or ""),
+        "customer_email":   (customer_email or email or ""),
+        "customer_address": (customer_address or address or ""),
+        "customer_city":    (kwargs.get("city") or ""),
+        "customer_state":   (kwargs.get("state") or ""),
+        "customer_pincode": (kwargs.get("pincode") or ""),
+        "customer_gstin":   (kwargs.get("gstin") or ""),
+        "contact_person":   (kwargs.get("contact_person") or ""),
 
         "totals": totals,
     }

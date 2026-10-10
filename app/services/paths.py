@@ -18,16 +18,7 @@ def is_frozen() -> bool:
 
 
 def _setup_shared_path():
-    """Try to read shared_path from the setup file."""
-    try:
-        from app.services.setup_service import shared_path
-        p = shared_path()
-        if p is None:
-            return None
-        if p.is_dir():
-            return p
-    except Exception:
-        pass
+    """Multi-user shared folder was removed — always return None."""
     return None
 
 

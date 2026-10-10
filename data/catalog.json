@@ -41,11 +41,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -92,11 +96,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -143,11 +151,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -194,11 +206,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -245,11 +261,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -296,11 +316,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -337,7 +361,7 @@
       "hardware_features": [
         "High accuracy granite base and column",
         "HIWIN linear guide ways",
-        "CNC servo motor drive",
+        "Servo motor drive",
         "Programmable LED 8-zone illumination"
       ],
       "software_features": [
@@ -348,11 +372,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -389,7 +417,7 @@
       "hardware_features": [
         "High accuracy granite base and column",
         "HIWIN linear guide ways",
-        "CNC servo motor drive",
+        "Servo motor drive",
         "Programmable LED 8-zone illumination"
       ],
       "software_features": [
@@ -400,11 +428,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -441,7 +473,7 @@
       "hardware_features": [
         "High accuracy granite base and column",
         "HIWIN linear guide ways",
-        "CNC servo motor drive",
+        "Servo motor drive",
         "Programmable LED 8-zone illumination"
       ],
       "software_features": [
@@ -452,11 +484,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -745,11 +781,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -797,11 +837,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],
@@ -849,11 +893,15 @@
       ],
       "accessories": [
         {
-          "name": "Computer System",
+          "name": "Machine Cabinet",
           "qty": 1
         },
         {
-          "name": "Table",
+          "name": "Online UPS",
+          "qty": 1
+        },
+        {
+          "name": "Computer System",
           "qty": 1
         }
       ],

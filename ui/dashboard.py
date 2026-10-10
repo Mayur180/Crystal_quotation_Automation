@@ -24,11 +24,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import date
 
-# Phase 1 — current user
-try:
-    from app.services.user_service import get_current_user
-except Exception:
-    get_current_user = None
+get_current_user = None
 
 
 
@@ -80,7 +76,7 @@ class Dashboard(tk.Tk):
 
         super().__init__()
 
-        self.title("CRYSTAL | ARMATECH ASSOCIATES — Quotation Manager")
+        self.title("CRYSTAL | ARMATECH ASSOCIATES — Quotation Manager  v3.0")
         # Set Crystal logo as window icon
         try:
             from ui.ui_helpers import set_window_icon
@@ -358,14 +354,7 @@ class Dashboard(tk.Tk):
         add_item("📋", "Quotation History",  self._open_history)
         add_item("📝", "Activity Log",       self._open_activity_log)
 
-        # admin-only: Team Activity
-        try:
-            from app.services.user_service import is_admin
-            _show_team = is_admin()
-        except Exception:
-            _show_team = False
-        if _show_team:
-            add_item("👨‍👩‍👧", "Team Activity",    self._open_team_activity)
+
         add_item("📊", "Monthly Report",     self._open_monthly_report)
 
         # separator
@@ -711,7 +700,7 @@ class Dashboard(tk.Tk):
 
         tk.Label(
             footer,
-            text="CRYSTAL / ARMATECH ASSOCIATES  ·  Quotation Manager  ·  v1.0",
+            text="CRYSTAL / ARMATECH ASSOCIATES  ·  Quotation Manager  ·  v3.0",
             bg=self.CARD, fg=self.MUTED, font=("Arial", 8),
         ).pack(side="left", padx=24)
 
@@ -1048,42 +1037,6 @@ class Dashboard(tk.Tk):
                 "Could not clear the activity log.",
                 parent=self,
             )
-
-    def _open_team_activity(self):
-
-        try:
-            from ui.team_activity_window import TeamActivity
-        except Exception as exc:
-            messagebox.showerror(
-                "Could not open Team Activity",
-                f"{type(exc).__name__}: {exc}",
-                parent=self,
-            )
-            return
-
-        TeamActivity(self)
-
-    def _reconfigure_setup(self):
-        """Re-open the setup wizard to change name / role / server."""
-        from tkinter import messagebox as _mb
-        ok = _mb.askyesno(
-            "Reconfigure Setup",
-            "This will close the app and reopen the setup wizard.\n\n"
-            "Continue?",
-            parent=self,
-        )
-        if not ok:
-            return
-        try:
-            from app.services.setup_service import clear_setup
-            clear_setup()
-        except Exception:
-            pass
-        try:
-            self.destroy()
-        except Exception:
-            pass
-        # Note: next launch will show the wizard
 
     def _quit(self):
 

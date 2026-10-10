@@ -181,6 +181,62 @@ class CompanySettings(tk.Toplevel):
 
         tk.Frame(inner, bg=self.BG, height=20).pack()
 
+        
+
+        # ---- Output Folder card ----
+        card_out = self._card(inner)
+        self._section_title(card_out, "Output Folder")
+
+        tk.Label(
+            card_out,
+            text="PDF and Word files are saved under this folder.",
+            bg=self.CARD, fg=self.MUTED,
+            font=("Arial", 9), anchor="w",
+        ).pack(fill="x", pady=(0, 8))
+
+        out_row = tk.Frame(card_out, bg=self.CARD)
+        out_row.pack(fill="x", pady=4)
+
+        tk.Label(
+            out_row, text="Folder", bg=self.CARD, fg=self.TEXT,
+            font=("Arial", 9, "bold"), width=18, anchor="w",
+        ).pack(side="left")
+
+        self._vars["output_folder"] = tk.StringVar()
+
+        tk.Entry(
+            out_row,
+            textvariable=self._vars["output_folder"],
+            bg="white", fg=self.TEXT, relief="solid", bd=1,
+            font=("Arial", 10), insertbackground=self.RED,
+        ).pack(side="left", fill="x", expand=True, ipady=6)
+
+        tk.Button(
+            out_row, text="Browse…", command=self._browse_output_folder,
+            bg=self.SOFT, fg=self.TEXT,
+            activebackground="#ECEEF1", activeforeground=self.TEXT,
+            relief="solid", bd=1, highlightthickness=0,
+            font=("Arial", 9), cursor="hand2",
+            padx=12, pady=4,
+        ).pack(side="left", padx=(8, 0))
+
+        tk.Label(
+            card_out,
+            text="Inside this folder, the app creates:",
+            bg=self.CARD, fg=self.MUTED,
+            font=("Arial", 9, "italic"), anchor="w",
+        ).pack(fill="x", pady=(8, 0))
+
+        tk.Label(
+            card_out,
+            text="    DD-MM-YYYY/word/Quotation_*.docx\n"
+                 "    DD-MM-YYYY/pdf/Quotation_*.pdf",
+            bg=self.CARD, fg=self.MUTED,
+            font=("Courier New", 9), anchor="w", justify="left",
+        ).pack(fill="x")
+
+        tk.Frame(inner, bg=self.BG, height=20).pack()
+
         # ---- Maintenance / Actions card ----
         card3 = self._card(inner)
         self._section_title(card3, "Actions")
@@ -311,6 +367,17 @@ class CompanySettings(tk.Toplevel):
     # ========================================================
 
     def _load(self):
+        # Load output folder from settings_service if available
+        try:
+            from app.services.settings_service import get_output_folder as _gof
+            _folder = str(_gof())
+            if "output_folder" not in self._vars:
+                self._vars["output_folder"] = tk.StringVar()
+            self._vars["output_folder"].set(_folder)
+        except Exception:
+            pass
+
+
         if load_settings is None:
             return
         try:
@@ -320,6 +387,9 @@ class CompanySettings(tk.Toplevel):
 
         for key, var in self._vars.items():
             if key.endswith("_widget"):
+                continue
+            # Skip output_folder — already loaded from settings_service above
+            if key == "output_folder":
                 continue
             value = settings.get(key, "")
             if isinstance(var, tk.StringVar):
@@ -457,6 +527,32 @@ class CompanySettings(tk.Toplevel):
             parent=self,
         )
 
+    def _browse_output_folder(self):
+        """Let the user pick a new output folder."""
+        from tkinter import filedialog
+        try:
+            current = self._vars.get("output_folder")
+            current_val = current.get() if current else ""
+        except Exception:
+            current_val = ""
+
+        chosen = filedialog.askdirectory(
+            title="Choose output folder",
+            initialdir=current_val or None,
+            parent=self,
+        )
+        if not chosen:
+            return
+
+        try:
+            self._vars["output_folder"].set(chosen)
+        except Exception as e:
+            messagebox.showerror(
+                "Error",
+                f"Could not set folder:\n{e}",
+                parent=self,
+            )
+
     def _save(self):
         if save_settings is None:
             messagebox.showerror("Unavailable",
@@ -466,6 +562,18 @@ class CompanySettings(tk.Toplevel):
 
         data = self._collect()
         ok, err = save_settings(data)
+
+        # Also persist the output folder via settings_service
+        if ok:
+            try:
+                from app.services.settings_service import set_output_folder
+                folder_var = self._vars.get("output_folder")
+                if folder_var:
+                    folder_val = folder_var.get().strip()
+                    if folder_val:
+                        set_output_folder(folder_val)
+            except Exception as e:
+                print(f"[output-folder] save failed: {e}")
 
         if ok:
             messagebox.showinfo("Saved",
