@@ -465,7 +465,7 @@ class ProductManager(tk.Toplevel):
 
         self._configure_style()
         self._build_interface()
-        self._reload()
+        self.after(50, self._reload)
 
         # ---- Escape closes the window ----
         try:
@@ -542,10 +542,6 @@ class ProductManager(tk.Toplevel):
 
         tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
 
-        # Content area
-        self.body = tk.Frame(self, bg=self.BG)
-        self.body.pack(fill="both", expand=True, padx=28, pady=14)
-
         # Bottom action bar
         bar = tk.Frame(self, bg=self.CARD, height=70,
                        highlightbackground=self.BORDER,
@@ -571,6 +567,11 @@ class ProductManager(tk.Toplevel):
 
         self._btn(right_side, "Close", self.destroy).pack(
             side="right", pady=14)
+
+        # Content area
+        self.body = tk.Frame(self, bg=self.BG)
+        self.body.pack(fill="both", expand=True, padx=28, pady=14)
+
 
     def _btn(self, parent, text, command, primary=False, danger=False):
         if primary:
@@ -643,8 +644,13 @@ class ProductManager(tk.Toplevel):
 
     def _render_products(self):
 
-        catalog = load_catalog() or {}
-        products = catalog.get("products", []) or []
+        try:
+            catalog = load_catalog() or {}
+            products = catalog.get("products", []) or []
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            products = []
 
         cols = ("model", "category", "name", "price", "status")
         tree = ttk.Treeview(self.body, columns=cols, show="headings",
@@ -668,14 +674,19 @@ class ProductManager(tk.Toplevel):
                         stretch=(c in ("category", "name")))
 
         for p in products:
-            tree.insert("", "end", iid=p.get("model", ""),
-                        values=(
-                            p.get("model", ""),
-                            p.get("category", ""),
-                            p.get("product_name", ""),
-                            _money(p.get("price", 0)),
-                            p.get("status", ""),
-                        ))
+            try:
+                model_val = p.get("model", "")
+                tree.insert("", "end", iid=model_val,
+                            values=(
+                                p.get("model", ""),
+                                p.get("category", ""),
+                                p.get("product_name", ""),
+                                _money(p.get("price", 0)),
+                                p.get("status", ""),
+                            ))
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
 
         vsb = ttk.Scrollbar(self.body, orient="vertical",
                             command=tree.yview)
@@ -687,6 +698,17 @@ class ProductManager(tk.Toplevel):
         tree.bind("<Double-1>", lambda e: self._edit_selected())
 
         self.tree = tree
+        actual_rows = len(tree.get_children())
+        
+        # Check tree visibility
+        tree.update_idletasks()
+        
+        # Show first row
+        children = tree.get_children()
+        if children:
+            first = children[0]
+            vals = tree.item(first, 'values')
+        
         self.count_label.configure(text=f"{len(products)} product(s)")
 
         # Keyboard shortcuts

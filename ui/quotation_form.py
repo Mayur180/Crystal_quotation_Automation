@@ -1831,13 +1831,26 @@ class QuotationForm(tk.Toplevel):
                 pady=4
             )
 
+            # Row dict is built further down; we need it before
+            # the checkbox so the toggle handler can reach it.
+            row_state = {
+                "code": code,
+                "name": name,
+                "selected": selected,
+                "quantity": quantity,
+                "price": price,
+                "total": total,
+                "base_price": f"{price_value:g}",
+                "entry": None,  # filled in below
+            }
+
             tk.Checkbutton(
                 row,
                 variable=selected,
                 bg=self.CARD,
                 activebackground=self.CARD,
                 selectcolor=self.CARD,
-                command=self._recalculate
+                command=lambda r=row_state: self._on_accessory_toggle(r)
             ).pack(
                 side="left",
                 padx=(12, 7)
@@ -1907,17 +1920,21 @@ class QuotationForm(tk.Toplevel):
                 side="left"
             )
 
-            tk.Entry(
+            price_entry = tk.Entry(
                 row,
                 textvariable=price,
-                width=12,
+                width=16,
                 relief="solid",
-                bd=1
-            ).pack(
+                bd=1,
+                disabledbackground=self.SOFT,
+                disabledforeground=self.MUTED,
+            )
+            price_entry.pack(
                 side="left",
                 padx=(3, 12),
                 ipady=4
             )
+            row_state["entry"] = price_entry
 
             tk.Label(
                 row,
@@ -1942,16 +1959,10 @@ class QuotationForm(tk.Toplevel):
                 lambda *_: self._recalculate()
             )
 
-            self.accessory_rows.append(
-                {
-                    "code": code,
-                    "name": name,
-                    "selected": selected,
-                    "quantity": quantity,
-                    "price": price,
-                    "total": total,
-                }
-            )
+            self.accessory_rows.append(row_state)
+
+            # Apply initial state: unticked rows show "Extra If Required"
+            self._set_accessory_row_state(row_state)
 
         note = tk.Frame(
             card,
@@ -1986,6 +1997,42 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
     # GET ACCESSORIES  (from catalog — active only)
     # ========================================================
+
+    def _set_accessory_row_state(self, row_state):
+        """Enable/disable the price entry depending on the tick state.
+
+        - Ticked   -> numeric price, editable, normal state
+        - Unticked -> text 'Extra If Required', disabled, greyed
+        """
+        try:
+            entry = row_state.get("entry")
+            if entry is None:
+                return
+
+            selected = bool(row_state["selected"].get())
+            price_var = row_state["price"]
+
+            if selected:
+                # Restore numeric price
+                price_var.set(str(row_state.get("base_price", "0")))
+                try:
+                    entry.configure(state="normal")
+                except tk.TclError:
+                    pass
+            else:
+                # Placeholder text, disabled
+                price_var.set("Extra If Required")
+                try:
+                    entry.configure(state="disabled")
+                except tk.TclError:
+                    pass
+        except Exception:
+            pass
+
+    def _on_accessory_toggle(self, row_state):
+        """Called when an accessory checkbox is clicked."""
+        self._set_accessory_row_state(row_state)
+        self._recalculate()
 
     def _get_accessories(self):
 
