@@ -1,0 +1,8 @@
+{
+  "permissions": [
+    { "user_id": "U001", "module": "VMM" },
+    { "user_id": "U001", "module": "Crystal" },
+    { "user_id": "U002", "module": "VMM" },
+    { "user_id": "U003", "module": "Crystal" }
+  ]
+}

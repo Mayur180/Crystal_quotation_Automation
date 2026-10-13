@@ -1,0 +1,28 @@
+{
+  "users": [
+    {
+      "user_id": "U001",
+      "username": "admin",
+      "password": "admin123",
+      "full_name": "System Administrator",
+      "is_active": true,
+      "created_at": "2026-10-13"
+    },
+    {
+      "user_id": "U002",
+      "username": "vmm_user",
+      "password": "vmm123",
+      "full_name": "VMM Operator",
+      "is_active": true,
+      "created_at": "2026-10-13"
+    },
+    {
+      "user_id": "U003",
+      "username": "crystal_user",
+      "password": "crystal123",
+      "full_name": "Crystal Operator",
+      "is_active": true,
+      "created_at": "2026-10-13"
+    }
+  ]
+}
