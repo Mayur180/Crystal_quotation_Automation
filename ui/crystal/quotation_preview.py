@@ -120,7 +120,7 @@ class QuotationPreview(tk.Toplevel):
 
         # Set Crystal logo as window icon
         try:
-            from ui.ui_helpers import set_window_icon
+            from ui.common.ui_helpers import set_window_icon
             set_window_icon(self)
         except Exception:
             pass
@@ -168,7 +168,7 @@ class QuotationPreview(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(self, on_escape=self._close)
         except Exception:
             pass
@@ -304,7 +304,7 @@ class QuotationPreview(tk.Toplevel):
         # Register with the global wheel router instead of bind_all
         # (avoids stealing wheel events from other windows).
         try:
-            from ui.scroll_manager import ScrollManager
+            from ui.common.scroll_manager import ScrollManager
             ScrollManager.register(self.canvas, "vertical")
         except Exception:
             # Fallback: bind locally if the manager can't load

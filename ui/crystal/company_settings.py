@@ -65,7 +65,7 @@ class CompanySettings(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(
                 self,
                 on_escape=self.destroy,

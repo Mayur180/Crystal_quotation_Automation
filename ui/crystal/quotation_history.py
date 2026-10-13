@@ -170,7 +170,7 @@ class QuotationHistory(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import (
+            from ui.common.ui_helpers import (
                 install_table_shortcuts,
                 install_modal_shortcuts,
             )
@@ -699,7 +699,7 @@ class QuotationHistory(tk.Toplevel):
             return
 
         try:
-            from ui.quotation_form import QuotationForm
+            from ui.crystal.quotation_form import QuotationForm
         except Exception as e:
             messagebox.showerror(
                 "Duplicate",

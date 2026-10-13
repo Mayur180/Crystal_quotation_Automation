@@ -118,7 +118,7 @@ class ProductEditDialog(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(
                 self,
                 on_escape=self._cancel,
@@ -315,7 +315,7 @@ class AccessoryEditDialog(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(
                 self,
                 on_escape=self._cancel,
@@ -469,7 +469,7 @@ class ProductManager(tk.Toplevel):
 
         # ---- Escape closes the window ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(self, on_escape=self.destroy)
         except Exception:
             pass
@@ -632,7 +632,7 @@ class ProductManager(tk.Toplevel):
     def _install_tree_shortcuts(self, tree, on_enter):
         """Wire keyboard nav on the given tree, once per tab."""
         try:
-            from ui.ui_helpers import install_table_shortcuts
+            from ui.common.ui_helpers import install_table_shortcuts
             install_table_shortcuts(tree, on_enter=on_enter)
             tree.focus_set()
         except Exception:
@@ -957,7 +957,7 @@ class ProductManager(tk.Toplevel):
 
         # Escape closes the bulk dialog
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(dialog, on_escape=dialog.destroy)
         except Exception:
             pass

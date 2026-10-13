@@ -116,7 +116,7 @@ class BackupExport(tk.Toplevel):
 
         # ---- Escape closes the window ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(self, on_escape=self.destroy)
         except Exception:
             pass
@@ -466,7 +466,7 @@ class BackupExport(tk.Toplevel):
 
         # ---- Keyboard shortcuts on the backup tree ----
         try:
-            from ui.ui_helpers import install_table_shortcuts
+            from ui.common.ui_helpers import install_table_shortcuts
             install_table_shortcuts(
                 tree,
                 on_enter=lambda _id: self._do_restore_backup(),

@@ -677,7 +677,7 @@ class QuotationForm(tk.Toplevel):
         # Wheel is routed through the shared ScrollManager so the
         # preview / customer DB windows don't steal wheel events.
         try:
-            from ui.scroll_manager import ScrollManager
+            from ui.common.scroll_manager import ScrollManager
             ScrollManager.register(self.canvas, "vertical")
         except Exception:
             # Fallback: bind locally if the manager can't load
@@ -4544,11 +4544,11 @@ class QuotationForm(tk.Toplevel):
 
         # ---- 7. Open the preview ----
         try:
-            from ui.quotation_preview import QuotationPreview
+            from ui.crystal.quotation_preview import QuotationPreview
         except Exception as exc:
             messagebox.showerror(
                 "Preview unavailable",
-                f"Could not import ui.quotation_preview.\n\n"
+                f"Could not import ui.crystal.quotation_preview.\n\n"
                 f"{type(exc).__name__}: {exc}",
                 parent=self,
             )

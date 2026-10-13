@@ -25,7 +25,7 @@ class QuotationsBrowser(tk.Toplevel):
         self.title("CRYSTAL | Quotations")
         self.configure(bg=self.BG)
         try:
-            from ui.ui_helpers import set_window_icon
+            from ui.common.ui_helpers import set_window_icon
             set_window_icon(self)
         except Exception:
             pass
@@ -43,7 +43,7 @@ class QuotationsBrowser(tk.Toplevel):
         self._rows = []; self._loading = False
         self._build()
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(self, on_escape=self.destroy)
         except Exception:
             self.bind("<Escape>", lambda e: self.destroy())

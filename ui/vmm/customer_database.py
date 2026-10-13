@@ -74,7 +74,7 @@ class CustomerEditDialog(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import install_modal_shortcuts
+            from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(
                 self,
                 on_escape=self._cancel,
@@ -120,7 +120,7 @@ class CustomerEditDialog(tk.Toplevel):
 
         # Wheel is routed through the shared ScrollManager.
         try:
-            from ui.scroll_manager import ScrollManager
+            from ui.common.scroll_manager import ScrollManager
             ScrollManager.register(scroll_canvas, "vertical")
             self._scroll_canvas_for_cleanup = scroll_canvas
         except Exception:
@@ -130,7 +130,7 @@ class CustomerEditDialog(tk.Toplevel):
             if event is not None and event.widget is not self:
                 return
             try:
-                from ui.scroll_manager import ScrollManager
+                from ui.common.scroll_manager import ScrollManager
                 canvas = getattr(self, "_scroll_canvas_for_cleanup", None)
                 if canvas is not None:
                     ScrollManager.unregister(canvas)
@@ -294,7 +294,7 @@ class CustomerDatabase(tk.Toplevel):
 
         # ---- Keyboard shortcuts ----
         try:
-            from ui.ui_helpers import (
+            from ui.common.ui_helpers import (
                 install_table_shortcuts,
                 install_modal_shortcuts,
             )
@@ -547,7 +547,7 @@ class CustomerDatabase(tk.Toplevel):
             return
 
         try:
-            from ui.quotation_form import QuotationForm
+            from ui.vmm.quotation_form import QuotationForm
         except Exception as e:
             messagebox.showerror(
                 "New Quotation",

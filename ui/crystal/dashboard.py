@@ -139,7 +139,7 @@ class Dashboard(tk.Tk):
         )
         # Set Crystal logo as window icon
         try:
-            from ui.ui_helpers import set_window_icon
+            from ui.common.ui_helpers import set_window_icon
             set_window_icon(self)
         except Exception:
             pass
@@ -161,7 +161,7 @@ class Dashboard(tk.Tk):
 
         # ---- Keyboard shortcuts (Phase: keyboard nav) ----
         try:
-            from ui.ui_helpers import (
+            from ui.common.ui_helpers import (
                 install_table_shortcuts,
                 install_modal_shortcuts,
             )
@@ -993,7 +993,7 @@ class Dashboard(tk.Tk):
     def _open_new_quotation(self):
 
         try:
-            from ui.quotation_form import QuotationForm
+            from ui.crystal.quotation_form import QuotationForm
         except Exception as exc:
             messagebox.showerror(
                 "Could not open quotation form",
@@ -1012,7 +1012,7 @@ class Dashboard(tk.Tk):
     def _open_backup_export(self):
 
         try:
-            from ui.backup_export import BackupExport
+            from ui.crystal.backup_export import BackupExport
         except Exception as exc:
             messagebox.showerror(
                 "Could not open backup / export",
@@ -1026,7 +1026,7 @@ class Dashboard(tk.Tk):
     def _open_product_manager(self):
 
         try:
-            from ui.product_manager import ProductManager
+            from ui.crystal.product_manager import ProductManager
         except Exception as exc:
             messagebox.showerror(
                 "Could not open product manager",
@@ -1040,7 +1040,7 @@ class Dashboard(tk.Tk):
     def _open_quotations_browser(self):
 
         try:
-            from ui.quotations_browser import QuotationsBrowser
+            from ui.crystal.quotations_browser import QuotationsBrowser
         except Exception as exc:
             messagebox.showerror(
                 "Could not open quotations browser",
@@ -1054,7 +1054,7 @@ class Dashboard(tk.Tk):
     def _open_customer_database(self):
 
         try:
-            from ui.customer_database import CustomerDatabase
+            from ui.crystal.customer_database import CustomerDatabase
         except Exception as exc:
             messagebox.showerror(
                 "Could not open customer database",
@@ -1068,7 +1068,7 @@ class Dashboard(tk.Tk):
     def _open_company_settings(self):
 
         try:
-            from ui.company_settings import CompanySettings
+            from ui.crystal.company_settings import CompanySettings
         except Exception as exc:
             messagebox.showerror(
                 "Could not open company settings",
@@ -1082,7 +1082,7 @@ class Dashboard(tk.Tk):
     def _open_history(self):
 
         try:
-            from ui.quotation_history import QuotationHistory
+            from ui.crystal.quotation_history import QuotationHistory
         except Exception as exc:
             messagebox.showerror(
                 "Could not open history",
@@ -1101,7 +1101,7 @@ class Dashboard(tk.Tk):
     def _open_activity_log(self):
 
         try:
-            from ui.activity_log_window import ActivityLog
+            from ui.crystal.activity_log_window import ActivityLog
         except Exception as exc:
             messagebox.showerror(
                 "Could not open activity log",
@@ -1115,7 +1115,7 @@ class Dashboard(tk.Tk):
     def _open_monthly_report(self):
 
         try:
-            from ui.monthly_report_window import MonthlyReport
+            from ui.crystal.monthly_report_window import MonthlyReport
         except Exception as exc:
             messagebox.showerror(
                 "Could not open monthly report",

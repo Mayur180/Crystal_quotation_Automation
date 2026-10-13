@@ -114,7 +114,12 @@ def _phase_launcher(session):
 def _phase_dashboard(session):
     """Launch the actual dashboard. This is the final, main Tk."""
     from app.services import paths
-    from ui.dashboard import Dashboard
+    # Route to the correct module dashboard
+    from app.services.paths import get_active_module
+    if get_active_module() == "Crystal":
+        from ui.crystal.dashboard import Dashboard
+    else:
+        from ui.vmm.dashboard import Dashboard
 
     # Set the active module BEFORE creating the dashboard
     paths.set_active_module(session.active_module)
