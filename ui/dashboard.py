@@ -266,15 +266,17 @@ class Dashboard(tk.Tk):
         ).pack(side="left", pady=26)
 
         # v4: module badge
-        _badge_colors = {
-            "VMM": "#2C3E50",
-            "Crystal": "#C0392B",
-        }
-        _mod = getattr(self, "_active_module", "VMM")
-        _badge_bg = _badge_colors.get(_mod, self.RED)
+        # v4 C1: theme-driven badge color
+        try:
+            from ui.themes import get_badge_colors
+            _mod = getattr(self, "_active_module", "VMM")
+            _badge_bg, _badge_fg = get_badge_colors(_mod)
+        except Exception:
+            _badge_bg = self.RED
+            _badge_fg = "white"
         tk.Label(
             brand, text=f" {_mod} ",
-            bg=_badge_bg, fg="white",
+            bg=_badge_bg, fg=_badge_fg,
             font=("Arial", 9, "bold"),
         ).pack(side="left", pady=26, padx=(10, 0))
 
@@ -286,8 +288,14 @@ class Dashboard(tk.Tk):
             fg=self.TEXT, font=("Arial", 12, "bold"),
         ).pack(anchor="e", pady=(18, 1))
 
+        # v4 C1: theme-driven tagline
+        try:
+            from ui.themes import get_tagline
+            _tagline = get_tagline(getattr(self, "_active_module", "VMM"))
+        except Exception:
+            _tagline = "Precision Measurement Technology"
         tk.Label(
-            company, text="Precision Measurement Technology",
+            company, text=_tagline,
             bg=self.CARD, fg=self.MUTED, font=("Arial", 9),
         ).pack(anchor="e")
 
