@@ -14,14 +14,12 @@ from pathlib import Path
 # PATH
 # ============================================================
 
-from app.services.paths import get_project_root
-PROJECT_ROOT = get_project_root()
+from app.services.paths import get_data_dir
 
-CATALOG_FILE = (
-    PROJECT_ROOT
-    / "data"
-    / "catalog.json"
-)
+
+def _catalog_file():
+    """Resolve catalog path at call time (module-aware)."""
+    return get_data_dir() / "catalog.json"
 
 
 # ============================================================
@@ -29,15 +27,15 @@ CATALOG_FILE = (
 # ============================================================
 
 def load_catalog():
+    catalog_path = _catalog_file()
 
-    if not CATALOG_FILE.exists():
-
+    if not catalog_path.exists():
         raise FileNotFoundError(
-            f"Catalog file not found:\n{CATALOG_FILE}"
+            f"Catalog file not found:\n{catalog_path}"
         )
 
     with open(
-        CATALOG_FILE,
+        catalog_path,
         "r",
         encoding="utf-8",
     ) as file:
@@ -75,8 +73,14 @@ def _safe_quantity(value):
 # ============================================================
 
 def get_products():
+    try:
+        catalog = load_catalog()
+    except FileNotFoundError:
+        # Empty catalog is OK — return empty list
+        return []
 
-    catalog = load_catalog()
+    if not catalog:
+        return []
 
     return catalog.get(
         "products",

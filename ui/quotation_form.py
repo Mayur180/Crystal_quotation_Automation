@@ -115,13 +115,25 @@ STATE_GST_CODES = {
 # FALLBACK CATALOG
 # ============================================================
 
-FALLBACK_CATEGORIES = [
-    "Manual VMM",
-    "Semi Automatic VMM",
-    "Fully Automatic VMM",
-    "Automatic VMM with Cabinet",
-    "VMS",
-]
+def _get_fallback_categories():
+    """Return VMM fallback categories ONLY when VMM module is active.
+    Crystal module gets NO fallback (user must add real products)."""
+    try:
+        from app.services import paths as _paths
+        if _paths.get_active_module() == "VMM":
+            return [
+                "Manual VMM",
+                "Semi Automatic VMM",
+                "Fully Automatic VMM",
+                "Automatic VMM with Cabinet",
+                "VMS",
+            ]
+    except Exception:
+        pass
+    return []
+
+
+FALLBACK_CATEGORIES = _get_fallback_categories()
 
 
 FALLBACK_MODELS = {
@@ -814,9 +826,16 @@ class QuotationForm(tk.Toplevel):
             pady=(14, 1)
         )
 
+        try:
+            from ui.themes import get_tagline
+            from app.services import paths as _paths
+            _form_tagline = get_tagline(_paths.get_active_module())
+        except Exception:
+            _form_tagline = "Precision Measurement Technology"
+
         tk.Label(
             company,
-            text="Precision Measurement Technology",
+            text=_form_tagline,
             bg=self.CARD,
             fg=self.MUTED,
             font=("Arial", 9)
