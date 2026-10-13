@@ -1,16 +1,12 @@
 """
 Phase 7 patch: Make dashboard module-aware + add Logout button.
-Safe, additive changes only. No existing behavior modified.
 """
 from pathlib import Path
 
 p = Path("ui/dashboard.py")
 src = p.read_text(encoding="utf-8")
 
-# ============================================================
-# CHANGE 1: Dynamic title in __init__
-# ============================================================
-
+# ---------- 1. Dynamic title ----------
 OLD_TITLE = '''        self.title("CRYSTAL | ARMATECH ASSOCIATES — Quotation Manager  v3.0")'''
 
 NEW_TITLE = '''        # v4: dynamic title based on active module
@@ -28,39 +24,56 @@ if OLD_TITLE in src:
     src = src.replace(OLD_TITLE, NEW_TITLE, 1)
     print("[OK] Title patched")
 else:
-    print("[SKIP] Title line not found — may already be patched")
+    print("[SKIP] Title (already patched?)")
 
-# ============================================================
-# CHANGE 2: Add module badge + Logout button to header
-# ============================================================
+# ---------- 2. Add badge next to "CRYSTAL" brand ----------
+OLD_BRAND_TAIL = '''        tk.Label(
+            brand, text="  /  Quotation Manager", bg=self.CARD,
+            fg=self.MUTED, font=("Arial", 11),
+        ).pack(side="left", pady=26)'''
 
-OLD_HEADER_END = '''        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")'''
+NEW_BRAND_TAIL = '''        tk.Label(
+            brand, text="  /  Quotation Manager", bg=self.CARD,
+            fg=self.MUTED, font=("Arial", 11),
+        ).pack(side="left", pady=26)
 
-NEW_HEADER_END = '''        # ---- v4: Module badge + Logout button ----
-        actions = tk.Frame(header, bg=self.CARD)
-        actions.pack(side="right", padx=(0, 34))
-
-        # Module badge
-        badge_colors = {
-            "VMM": ("#2C3E50", "#34495E"),
-            "Crystal": ("#C0392B", "#A93226"),
+        # v4: module badge
+        _badge_colors = {
+            "VMM": "#2C3E50",
+            "Crystal": "#C0392B",
         }
-        badge_bg, _ = badge_colors.get(
-            getattr(self, "_active_module", "VMM"),
-            (self.RED, self.RED_DARK),
-        )
+        _mod = getattr(self, "_active_module", "VMM")
+        _badge_bg = _badge_colors.get(_mod, self.RED)
+        tk.Label(
+            brand, text=f" {_mod} ",
+            bg=_badge_bg, fg="white",
+            font=("Arial", 9, "bold"),
+        ).pack(side="left", pady=26, padx=(10, 0))'''
 
-        badge = tk.Label(
-            actions,
-            text=f"  {getattr(self, '_active_module', 'VMM')}  ",
-            bg=badge_bg, fg="white",
-            font=("Arial", 10, "bold"),
-            padx=10, pady=4,
-        )
-        badge.pack(side="left", padx=(0, 12))
+if OLD_BRAND_TAIL in src:
+    src = src.replace(OLD_BRAND_TAIL, NEW_BRAND_TAIL, 1)
+    print("[OK] Module badge added next to brand")
+else:
+    print("[SKIP] Brand tail (already patched?)")
 
-        # Logout / Switch Module button
-        def _do_logout():
+# ---------- 3. Add logout button near date, in company block ----------
+OLD_COMPANY_TAIL = '''        tk.Label(
+            company,
+            text=f"Today:  {date.today().strftime('%d %b %Y')}",
+            bg=self.CARD, fg=self.LIGHT_MUTED, font=("Arial", 8),
+        ).pack(anchor="e", pady=(2, 0))'''
+
+NEW_COMPANY_TAIL = '''        _row = tk.Frame(company, bg=self.CARD)
+        _row.pack(anchor="e", pady=(2, 0))
+
+        tk.Label(
+            _row,
+            text=f"Today:  {date.today().strftime('%d %b %Y')}",
+            bg=self.CARD, fg=self.LIGHT_MUTED, font=("Arial", 8),
+        ).pack(side="left")
+
+        # v4: Logout link
+        def _do_logout(self=self):
             from tkinter import messagebox
             if not messagebox.askyesno(
                 "Switch Module",
@@ -72,37 +85,31 @@ NEW_HEADER_END = '''        # ---- v4: Module badge + Logout button ----
                 self.destroy()
             except Exception:
                 pass
-            # Restart the v4 flow
             try:
                 import main as _main
                 _main.main()
             except Exception as e:
-                from tkinter import messagebox
-                messagebox.showerror("Restart Failed",
-                    f"Could not restart app:\\n{e}")
+                from tkinter import messagebox as _mb
+                _mb.showerror("Restart Failed", f"Could not restart app:\\n{e}")
 
-        logout_btn = tk.Button(
-            actions, text="Logout",
-            bg=self.CARD, fg=self.MUTED,
-            activebackground=self.SOFT, activeforeground=self.TEXT,
-            relief="flat", bd=0, cursor="hand2",
-            font=("Arial", 10),
-            command=_do_logout,
-        )
-        logout_btn.pack(side="left")
+        tk.Label(
+            _row, text="  •  ",
+            bg=self.CARD, fg=self.LIGHT_MUTED, font=("Arial", 8),
+        ).pack(side="left")
 
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")'''
+        tk.Label(
+            _row, text="Logout",
+            bg=self.CARD, fg=self.RED, cursor="hand2",
+            font=("Arial", 8, "underline"),
+        ).pack(side="left")
+        # Bind click on logout label
+        _row.winfo_children()[-1].bind("<Button-1>", lambda e: _do_logout())'''
 
-if OLD_HEADER_END in src:
-    src = src.replace(OLD_HEADER_END, NEW_HEADER_END, 1)
-    print("[OK] Header patched (badge + logout)")
+if OLD_COMPANY_TAIL in src:
+    src = src.replace(OLD_COMPANY_TAIL, NEW_COMPANY_TAIL, 1)
+    print("[OK] Logout link added to header")
 else:
-    print("[SKIP] Header end line not found — may already be patched")
-
-# ============================================================
-# Write back
-# ============================================================
+    print("[SKIP] Company tail (already patched?)")
 
 p.write_text(src, encoding="utf-8")
 print("\n✅ Patch applied to ui/dashboard.py")
-print("   Backup: ui/dashboard.py.bak_before_v4_polish")

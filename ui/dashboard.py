@@ -265,6 +265,19 @@ class Dashboard(tk.Tk):
             fg=self.MUTED, font=("Arial", 11),
         ).pack(side="left", pady=26)
 
+        # v4: module badge
+        _badge_colors = {
+            "VMM": "#2C3E50",
+            "Crystal": "#C0392B",
+        }
+        _mod = getattr(self, "_active_module", "VMM")
+        _badge_bg = _badge_colors.get(_mod, self.RED)
+        tk.Label(
+            brand, text=f" {_mod} ",
+            bg=_badge_bg, fg="white",
+            font=("Arial", 9, "bold"),
+        ).pack(side="left", pady=26, padx=(10, 0))
+
         company = tk.Frame(header, bg=self.CARD)
         company.pack(side="right", padx=34)
 
@@ -278,11 +291,47 @@ class Dashboard(tk.Tk):
             bg=self.CARD, fg=self.MUTED, font=("Arial", 9),
         ).pack(anchor="e")
 
+        _row = tk.Frame(company, bg=self.CARD)
+        _row.pack(anchor="e", pady=(2, 0))
+
         tk.Label(
-            company,
+            _row,
             text=f"Today:  {date.today().strftime('%d %b %Y')}",
             bg=self.CARD, fg=self.LIGHT_MUTED, font=("Arial", 8),
-        ).pack(anchor="e", pady=(2, 0))
+        ).pack(side="left")
+
+        # v4: Logout link
+        def _do_logout(self=self):
+            from tkinter import messagebox
+            if not messagebox.askyesno(
+                "Switch Module",
+                "Return to login screen?\n\n"
+                "You will need to log in again to switch modules."
+            ):
+                return
+            try:
+                self.destroy()
+            except Exception:
+                pass
+            try:
+                import main as _main
+                _main.main()
+            except Exception as e:
+                from tkinter import messagebox as _mb
+                _mb.showerror("Restart Failed", f"Could not restart app:\n{e}")
+
+        tk.Label(
+            _row, text="  •  ",
+            bg=self.CARD, fg=self.LIGHT_MUTED, font=("Arial", 8),
+        ).pack(side="left")
+
+        tk.Label(
+            _row, text="Logout",
+            bg=self.CARD, fg=self.RED, cursor="hand2",
+            font=("Arial", 8, "underline"),
+        ).pack(side="left")
+        # Bind click on logout label
+        _row.winfo_children()[-1].bind("<Button-1>", lambda e: _do_logout())
 
         # ---- v4: Module badge + Logout button ----
         actions = tk.Frame(header, bg=self.CARD)
