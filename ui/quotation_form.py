@@ -662,36 +662,20 @@ class QuotationForm(tk.Toplevel):
             self._resize_canvas_content
         )
 
-        self.canvas.bind_all(
-            "<MouseWheel>",
-            self._mousewheel,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Shift-MouseWheel>",
-            self._mousewheel,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Button-4>",
-            self._mousewheel_up,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Button-5>",
-            self._mousewheel_down,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Prior>",
-            lambda e: self.canvas.yview_scroll(-8, "units"),
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Next>",
-            lambda e: self.canvas.yview_scroll(8, "units"),
-            add="+"
-        )
+        # Wheel is routed through the shared ScrollManager so the
+        # preview / customer DB windows don't steal wheel events.
+        try:
+            from ui.scroll_manager import ScrollManager
+            ScrollManager.register(self.canvas, "vertical")
+        except Exception:
+            # Fallback: bind locally if the manager can't load
+            self.canvas.bind("<MouseWheel>", self._mousewheel)
+
+        # Keep PgUp / PgDn as window-scoped bindings
+        self.bind("<Prior>",
+                  lambda e: self.canvas.yview_scroll(-8, "units"))
+        self.bind("<Next>",
+                  lambda e: self.canvas.yview_scroll(8, "units"))
 
         self._build_summary_panel()
 
@@ -4219,6 +4203,10 @@ class QuotationForm(tk.Toplevel):
                         or result.get("pdf")
                     )
 
+                import sys as _sys
+                print(f"[DIALOG] output_path={output_path!r}", file=_sys.stderr)
+                print(f"[DIALOG] pdf_path={pdf_path!r}", file=_sys.stderr)
+                print(f"[DIALOG] result type={type(result).__name__}", file=_sys.stderr)
                 message = (
                     "Quotation generated successfully.\n\n"
                     f"Word file:\n{output_path}"

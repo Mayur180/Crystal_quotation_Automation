@@ -118,29 +118,22 @@ class CustomerEditDialog(tk.Toplevel):
             scroll_canvas.itemconfigure(body_window, width=event.width)
         scroll_canvas.bind("<Configure>", _on_canvas_config)
 
-        def _on_mousewheel(event):
-            try:
-                if scroll_canvas.winfo_exists():
-                    scroll_canvas.yview_scroll(
-                        int(-1 * (event.delta / 120)), "units"
-                    )
-            except Exception:
-                pass
-
-        # Track the binding id so we can unbind it when the dialog closes
+        # Wheel is routed through the shared ScrollManager.
         try:
-            _wheel_binding_id = self.bind_all(
-                "<MouseWheel>", _on_mousewheel, add="+"
-            )
+            from ui.scroll_manager import ScrollManager
+            ScrollManager.register(scroll_canvas, "vertical")
+            self._scroll_canvas_for_cleanup = scroll_canvas
         except Exception:
-            _wheel_binding_id = None
+            pass
 
         def _cleanup_wheel(event=None):
             if event is not None and event.widget is not self:
                 return
             try:
-                if _wheel_binding_id is not None:
-                    self.unbind_all("<MouseWheel>")
+                from ui.scroll_manager import ScrollManager
+                canvas = getattr(self, "_scroll_canvas_for_cleanup", None)
+                if canvas is not None:
+                    ScrollManager.unregister(canvas)
             except Exception:
                 pass
 

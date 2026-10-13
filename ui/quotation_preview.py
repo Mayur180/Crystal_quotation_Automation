@@ -301,7 +301,14 @@ class QuotationPreview(tk.Toplevel):
             ),
         )
 
-        self.canvas.bind_all("<MouseWheel>", self._mousewheel)
+        # Register with the global wheel router instead of bind_all
+        # (avoids stealing wheel events from other windows).
+        try:
+            from ui.scroll_manager import ScrollManager
+            ScrollManager.register(self.canvas, "vertical")
+        except Exception:
+            # Fallback: bind locally if the manager can't load
+            self.canvas.bind("<MouseWheel>", self._mousewheel)
 
     def _mousewheel(self, event):
         try:

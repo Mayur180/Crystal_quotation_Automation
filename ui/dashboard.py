@@ -364,6 +364,7 @@ class Dashboard(tk.Tk):
 
         add_item("👥", "Customers",          self._open_customer_database)
         add_item("📦", "Products & Prices",  self._open_product_manager)
+        add_item("📋", "Quotations (Sheet)", self._open_quotations_browser)
         add_item("⚙",  "Company Settings",   self._open_company_settings)
         add_item("💾", "Backup / Export",    self._open_backup_export)
 
@@ -879,6 +880,20 @@ class Dashboard(tk.Tk):
             return
 
         ProductManager(self)
+
+    def _open_quotations_browser(self):
+
+        try:
+            from ui.quotations_browser import QuotationsBrowser
+        except Exception as exc:
+            messagebox.showerror(
+                "Could not open quotations browser",
+                f"{type(exc).__name__}: {exc}",
+                parent=self,
+            )
+            return
+
+        QuotationsBrowser(self)
 
     def _open_customer_database(self):
 

@@ -13,15 +13,23 @@ from pathlib import Path
 
 def _resolve_base_dir() -> Path:
     """
-    Locate the project base directory.
+    Locate the base directory that contains 'assets/'.
 
     Script mode:
-        Walk up from this file until we find the 'assets' folder.
+        Walk up until we find an 'assets' folder.
     Frozen .exe mode:
-        Use the folder that contains the .exe.
+        1. Prefer <exe_dir>/assets (portable layout, if user copied assets there)
+        2. Fall back to sys._MEIPASS/assets (PyInstaller bundle, default)
     """
     if getattr(sys, "frozen", False):
-        return Path(sys.executable).resolve().parent
+        exe_dir = Path(sys.executable).resolve().parent
+        external = exe_dir / "assets"
+        if external.is_dir():
+            return exe_dir
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass)
+        return exe_dir
 
     here = Path(__file__).resolve().parent
     for candidate in [here, *here.parents]:

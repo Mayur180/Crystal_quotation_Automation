@@ -32,6 +32,19 @@ def _project_base() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
+def _runtime_data_dir() -> Path:
+    """Portable data dir next to the EXE when frozen.
+
+    Keeps `data/` sitting beside CRYSTALQuotation.exe so the whole
+    folder (exe + data) can be copied to another PC as a unit, and
+    so users can edit catalog.json without rebuilding.
+    """
+    exe_dir = Path(sys.executable).resolve().parent
+    d = exe_dir / "data"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
 def get_data_dir() -> Path:
     """Where the JSON/JSONL data lives."""
     sp = _setup_shared_path()
@@ -39,7 +52,7 @@ def get_data_dir() -> Path:
         sp.mkdir(parents=True, exist_ok=True)
         return sp
     if is_frozen():
-        d = _appdata_base() / "data"
+        d = _runtime_data_dir()
     else:
         d = _project_base() / "data"
     d.mkdir(parents=True, exist_ok=True)
@@ -54,7 +67,8 @@ def get_output_dir() -> Path:
         d.mkdir(parents=True, exist_ok=True)
         return d
     if is_frozen():
-        d = _appdata_base() / "output"
+        exe_dir = Path(sys.executable).resolve().parent
+        d = exe_dir / "output"
     else:
         d = _project_base() / "output"
     d.mkdir(parents=True, exist_ok=True)
@@ -69,23 +83,35 @@ def get_project_root() -> Path:
 
 
 def seed_data_on_first_run():
-    """If using %APPDATA% fresh, copy bundled default data."""
+    """Copy bundled default data into <exe_dir>/data on first run.
+
+    Runs only when frozen. Missing files are copied; existing files
+    are left untouched so user edits are preserved across upgrades.
+    """
     if not is_frozen():
         return
     try:
-        target = get_data_dir()
-        if any(target.iterdir()):
+        import shutil
+
+        target = _runtime_data_dir()
+
+        # Source: data bundled inside the EXE at build time
+        if hasattr(sys, "_MEIPASS"):
+            bundled = Path(sys._MEIPASS) / "data"
+        else:
+            bundled = get_project_root() / "data"
+
+        if not bundled.is_dir():
             return
-        bundled = get_project_root() / "data"
-        if bundled.is_dir():
-            import shutil
-            for item in bundled.rglob("*"):
-                rel = item.relative_to(bundled)
-                dest = target / rel
-                if item.is_dir():
-                    dest.mkdir(parents=True, exist_ok=True)
-                else:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    shutil.copy2(item, dest)
+
+        for item in bundled.rglob("*"):
+            if item.is_dir():
+                continue
+            rel = item.relative_to(bundled)
+            dest = target / rel
+            if dest.exists():
+                continue
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(item, dest)
     except Exception:
         pass

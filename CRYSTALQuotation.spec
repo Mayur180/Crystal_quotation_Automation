@@ -52,3 +52,24 @@ coll = COLLECT(
     upx_exclude=[],
     name='CRYSTALQuotation',
 )
+
+
+# CRYSTAL: copy data next to exe
+# Runs after PyInstaller finishes so dist/CRYSTALQuotation/data/ exists
+# on first launch (seed_data_on_first_run only fills missing files).
+import shutil, os as _os
+_project_root_dir = _os.path.dirname(_os.path.abspath(SPEC))
+for _folder in ("data", "assets"):
+    _src_dir = _os.path.join(_project_root_dir, _folder)
+    _dst_dir = _os.path.join(DISTPATH, "CRYSTALQuotation", _folder)
+    if not _os.path.isdir(_src_dir):
+        continue
+    _os.makedirs(_dst_dir, exist_ok=True)
+    for _root, _dirs, _files in _os.walk(_src_dir):
+        for _f in _files:
+            _src = _os.path.join(_root, _f)
+            _rel = _os.path.relpath(_src, _src_dir)
+            _dst = _os.path.join(_dst_dir, _rel)
+            _os.makedirs(_os.path.dirname(_dst), exist_ok=True)
+            if not _os.path.exists(_dst):
+                shutil.copy2(_src, _dst)
