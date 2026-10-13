@@ -759,7 +759,7 @@ class Dashboard(tk.Tk):
 
         tk.Label(
             footer,
-            text="CRYSTAL / ARMATECH ASSOCIATES  ·  Quotation Manager  ·  v3.0",
+            text="CRYSTAL / ARMATECH ASSOCIATES  ·  Quotation Manager  ·  v4.0",
             bg=self.CARD, fg=self.MUTED, font=("Arial", 8),
         ).pack(side="left", padx=24)
 
