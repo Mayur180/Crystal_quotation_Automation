@@ -41,6 +41,57 @@ if PROJECT_ROOT not in sys.path:
 
 
 # ============================================================
+# DASHBOARD HELPERS — config-driven tiles (Phase R-A)
+# ============================================================
+
+def _safe_summary() -> dict:
+    """
+    Return live counts for the current module. Never raises.
+    Missing services → 0, so the dashboard always renders.
+    """
+    out = {
+        "product_count":   0,
+        "accessory_count": 0,
+        "customer_count":  0,
+        "quotation_count": 0,
+    }
+
+    # Products + accessories (catalog service)
+    try:
+        from app.services.catalog_service import get_catalog_summary
+        s = get_catalog_summary() or {}
+        out["product_count"]   = int(s.get("product_count", 0))
+        out["accessory_count"] = int(s.get("accessory_count", 0))
+    except Exception:
+        pass
+
+    # Customers
+    try:
+        from app.services.customer_service import get_customers
+        out["customer_count"] = len(get_customers() or [])
+    except Exception:
+        pass
+
+    # Quotations
+    try:
+        from app.services.quotation_history_service import load_quotations
+        out["quotation_count"] = len(load_quotations() or [])
+    except Exception:
+        pass
+
+    return out
+
+
+def _resolve_subtitle(tile: dict, summary: dict) -> str:
+    """Fill '{n}' in tile['sub'] with a live count (comma-formatted)."""
+    sub = tile.get("sub", "") or ""
+    ck  = tile.get("count_key")
+    if ck and "{n}" in sub:
+        n = int(summary.get(ck, 0))
+        sub = sub.replace("{n}", f"{n:,}")
+    return sub
+
+# ============================================================
 # MAIN WINDOW
 # ============================================================
 
@@ -268,7 +319,7 @@ class Dashboard(tk.Tk):
         # v4: module badge
         # v4 C1: theme-driven badge color
         try:
-            from ui.themes import get_badge_colors
+            from ui.themes import get_badge_colors, get_logo_text, get_tiles
             _mod = getattr(self, "_active_module", "VMM")
             _badge_bg, _badge_fg = get_badge_colors(_mod)
         except Exception:
@@ -363,6 +414,10 @@ class Dashboard(tk.Tk):
 
     def _build_sidebar(self):
 
+        # Phase R-A step 5c: import theme helpers right here so this
+        # method works even if the top-of-file import was edited away.
+        from ui.themes import get_tiles, get_logo_text  # noqa: F401
+
         # top spacer so first nav item isn't glued to the header
         tk.Frame(self._sidebar, bg=self.CARD, height=14).pack(fill="x")
 
@@ -416,23 +471,58 @@ class Dashboard(tk.Tk):
             return item
 
         self._home_item = add_item("🏠", "Home", lambda: None)
-        add_item("📄", "New Quotation",      self._open_new_quotation)
-        add_item("📋", "Quotation History",  self._open_history)
-        add_item("📝", "Activity Log",       self._open_activity_log)
 
+        # ---- config-driven nav (Phase R-A step 5c) ----
+        # Dispatch map: action name → bound method. Anything missing
+        # from dispatch is silently skipped, so the dashboard never crashes
+        # on a tile whose handler hasn't been written yet.
+        dispatch = {
+            "quotation_form":       getattr(self, "_open_new_quotation",     None),
+            "quotation_history":    getattr(self, "_open_history",           None),
+            "activity_log":         getattr(self, "_open_activity_log",      None),
+            "monthly_report":       getattr(self, "_open_monthly_report",    None),
+            "customer_database":    getattr(self, "_open_customer_database", None),
+            "product_manager":      getattr(self, "_open_product_manager",   None),
+            "accessories_manager":  getattr(self, "_open_accessories_manager", None),
+            "quotations_browser":   getattr(self, "_open_quotations_browser", None),
+            "company_settings":     getattr(self, "_open_company_settings",  None),
+            "backup_export":        getattr(self, "_open_backup_export",     None),
+        }
 
-        add_item("📊", "Monthly Report",     self._open_monthly_report)
+        try:
+            active_module = self._active_module
+        except AttributeError:
+            # Fall back to paths.get_active_module()
+            try:
+                from app.services.paths import get_active_module
+                active_module = get_active_module()
+            except Exception:
+                active_module = "VMM"
 
-        # separator
-        tk.Frame(self._sidebar, bg=self.BORDER, height=1).pack(
-            fill="x", padx=14, pady=(10, 8),
-        )
+        current_group = None
+        separator_emitted = False
 
-        add_item("👥", "Customers",          self._open_customer_database)
-        add_item("📦", "Products & Prices",  self._open_product_manager)
-        add_item("📋", "Quotations (Sheet)", self._open_quotations_browser)
-        add_item("⚙",  "Company Settings",   self._open_company_settings)
-        add_item("💾", "Backup / Export",    self._open_backup_export)
+        for tile in get_tiles(active_module):
+            group = tile.get("group", "primary")
+
+            # Insert separator once, at the primary→secondary boundary
+            if current_group == "primary" and group == "secondary" \
+                    and not separator_emitted:
+                tk.Frame(self._sidebar, bg=self.BORDER, height=1).pack(
+                    fill="x", padx=14, pady=(10, 8),
+                )
+                separator_emitted = True
+
+            current_group = group
+
+            action = tile.get("action", "")
+            cmd    = dispatch.get(action)
+            if cmd is None:
+                # No handler yet — skip cleanly (e.g. accessories_manager
+                # before R-B ships)
+                continue
+
+            add_item(tile.get("icon", "•"), tile.get("label", action), cmd)
 
         # mark Home as the active item (red left bar + light bg)
         try:

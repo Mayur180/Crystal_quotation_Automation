@@ -1,0 +1,23 @@
+======================================================================
+CRYSTAL PRODUCT MASTER — NORMALIZE REPORT
+======================================================================
+Source:           Product_Master.csv
+Output:           Product_Master.clean.csv
+Header columns:   35
+Data rows read:   3324
+  → skipped:      1  (blank Item Code)
+  → duplicates:   0
+  → written:      3323
+
+-- Sanity checks on written rows --
+Category values (3):
+    MAGNETIC             1555
+    NON-MAGNETIC         1080
+    <blank>              688
+Manufacturer values (2):
+    <blank>              2416
+    CRYSTAL              907
+Tax % values: {'18': 3323}
+Rate == 0:    0
+Discount ==0: 3323
+======================================================================

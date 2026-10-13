@@ -1,0 +1,3 @@
+# Skipped rows (blank Item Code): 1
+# Format: csv_line | reason | snippet
+2 | blank_item_code | fully_blank_row
