@@ -1,104 +1,51 @@
-# ============================================================
-# CRYSTAL / ARMATECH ASSOCIATES
-# QUOTATION PREVIEW
-#
-# Six-page modal preview of the current quotation.
-#
-# File:
-#   ui/quotation_preview.py
-#
-# Responsibility:
-#   • Display quotation data provided by the caller
-#   • Six pages matching the final Word layout
-#
-# Non-responsibility:
-#   • No calculation
-#   • No product / accessory lookup
-#   • No terms editing
-#   • No PDF generation
-# ============================================================
+"""
+CRYSTAL — Single-Page Quotation Preview.
 
+Replaces the 6-tab VMM-style layout with one scrollable page:
+    Header · Customer · Item · Totals · Amount in Words · Terms · Signature
+"""
 import os
 import sys
 import tkinter as tk
-from tkinter import ttk, messagebox
-from decimal import Decimal, InvalidOperation
+from tkinter import messagebox
 
+# Project root on path
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
-# ============================================================
-# HELPERS
-# ============================================================
+# Shared helpers from the Crystal generator
+try:
+    from quotation_generator_crystal import (
+        _money, _text, _decimal,
+    )
+    from app.services.amount_in_words import amount_in_words as _amount_in_words
+except Exception:
+    def _money(v):
+        try:
+            return f"₹ {float(v):,.2f}"
+        except Exception:
+            return "₹ 0.00"
 
-def _text(value, default="—"):
-    if value is None:
-        return default
-    s = str(value).strip()
-    return s if s else default
+    def _text(v):
+        return "" if v is None else str(v)
 
+    def _decimal(v, default=0):
+        try:
+            return float(v or default)
+        except Exception:
+            return default
 
-def _decimal(value, default=Decimal("0")):
-    if value is None:
-        return default
-    if isinstance(value, Decimal):
-        return value
-    try:
-        s = str(value).replace(",", "").replace("₹", "").strip()
-        return Decimal(s) if s else default
-    except (InvalidOperation, ValueError, TypeError):
-        return default
+    def _amount_in_words(v):
+        return f"{_money(v)} only"
 
-
-def _money(value):
-    return f"₹ {_decimal(value):,.2f}"
-
-
-def _amount_in_words(value):
-    n = int(_decimal(value))
-    if n <= 0:
-        return "Rupees Zero Only"
-
-    ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven",
-            "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen",
-            "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen",
-            "Nineteen"]
-    tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty",
-            "Sixty", "Seventy", "Eighty", "Ninety"]
-
-    def two(num):
-        if num < 20:
-            return ones[num]
-        return (tens[num // 10] +
-                (" " + ones[num % 10] if num % 10 else "")).strip()
-
-    def three(num):
-        if num < 100:
-            return two(num)
-        return (ones[num // 100] + " Hundred" +
-                (" " + two(num % 100) if num % 100 else "")).strip()
-
-    parts = []
-    crore = n // 10000000; n %= 10000000
-    lakh = n // 100000;   n %= 100000
-    thou = n // 1000;     n %= 1000
-    hund = n
-
-    if crore: parts.append(three(crore) + " Crore")
-    if lakh:  parts.append(three(lakh)  + " Lakh")
-    if thou:  parts.append(three(thou)  + " Thousand")
-    if hund:  parts.append(three(hund))
-
-    return "Rupees " + " ".join(parts) + " Only"
-
-
-# ============================================================
-# MAIN WINDOW
-# ============================================================
 
 class QuotationPreview(tk.Toplevel):
 
-    # Palette — mirrors QuotationForm exactly
+    # ─── Palette ───
     BG = "#F4F5F7"
     CARD = "#FFFFFF"
+    SOFT = "#F8F9FA"
     TEXT = "#17191D"
     MUTED = "#747A84"
     LIGHT_MUTED = "#9BA1AA"
@@ -107,8 +54,6 @@ class QuotationPreview(tk.Toplevel):
     RED_DARK = "#980000"
     RED_LIGHT = "#FFF3F3"
     GREEN = "#16804B"
-    GREEN_LIGHT = "#ECF8F1"
-    SOFT = "#F8F9FA"
 
     def __init__(self, parent, form_data, totals, product,
                  quotation_number, quotation_date, company,
@@ -116,85 +61,57 @@ class QuotationPreview(tk.Toplevel):
         super().__init__(parent)
 
         self.title("CRYSTAL | Quotation Preview")
-                
-
-        # Set Crystal logo as window icon
         try:
             from ui.common.ui_helpers import set_window_icon
             set_window_icon(self)
         except Exception:
             pass
-# ---- Adaptive window size (fits on screen, above taskbar) ----
+
+        # Adaptive size
         self.update_idletasks()
         try:
-            screen_w = self.winfo_screenwidth()
-            screen_h = self.winfo_screenheight()
+            sw, sh = self.winfo_screenwidth(), self.winfo_screenheight()
         except Exception:
-            screen_w, screen_h = 1366, 768
-
-        # Reserve 90px for taskbar + window borders
-        usable_h = max(600, screen_h - 90)
-        usable_w = min(1080, max(900, screen_w - 100))
-
-        # Center on screen
-        x = max(0, (screen_w - usable_w) // 2)
-        y = max(0, (screen_h - usable_h) // 2 - 20)
-
+            sw, sh = 1366, 768
+        usable_h = max(600, sh - 90)
+        usable_w = min(1080, max(900, sw - 100))
+        x = max(0, (sw - usable_w) // 2)
+        y = max(0, (sh - usable_h) // 2 - 20)
         self.geometry(f"{usable_w}x{usable_h}+{x}+{y}")
         self.minsize(920, 600)
-
 
         self.configure(bg=self.BG)
         self.transient(parent)
         self.grab_set()
 
-        # ---- Data ----
+        # Data
         self.form_data = form_data or {}
         self.totals = totals or {}
         self.product = product or {}
         self.quotation_number = quotation_number or "—"
         self.quotation_date = quotation_date or "—"
         self.company = company or {}
-
-        # Callback set by the form (Phase 3)
         self.on_finalise = on_finalise
-
-        self.current_page = 1
-        self.total_pages = 6
         self.confirmed = False
 
         self._build_interface()
         self.protocol("WM_DELETE_WINDOW", self._close)
 
-        # ---- Keyboard shortcuts ----
         try:
             from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(self, on_escape=self._close)
         except Exception:
             pass
 
-        # ---- Page navigation keys ----
-        try:
-            self.bind("<Left>", lambda e: self._prev_page())
-            self.bind("<Right>", lambda e: self._next_page())
-            self.bind("<Prior>", lambda e: self._prev_page())   # PageUp
-            self.bind("<Next>", lambda e: self._next_page())    # PageDown
-            self.bind("<Home>", lambda e: self._show_page(1))
-            self.bind("<End>", lambda e: self._show_page(self.total_pages))
-            self.bind("<Control-s>", lambda e: self._finalise())
-        except Exception:
-            pass
-
-    # ========================================================
-    # INTERFACE
-    # ========================================================
+    # ═══════════════════════════════════════════════════════════
+    # LAYOUT
+    # ═══════════════════════════════════════════════════════════
 
     def _build_interface(self):
         self._build_header()
-        self._build_page_tabs()
         self._build_content_area()
         self._build_navigation()
-        self._show_page(1)
+        self._render_single_page()
 
     def _build_header(self):
         header = tk.Frame(self, bg=self.CARD, height=72)
@@ -203,117 +120,52 @@ class QuotationPreview(tk.Toplevel):
 
         brand = tk.Frame(header, bg=self.CARD)
         brand.pack(side="left", padx=26)
-
         tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
                  font=("Arial", 20, "bold")).pack(side="left", pady=20)
-
         tk.Label(brand, text="  /  Quotation Preview", bg=self.CARD,
                  fg=self.MUTED, font=("Arial", 10)).pack(side="left", pady=24)
 
         right = tk.Frame(header, bg=self.CARD)
         right.pack(side="right", padx=26)
-
         tk.Label(right, text=f"Offer No.  {self.quotation_number}",
                  bg=self.CARD, fg=self.TEXT,
                  font=("Arial", 11, "bold")).pack(anchor="e", pady=(18, 0))
-
         tk.Label(right, text=f"Date  {self.quotation_date}",
                  bg=self.CARD, fg=self.MUTED,
                  font=("Arial", 9)).pack(anchor="e")
 
         tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
 
-    def _build_page_tabs(self):
-        bar = tk.Frame(self, bg=self.CARD, height=52)
-        bar.pack(fill="x")
-        bar.pack_propagate(False)
-
-        inner = tk.Frame(bar, bg=self.CARD)
-        inner.pack(expand=True)
-
-        labels = [
-            (1, "Cover"),
-            (2, "Technical"),
-            (3, "Features"),
-            (4, "Accessories"),
-            (5, "Pricing"),
-            (6, "Terms"),
-        ]
-
-        self.tab_widgets = {}
-
-        for num, label in labels:
-            holder = tk.Frame(inner, bg=self.CARD)
-            holder.pack(side="left", padx=4, pady=10)
-
-            btn = tk.Button(
-                holder,
-                text=f"{num}. {label}",
-                command=lambda n=num: self._show_page(n),
-                bg=self.SOFT,
-                fg=self.TEXT,
-                activebackground="#ECEEF1",
-                activeforeground=self.TEXT,
-                relief="solid",
-                bd=1,
-                highlightthickness=0,
-                font=("Arial", 9),
-                cursor="hand2",
-                padx=12,
-                pady=5,
-            )
-            btn.pack()
-            self.tab_widgets[num] = btn
-
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
-
     def _build_content_area(self):
         wrap = tk.Frame(self, bg=self.BG)
         wrap.pack(fill="both", expand=True)
 
-        self.canvas = tk.Canvas(wrap, bg=self.BG,
-                                highlightthickness=0, bd=0)
+        self._canvas = tk.Canvas(wrap, bg=self.BG, highlightthickness=0)
+        scroll = tk.Scrollbar(wrap, orient="vertical", command=self._canvas.yview)
+        self._canvas.configure(yscrollcommand=scroll.set)
+        scroll.pack(side="right", fill="y")
+        self._canvas.pack(side="left", fill="both", expand=True)
 
-        scrollbar = ttk.Scrollbar(wrap, orient="vertical",
-                                  command=self.canvas.yview)
-
-        self.page_frame = tk.Frame(self.canvas, bg=self.BG)
-
-        self.canvas_window = self.canvas.create_window(
-            (0, 0), window=self.page_frame, anchor="nw"
+        self.content = tk.Frame(self._canvas, bg=self.BG)
+        self._win = self._canvas.create_window(
+            (0, 0), window=self.content, anchor="nw"
         )
 
-        self.canvas.configure(yscrollcommand=scrollbar.set)
-        self.canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-
-        self.page_frame.bind(
+        self.content.bind(
             "<Configure>",
-            lambda e: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            ),
+            lambda e: self._canvas.configure(scrollregion=self._canvas.bbox("all")),
         )
-
-        self.canvas.bind(
+        self._canvas.bind(
             "<Configure>",
-            lambda e: self.canvas.itemconfigure(
-                self.canvas_window, width=e.width
-            ),
+            lambda e: self._canvas.itemconfigure(self._win, width=e.width),
         )
 
-        # Register with the global wheel router instead of bind_all
-        # (avoids stealing wheel events from other windows).
-        try:
-            from ui.common.scroll_manager import ScrollManager
-            ScrollManager.register(self.canvas, "vertical")
-        except Exception:
-            # Fallback: bind locally if the manager can't load
-            self.canvas.bind("<MouseWheel>", self._mousewheel)
+        # Mouse wheel
+        self._canvas.bind_all("<MouseWheel>", self._mousewheel)
 
     def _mousewheel(self, event):
         try:
-            if self.canvas.winfo_exists():
-                self.canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            self._canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
         except Exception:
             pass
 
@@ -323,802 +175,361 @@ class QuotationPreview(tk.Toplevel):
         nav.pack(side="bottom", fill="x")
         nav.pack_propagate(False)
 
+        # Left: close
         left = tk.Frame(nav, bg="white")
         left.pack(side="left", padx=22)
-
-        self.prev_btn = tk.Button(
-            left, text="←  Previous", command=self._prev_page,
+        tk.Button(
+            left, text="←  Close", command=self._close,
             bg="white", fg=self.TEXT,
             activebackground="#F3F4F6", activeforeground=self.TEXT,
             relief="solid", bd=1, highlightthickness=0,
             font=("Arial", 9, "bold"), cursor="hand2",
             width=14, height=2,
-        )
-        self.prev_btn.pack(pady=14)
+        ).pack(pady=14)
 
-        center = tk.Frame(nav, bg="white")
-        center.pack(side="left", expand=True)
-
-        self.page_indicator = tk.Label(
-            center, text="Page 1 of 6",
-            bg="white", fg=self.MUTED,
-            font=("Arial", 10, "bold"),
-        )
-        self.page_indicator.pack(pady=22)
-
+        # Right: Save as Word / Save PDF / Finalise
         right = tk.Frame(nav, bg="white")
         right.pack(side="right", padx=22)
 
-        self.next_btn = tk.Button(
-            right, text="Next  →", command=self._next_page,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6", activeforeground=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            width=14, height=2,
-        )
-        self.next_btn.pack(side="left", padx=(0, 8), pady=14)
-
         tk.Button(
-            right, text="Close", command=self._close,
-            bg="white", fg=self.MUTED,
-            activebackground="#F3F4F6", activeforeground=self.TEXT,
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            width=10, height=2,
-        ).pack(side="left", padx=(0, 8), pady=14)
-
-        tk.Button(
-            right, text="Finalise & Save  →",
-            command=self._finalise,
+            right, text="Finalise & Save  →", command=self._finalise,
             bg=self.RED, fg="white",
             activebackground=self.RED_DARK, activeforeground="white",
             relief="flat", bd=0, highlightthickness=0,
             font=("Arial", 10, "bold"), cursor="hand2",
             width=24, height=2,
-        ).pack(side="left", pady=14)
+        ).pack(side="right", pady=14)
 
-    # ========================================================
-    # NAVIGATION
-    # ========================================================
-
-    def _show_page(self, page_number):
-        if not (1 <= page_number <= self.total_pages):
-            return
-
-        self.current_page = page_number
-
-        for widget in self.page_frame.winfo_children():
-            widget.destroy()
-
-        renderers = {
-            1: self._render_page_1,
-            2: self._render_page_2,
-            3: self._render_page_3,
-            4: self._render_page_4,
-            5: self._render_page_5,
-            6: self._render_page_6,
-        }
-        renderers[page_number]()
-
-        for num, btn in self.tab_widgets.items():
-            if num == page_number:
-                btn.configure(bg=self.RED, fg="white",
-                              activebackground=self.RED_DARK,
-                              activeforeground="white")
-            else:
-                btn.configure(bg=self.SOFT, fg=self.TEXT,
-                              activebackground="#ECEEF1",
-                              activeforeground=self.TEXT)
-
-        self.page_indicator.configure(
-            text=f"Page {page_number} of {self.total_pages}"
-        )
-
-        self.prev_btn.configure(
-            state="normal" if page_number > 1 else "disabled",
-            fg=self.TEXT if page_number > 1 else self.LIGHT_MUTED,
-        )
-        self.next_btn.configure(
-            state="normal" if page_number < self.total_pages else "disabled",
-            fg=self.TEXT if page_number < self.total_pages else self.LIGHT_MUTED,
-        )
-
-        try:
-            self.canvas.yview_moveto(0)
-        except Exception:
-            pass
-
-    def _prev_page(self):
-        if self.current_page > 1:
-            self._show_page(self.current_page - 1)
-
-    def _next_page(self):
-        if self.current_page < self.total_pages:
-            self._show_page(self.current_page + 1)
-
-    # ========================================================
-    # BUILDING BLOCKS
-    # ========================================================
+    # ═══════════════════════════════════════════════════════════
+    # HELPERS
+    # ═══════════════════════════════════════════════════════════
 
     def _card(self, padding=22):
-        outer = tk.Frame(self.page_frame, bg=self.CARD,
-                         highlightbackground=self.BORDER,
-                         highlightthickness=1)
-        outer.pack(fill="x", padx=32, pady=(20, 0))
-
+        outer = tk.Frame(self.content, bg=self.BORDER)
+        outer.pack(fill="x", padx=24, pady=(0, 14))
         inner = tk.Frame(outer, bg=self.CARD)
-        inner.pack(fill="both", expand=True, padx=padding, pady=padding)
-        return inner
+        inner.pack(fill="both", expand=True, padx=1, pady=1)
+        body = tk.Frame(inner, bg=self.CARD)
+        body.pack(fill="both", expand=True, padx=padding, pady=padding)
+        return body
 
-    def _page_title(self, parent, number, title, subtitle=""):
-        row = tk.Frame(parent, bg=self.CARD)
-        row.pack(fill="x", pady=(0, 18))
-
-        tk.Label(row, text=str(number), bg=self.RED, fg="white",
-                 width=3, font=("Arial", 9, "bold")).pack(side="left",
-                                                          padx=(0, 10))
-
-        box = tk.Frame(row, bg=self.CARD)
-        box.pack(side="left")
-
-        tk.Label(box, text=title, bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 15, "bold")).pack(anchor="w")
-
+    def _section_title(self, parent, title, subtitle=""):
+        tk.Label(parent, text=title, bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 12, "bold"), anchor="w").pack(anchor="w")
         if subtitle:
-            tk.Label(box, text=subtitle, bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9)).pack(anchor="w", pady=(2, 0))
+            tk.Label(parent, text=subtitle, bg=self.CARD, fg=self.MUTED,
+                     font=("Arial", 9), anchor="w").pack(anchor="w", pady=(2, 0))
 
-    def _kv_row(self, parent, label, value, bold_value=False):
-        row = tk.Frame(parent, bg=self.CARD)
-        row.pack(fill="x", pady=3)
+    def _divider(self, parent):
+        tk.Frame(parent, bg=self.BORDER, height=1).pack(fill="x", pady=(10, 10))
 
-        tk.Label(row, text=label, bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 9, "bold"), width=18,
-                 anchor="w").pack(side="left", anchor="n")
+    # ═══════════════════════════════════════════════════════════
+    # SINGLE-PAGE RENDER
+    # ═══════════════════════════════════════════════════════════
 
-        tk.Label(row, text=_text(value), bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold" if bold_value else "normal"),
-                 anchor="w", justify="left",
-                 wraplength=560).pack(side="left", fill="x", expand=True)
+    def _render_single_page(self):
+        # Top spacing
+        tk.Frame(self.content, bg=self.BG, height=18).pack()
 
-    # ========================================================
-    # PAGE 1 — COVER
-    # ========================================================
+        self._render_header_card()
+        self._render_item_card()
+        self._render_totals_card()
+        self._render_terms_card()
+        self._render_signature_card()
 
-    def _render_page_1(self):
+        # Bottom spacing
+        tk.Frame(self.content, bg=self.BG, height=18).pack()
+
+    def _render_header_card(self):
         card = self._card()
 
-        # ---- Title from product_name ----
-        product_name = (
-            self.product.get("product_name")
-            or self.product.get("name")
-            or "Vision Measuring Machine"
+        # Left: CRYSTAL brand
+        left = tk.Frame(card, bg=self.CARD)
+        left.pack(side="left", anchor="n")
+
+        tk.Label(left, text="CRYSTAL", bg=self.CARD, fg=self.RED,
+                 font=("Arial", 22, "bold"), anchor="w").pack(anchor="w")
+        tk.Label(left, text="A Name With Magnetic Fame",
+                 bg=self.CARD, fg=self.MUTED,
+                 font=("Arial", 9, "italic"), anchor="w").pack(anchor="w")
+
+        # Right: Seller info
+        right = tk.Frame(card, bg=self.CARD)
+        right.pack(side="right", anchor="n")
+
+        tk.Label(right, text="ARMATECH ASSOCIATES",
+                 bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 13, "bold"), anchor="e").pack(anchor="e")
+
+        seller_addr = self.company.get(
+            "address",
+            "W-174A, 'S' Block, M.I.D.C., Bhosari Industrial Estate, PUNE - 411 026. (INDIA)",
         )
-        self._page_title(card, 1, str(product_name).upper(),
-                         "")
-
-        # ---- Machine image ----
-        image_path = None
-        try:
-            from quotation_generator import find_product_image
-            image_path = find_product_image(self.product)
-        except Exception:
-            image_path = None
-
-        if image_path:
-            try:
-                from PIL import Image, ImageTk
-                img = Image.open(str(image_path))
-                # Scale to fit ~280px wide
-                w, h = img.size
-                max_w = 280
-                if w > max_w:
-                    ratio = max_w / w
-                    img = img.resize((int(w * ratio), int(h * ratio)))
-                photo = ImageTk.PhotoImage(img)
-                lbl = tk.Label(card, image=photo, bg=self.CARD)
-                lbl.image = photo  # keep reference
-                lbl.pack(pady=(6, 12))
-            except Exception:
-                pass
-
-        # ---- Description ----
-        description = self.product.get("description") or ""
-        if description:
-            for line in str(description).split("\n"):
-                line = line.strip()
-                if line:
-                    tk.Label(
-                        card, text=line,
-                        bg=self.CARD, fg=self.TEXT,
-                        font=("Arial", 10),
-                        anchor="w", justify="left",
-                        wraplength=800,
-                    ).pack(anchor="w", pady=(0, 4))
-
-        # ---- Offer / Seller / Buyer table ----
-        table = tk.Frame(card, bg=self.BORDER)
-        table.pack(fill="x", pady=(14, 0))
-
-        seller_name = self.company.get("name", "ARMATECH ASSOCIATES")
-        seller_contact = "Mr. Amol Lunawat"
-        seller_phone = "7020991684"
+        seller_gstin = self.company.get("gstin", "27AAKCA9634B1ZT")
+        seller_phone = self.company.get("phone", "+91 7020991684 / +91 9699820070")
         seller_email = self.company.get("email", "armatech@gmail.com")
-        seller_location = "Pune, Maharashtra"
 
-        buyer_company = self.form_data.get("company", "") or "-"
-        buyer_name = self.form_data.get("customer_name", "") or "-"
-        buyer_phone = self.form_data.get("phone", "") or "-"
-        buyer_email = self.form_data.get("email", "") or "-"
-        buyer_city = self.form_data.get("city", "") or ""
-        buyer_state = self.form_data.get("state", "") or ""
-        if buyer_city and buyer_state:
-            buyer_address = f"{buyer_city}, {buyer_state}"
-        else:
-            buyer_address = buyer_city or buyer_state or "-"
-        buyer_gstin = self.form_data.get("gstin", "") or "-"
-
-        rows = [
-            ("Offer No:", self.quotation_number, "Date:", self.quotation_date),
-            ("Seller:", seller_name, "Company:", buyer_company),
-            ("Contact:", seller_contact, "Buyer:", buyer_name),
-            ("Phone:", seller_phone, "Phone:", buyer_phone),
-            ("Email:", seller_email, "Email:", buyer_email),
-            ("Location:", seller_location, "Address:", buyer_address),
-            ("", "", "GSTIN:", buyer_gstin),
-        ]
-
-        for r_idx, row in enumerate(rows):
-            for c_idx, value in enumerate(row):
-                is_label = c_idx % 2 == 0
-                bg = self.SOFT if is_label else self.CARD
-                lbl = tk.Label(
-                    table, text=str(value) if value else "",
-                    bg=bg, fg=self.TEXT,
-                    font=("Arial", 10, "bold" if is_label else "normal"),
-                    anchor="w", justify="left",
-                    padx=10, pady=8,
-                    relief="flat",
-                    highlightthickness=1,
-                    highlightbackground=self.BORDER,
-                )
-                lbl.grid(row=r_idx, column=c_idx, sticky="nsew")
-
-        table.grid_columnconfigure(1, weight=1)
-        table.grid_columnconfigure(3, weight=1)
-
-
-    # ========================================================
-    # PAGE 2 — TECHNICAL SPECIFICATION
-    # ========================================================
-
-    def _render_page_2(self):
-        card = self._card()
-        self._page_title(card, 2, "Technical Specification",
-                         f"Model: {self.form_data.get('model', '—')}")
-
-        # Reuse generator's technical rows function
-        rows = []
-        try:
-            from quotation_generator import _technical_rows
-            rows = _technical_rows(
-                self.product, self.form_data.get("model", "")
-            )
-        except Exception:
-            pass
-
-        if not rows:
-            fields = [
-                ("Model No", self.form_data.get("model")),
-                ("Machine stand", self.product.get("category")),
-                ("Dimension (mm) (X/Y/Z)", self.product.get("dimension")),
-                ("Measuring range (mm) (X/Y/Z)",
-                 self.product.get("measuring_range")),
-                ("Measuring accuracy (µm)", self.product.get("accuracy")),
-                ("Repeatability (µm)", self.product.get("repeatability")),
-                ("Weight (Kg)", self.product.get("weight")),
-                ("CCD", self.product.get("ccd")),
-                ("Lens", self.product.get("lens")),
-                ("Magnification", self.product.get("magnification")),
-                ("FOV (mm)", self.product.get("fov")),
-                ("Working distance (mm)",
-                 self.product.get("working_distance")),
-                ("Linear scale resolution",
-                 self.product.get("linear_scale_resolution")),
-                ("Driving system", self.product.get("driving_system")),
-                ("Illumination", self.product.get("illumination")),
-            ]
-            rows = [(l, v) for l, v in fields if v not in (None, "")]
-
-        if not rows:
-            tk.Label(card,
-                     text="Technical specifications are not available for this model.",
-                     bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9, "italic")).pack(anchor="w")
-            return
-
-        table = tk.Frame(card, bg=self.BORDER)
-        table.pack(fill="x")
-
-        header = tk.Frame(table, bg=self.RED)
-        header.pack(fill="x")
-        tk.Label(header, text="Parameter", bg=self.RED, fg="white",
-                 font=("Arial", 9, "bold"), anchor="w",
-                 width=32, padx=10, pady=8).pack(side="left")
-        tk.Label(header, text="Specification", bg=self.RED, fg="white",
-                 font=("Arial", 9, "bold"), anchor="w",
-                 padx=10, pady=8).pack(side="left", fill="x", expand=True)
-
-        for i, (label, value) in enumerate(rows):
-            bg = self.SOFT if i % 2 == 0 else self.CARD
-            row = tk.Frame(table, bg=bg)
-            row.pack(fill="x")
-
-            tk.Label(row, text=label, bg=bg, fg=self.TEXT,
-                     font=("Arial", 9, "bold"), anchor="w",
-                     width=32, padx=10, pady=7).pack(side="left")
-
-            tk.Label(row, text=_text(value), bg=bg, fg=self.TEXT,
-                     font=("Arial", 9), anchor="w", justify="left",
-                     wraplength=560, padx=10, pady=7).pack(
-                side="left", fill="x", expand=True)
-
-        cap = tk.Label(card,
-                       text=f"{_text(self.product.get('product_name'))} — CAT: "
-                            f"{_text(self.form_data.get('model'))}",
-                       bg=self.CARD, fg=self.MUTED,
-                       font=("Arial", 9, "italic"))
-        cap.pack(anchor="center", pady=(10, 0))
-
-    # ========================================================
-    # PAGE 3 — FEATURES
-    # ========================================================
-
-    def _render_page_3(self):
-        card = self._card()
-        self._page_title(card, 3, "Features",
-                         "Hardware and software features.")
-
-        hardware, software = [], []
-        try:
-            from quotation_generator import (
-                _hardware_features,
-                _software_features,
-            )
-            hardware = _hardware_features(self.product)
-            software = _software_features(self.product)
-        except Exception:
-            pass
-
-        if not hardware and not software:
-            tk.Label(card,
-                     text="Feature details are not available for this model.",
-                     bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9, "italic")).pack(anchor="w")
-            return
-
-        grid = tk.Frame(card, bg=self.CARD)
-        grid.pack(fill="x")
-
-        left = tk.Frame(grid, bg=self.CARD)
-        left.pack(side="left", fill="both", expand=True, padx=(0, 10))
-        tk.Label(left, text="Hardware", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 10, "bold")).pack(anchor="w", pady=(0, 6))
-        for i, item in enumerate(hardware, 1):
-            tk.Label(left, text=f"{i}. {item}", bg=self.CARD, fg=self.TEXT,
-                     font=("Arial", 9), anchor="w", justify="left",
-                     wraplength=420).pack(anchor="w", pady=2)
-
-        right = tk.Frame(grid, bg=self.CARD)
-        right.pack(side="left", fill="both", expand=True, padx=(10, 0))
-        tk.Label(right, text="Software (2.5D)", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 10, "bold")).pack(anchor="w", pady=(0, 6))
-        for i, item in enumerate(software, 1):
-            tk.Label(right, text=f"{i}. {item}", bg=self.CARD, fg=self.TEXT,
-                     font=("Arial", 9), anchor="w", justify="left",
-                     wraplength=420).pack(anchor="w", pady=2)
-
-    # ========================================================
-    # PAGE 4 — ACCESSORIES
-    # ========================================================
-
-    def _render_page_4(self):
-        card = self._card()
-        self._page_title(card, 4, "Accessories",
-                         "Selected accessories and configuration.")
-
-        accessories = self.totals.get("accessories") or []
-
-        if not accessories:
-            tk.Label(card,
-                     text="No accessories selected for this quotation.",
-                     bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9, "italic")).pack(anchor="w")
-            return
-
-        table = tk.Frame(card, bg=self.BORDER)
-        table.pack(fill="x")
-
-        header = tk.Frame(table, bg=self.RED)
-        header.pack(fill="x")
-
-        for text, width in [
-            ("Sr.", 4), ("Accessory", 34),
-            ("Catalog No.", 16), ("Qty.", 6),
-            ("Unit Price", 14), ("Total", 14),
+        for line in [
+            seller_addr,
+            f"GSTIN: {seller_gstin}",
+            f"Phone: {seller_phone}",
+            f"Email: {seller_email}",
         ]:
+            tk.Label(right, text=line, bg=self.CARD, fg=self.MUTED,
+                     font=("Arial", 8), anchor="e",
+                     justify="right").pack(anchor="e", pady=(2, 0))
+
+        # Full-width divider
+        self._divider(card)
+
+        # Offer / Date
+        meta = tk.Frame(card, bg=self.CARD)
+        meta.pack(fill="x")
+        tk.Label(meta, text=f"Quotation No: {self.quotation_number}",
+                 bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 10, "bold")).pack(side="left")
+        tk.Label(meta, text=f"Date: {self.quotation_date}",
+                 bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 10, "bold")).pack(side="right")
+
+        self._divider(card)
+
+        # Bill To
+        tk.Label(card, text="BILL TO", bg=self.CARD, fg=self.RED,
+                 font=("Arial", 9, "bold"), anchor="w").pack(anchor="w")
+
+        f = self.form_data
+        buyer_lines = []
+        if f.get("company"):
+            buyer_lines.append(f["company"])
+        if f.get("customer_name"):
+            buyer_lines.append(f"Attn: {f['customer_name']}")
+        if f.get("contact_person"):
+            buyer_lines.append(f"Contact: {f['contact_person']}")
+        if f.get("address"):
+            buyer_lines.append(f["address"])
+        loc = " ".join(filter(None, [f.get("city"), f.get("state"), f.get("pincode")]))
+        if loc:
+            buyer_lines.append(loc)
+        if f.get("gstin"):
+            buyer_lines.append(f"GSTIN: {f['gstin']}")
+        if f.get("phone"):
+            buyer_lines.append(f"Phone: {f['phone']}")
+        if f.get("email"):
+            buyer_lines.append(f"Email: {f['email']}")
+
+        if not buyer_lines:
+            buyer_lines = ["—"]
+
+        for line in buyer_lines:
+            tk.Label(card, text=line, bg=self.CARD, fg=self.TEXT,
+                     font=("Arial", 9), anchor="w",
+                     justify="left").pack(anchor="w", pady=(1, 0))
+
+    def _render_item_card(self):
+        card = self._card()
+        self._section_title(card, "ITEM", "Product / machine configuration")
+
+        # Table header
+        table = tk.Frame(card, bg=self.BORDER)
+        table.pack(fill="x", pady=(10, 0))
+
+        header = tk.Frame(table, bg=self.RED)
+        header.pack(fill="x")
+
+        cols = [
+            ("Sr.", 4),
+            ("Description", 46),
+            ("Qty.", 6),
+            ("Unit Price", 14),
+            ("Amount", 14),
+        ]
+        for text, w in cols:
             tk.Label(header, text=text, bg=self.RED, fg="white",
                      font=("Arial", 9, "bold"), anchor="w",
-                     width=width, padx=8, pady=8).pack(side="left")
+                     width=w, padx=6, pady=8).pack(side="left")
 
-        for i, acc in enumerate(accessories, 1):
-            bg = self.SOFT if i % 2 == 0 else self.CARD
-            row = tk.Frame(table, bg=bg)
-            row.pack(fill="x")
-
-            qty = _decimal(acc.get("qty", 1))
-            price = _decimal(acc.get("price", 0))
-            total = _decimal(acc.get("amount", qty * price))
-
-            for text, width in [
-                (i, 4), (acc.get("name", "—"), 34),
-                (acc.get("code", "—"), 16), (f"{qty:g}", 6),
-                (_money(price), 14), (_money(total), 14),
-            ]:
-                tk.Label(row, text=_text(text), bg=bg, fg=self.TEXT,
-                         font=("Arial", 9), anchor="w", justify="left",
-                         wraplength=240, width=width,
-                         padx=8, pady=7).pack(side="left")
-
-    # ========================================================
-    # PAGE 5 — PRICING
-    # ========================================================
-
-    def _render_page_5(self):
-        card = self._card()
-        self._page_title(card, 5, "Commercial Quotation",
-                         "Final pricing and tax calculation for the selected configuration.")
-
+        # Row
         machine_price = _decimal(self.form_data.get("machine_price", 0))
         machine_qty = _decimal(self.form_data.get("machine_qty", 1))
         machine_total = machine_price * machine_qty
-        accessories = self.totals.get("accessories") or []
-        accessory_total = _decimal(self.totals.get("accessory_total", 0))
 
-        # Main table
-        table = tk.Frame(card, bg=self.BORDER)
-        table.pack(fill="x")
+        name = (self.product.get("name")
+                or self.product.get("product_name")
+                or "CRYSTAL Product")
+        model = self.product.get("model") or self.form_data.get("model") or ""
+        desc = self.product.get("description") or ""
 
-        header = tk.Frame(table, bg=self.RED)
-        header.pack(fill="x")
+        full_desc = name
+        if desc and desc != name:
+            full_desc = f"{name}\n{desc}"
+        if model:
+            full_desc = f"{full_desc}\nModel: {model}"
 
-        for text, width in [
-            ("Sr.", 4), ("Product / Accessory", 24),
-            ("Model / Code", 22), ("Qty.", 5),
-            ("Unit Price", 14), ("Amount", 14),
-        ]:
-            tk.Label(header, text=text, bg=self.RED, fg="white",
-                     font=("Arial", 9, "bold"), anchor="w",
-                     width=width, padx=6, pady=8).pack(side="left")
-
-        # Row 1 — Machine
         row = tk.Frame(table, bg=self.CARD)
         row.pack(fill="x")
 
-        for text, width in [
+        for text, w in [
             ("1", 4),
-            (self.product.get("product_name", "CRYSTAL VMM"), 24),
-            (_text(self.form_data.get("model")), 22),
-            (f"{machine_qty:g}", 5),
+            (full_desc, 46),
+            (f"{machine_qty:g}", 6),
             (_money(machine_price), 14),
             (_money(machine_total), 14),
         ]:
             tk.Label(row, text=_text(text), bg=self.CARD, fg=self.TEXT,
                      font=("Arial", 9), anchor="w", justify="left",
-                     wraplength=240, width=width,
-                     padx=6, pady=7).pack(side="left")
+                     wraplength=420, width=w,
+                     padx=6, pady=8).pack(side="left", anchor="n")
 
-        # Row 2 — Additional Items (if accessories > 0)
-        if accessories and accessory_total > 0:
-            row = tk.Frame(table, bg=self.SOFT)
-            row.pack(fill="x")
-            for text, width in [
-                ("2", 4), ("Additional Items", 24), ("", 22),
-                ("-", 5), ("", 14), (_money(accessory_total), 14),
-            ]:
-                tk.Label(row, text=_text(text), bg=self.SOFT, fg=self.TEXT,
-                         font=("Arial", 9), anchor="w",
-                         width=width, padx=6, pady=7).pack(side="left")
+    def _render_totals_card(self):
+        card = self._card()
+        self._section_title(card, "TOTALS", "Amount breakdown")
 
-        # Row 3 — Transportation (only if > 0)
-        transport_val = _decimal(self.totals.get("transportation", 0))
-        if transport_val > 0:
-            row = tk.Frame(table, bg=self.CARD)
-            row.pack(fill="x")
-            for text, width in [
-                ("3", 4), ("Transportation Cost", 24), ("", 22),
-                ("-", 5), ("", 14), (_money(transport_val), 14),
-            ]:
-                tk.Label(row, text=_text(text), bg=self.CARD, fg=self.TEXT,
-                         font=("Arial", 9), anchor="w",
-                         width=width, padx=6, pady=7).pack(side="left")
+        t = self.totals
 
-        # Totals block — right aligned
-        spacer = tk.Frame(card, bg=self.CARD)
-        spacer.pack(fill="x", pady=(16, 0))
+        rows = [
+            ("Machine", _money(t.get("machine_total", t.get("machine", 0))), False),
+        ]
 
-        # Build totals rows dynamically — new layout:
-        #   Machine
-        #   BuyBack Offer (-)
-        #   Accessories
-        #   Packing (if > 0)
-        #   Transportation (if > 0)
-        #   Taxable Value
-        #   GST rows
-        #   Grand Total
-        rows_to_show = []
+        # Optional rows
+        if _decimal(t.get("packing", 0)) > 0:
+            pct = _decimal(self.form_data.get("packing_value", 3.5))
+            rows.append((f"Packing ({pct:.2f}%)", _money(t.get("packing", 0)), False))
 
-        # 1. Machine
-        rows_to_show.append(
-            ("Machine", _money(self.totals.get("machine_total", 0)), False)
-        )
+        rows.append(("Taxable Value", _money(t.get("taxable", 0)), False))
 
-        # 2. BuyBack — only if > 0, shown as negative
-        buyback_val = _decimal(self.totals.get("buyback", 0))
-        if buyback_val > 0:
-            rows_to_show.append(
-                ("BuyBack Offer", _money(-buyback_val), False)
-            )
+        cgst_pct = _decimal(self.form_data.get("cgst_percent", 9))
+        sgst_pct = _decimal(self.form_data.get("sgst_percent", 9))
 
-        # 3. Accessories — only if > 0
-        accessory_val = _decimal(self.totals.get("accessory_total", 0))
-        if accessory_val > 0:
-            rows_to_show.append(
-                ("Accessories", _money(accessory_val), False)
-            )
+        gst_type = str(self.form_data.get("gst_type", "CGST + SGST") or "")
 
-        # 4. Packing — only if > 0
-        packing_val = _decimal(self.totals.get("packing", 0))
-        if packing_val > 0:
-            rows_to_show.append(
-                ("Packing", _money(packing_val), False)
-            )
+        if gst_type == "IGST":
+            igst_pct = _decimal(self.form_data.get("gst_rate", 18))
+            rows.append((f"IGST ({igst_pct:.2f}%)", _money(t.get("igst", 0)), False))
+        else:
+            rows.append((f"CGST ({cgst_pct:.2f}%)", _money(t.get("cgst", 0)), False))
+            rows.append((f"SGST ({sgst_pct:.2f}%)", _money(t.get("sgst", 0)), False))
 
-        # 5. Transportation — only if > 0
-        if transport_val > 0:
-            rows_to_show.append(
-                ("Transportation / Freight", _money(transport_val), False)
-            )
+        grand = t.get("grand_total", t.get("grand", 0))
+        rows.append(("GRAND TOTAL", _money(grand), True))
 
-        # 6. Taxable Value
-        rows_to_show.append(
-            ("Taxable Value", _money(self.totals.get("taxable", 0)), False)
-        )
-
-        # 7. GST rows
-        rows_to_show.append(
-            (f"CGST ({_decimal(self.form_data.get('cgst_percent', 9)):.2f}%)",
-             _money(self.totals.get("cgst", 0)), False)
-        )
-        rows_to_show.append(
-            (f"SGST ({_decimal(self.form_data.get('sgst_percent', 9)):.2f}%)",
-             _money(self.totals.get("sgst", 0)), False)
-        )
-
-        # 8. Grand total
-        rows_to_show.append(
-            ("GRAND TOTAL",
-             _money(self.totals.get("grand_total", 0)), True)
-        )
-
-        for label, value, is_grand in rows_to_show:
-            row = tk.Frame(card, bg=self.CARD)
-            row.pack(fill="x", pady=2)
-
+        for label, value, is_grand in rows:
             bg = self.RED if is_grand else self.SOFT
             fg = "white" if is_grand else self.TEXT
-
-            tk.Label(row, text=label, bg=bg, fg=fg,
-                     font=("Arial", 9, "bold" if is_grand else "normal"),
-                     anchor="e", width=30,
-                     padx=10, pady=8).pack(side="right")
-            tk.Label(row, text=value, bg=bg, fg=fg,
-                     font=("Arial", 10 if is_grand else 9, "bold"),
-                     anchor="e", width=18,
-                     padx=10, pady=8).pack(side="right")
+            r = tk.Frame(card, bg=bg)
+            r.pack(fill="x", pady=2)
+            tk.Label(r, text=label, bg=bg, fg=fg,
+                     font=("Arial", 10 if is_grand else 9,
+                           "bold" if is_grand else "normal"),
+                     anchor="e", width=30, padx=10, pady=8).pack(side="right")
+            tk.Label(r, text=value, bg=bg, fg=fg,
+                     font=("Arial", 11 if is_grand else 9, "bold"),
+                     anchor="e", width=18, padx=10, pady=8).pack(side="right")
 
         # Amount in words
-        spacer = tk.Frame(card, bg=self.CARD)
-        spacer.pack(fill="x", pady=(10, 0))
-
-        words = _amount_in_words(self.totals.get("grand_total", 0))
-        tk.Label(card, text=f"Amount in Words: {words}",
+        tk.Frame(card, bg=self.CARD, height=8).pack()
+        tk.Label(card, text=f"Amount in Words: {_amount_in_words(grand)}",
                  bg=self.CARD, fg=self.TEXT,
                  font=("Arial", 9, "bold"),
                  anchor="w", justify="left",
-                 wraplength=850).pack(anchor="w")
+                 wraplength=850).pack(anchor="w", pady=(6, 0))
 
-    # ========================================================
-    # PAGE 6 — TERMS
-    # ========================================================
-
-    def _render_page_6(self):
-        card = self._card()
-        self._page_title(card, 6, "Terms & Conditions",
-                         "Commercial terms applicable to this quotation.")
-
+    def _render_terms_card(self):
         if not self.form_data.get("include_terms", False):
-            tk.Label(card,
-                     text="Terms & Conditions are not included in this quotation.",
-                     bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 10, "italic")).pack(anchor="w", pady=20)
             return
 
         selected = self.form_data.get("selected_terms") or []
-
         if not selected:
-            tk.Label(card,
-                     text="No terms have been selected.",
-                     bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9, "italic")).pack(anchor="w")
             return
 
-        # Header row
+        card = self._card()
+        self._section_title(card, "TERMS & CONDITIONS",
+                            "Commercial terms applicable to this quotation")
+
         table = tk.Frame(card, bg=self.BORDER)
-        table.pack(fill="x")
+        table.pack(fill="x", pady=(10, 0))
 
         header = tk.Frame(table, bg=self.RED)
         header.pack(fill="x")
-        tk.Label(header, text="Sr. No.", bg=self.RED, fg="white",
-                 font=("Arial", 9, "bold"), anchor="center",
-                 width=8, padx=8, pady=8).pack(side="left")
-        tk.Label(header, text="Particulars", bg=self.RED, fg="white",
-                 font=("Arial", 9, "bold"), anchor="w",
-                 width=28, padx=8, pady=8).pack(side="left")
-        tk.Label(header, text="Terms", bg=self.RED, fg="white",
-                 font=("Arial", 9, "bold"), anchor="w",
-                 padx=8, pady=8).pack(side="left", fill="x", expand=True)
+        tk.Label(header, text="Sr.", bg=self.RED, fg="white",
+                 font=("Arial", 9, "bold"), width=4,
+                 padx=6, pady=8, anchor="w").pack(side="left")
+        tk.Label(header, text="Term", bg=self.RED, fg="white",
+                 font=("Arial", 9, "bold"), width=22,
+                 padx=6, pady=8, anchor="w").pack(side="left")
+        tk.Label(header, text="Details", bg=self.RED, fg="white",
+                 font=("Arial", 9, "bold"),
+                 padx=6, pady=8, anchor="w").pack(side="left", fill="x", expand=True)
 
         for i, term in enumerate(selected, 1):
             bg = self.SOFT if i % 2 == 0 else self.CARD
-            row = tk.Frame(table, bg=bg)
-            row.pack(fill="x")
+            r = tk.Frame(table, bg=bg)
+            r.pack(fill="x")
+            tk.Label(r, text=str(i), bg=bg, fg=self.TEXT,
+                     font=("Arial", 9), width=4, padx=6, pady=7,
+                     anchor="w").pack(side="left")
+            tk.Label(r, text=term.get("title", "—"), bg=bg, fg=self.TEXT,
+                     font=("Arial", 9, "bold"), width=22,
+                     padx=6, pady=7, anchor="w",
+                     justify="left", wraplength=200).pack(side="left", anchor="n")
+            tk.Label(r, text=term.get("value", "—"), bg=bg, fg=self.TEXT,
+                     font=("Arial", 9), padx=6, pady=7, anchor="w",
+                     justify="left", wraplength=520).pack(side="left", fill="x", expand=True)
 
-            tk.Label(row, text=str(i), bg=bg, fg=self.TEXT,
-                     font=("Arial", 9), anchor="center",
-                     width=8, padx=8, pady=7).pack(side="left")
-            tk.Label(row, text=term.get("title", "—"), bg=bg, fg=self.TEXT,
-                     font=("Arial", 9, "bold"), anchor="w",
-                     width=28, padx=8, pady=7).pack(side="left")
-            tk.Label(row, text=term.get("value", "—"), bg=bg, fg=self.TEXT,
-                     font=("Arial", 9), anchor="w", justify="left",
-                     wraplength=560, padx=8, pady=7).pack(
-                side="left", fill="x", expand=True)
-
-        # Closing text
+    def _render_signature_card(self):
+        card = self._card()
         tk.Label(card,
-                 text=("We trust you will find our proposal in line with your "
-                       "requirements. Please do not hesitate to contact us if "
-                       "you need any further clarification."),
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9), anchor="w", justify="left",
-                 wraplength=850).pack(anchor="w", pady=(18, 4))
+                 text="We trust you will find our proposal in line with your "
+                      "requirements. Please do not hesitate to contact us if "
+                      "you need any further clarification.",
+                 bg=self.CARD, fg=self.TEXT, font=("Arial", 9),
+                 anchor="w", justify="left", wraplength=850).pack(anchor="w")
 
         tk.Label(card, text="Thanking you and assuring our best services always,",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9), anchor="w",
-                 wraplength=850).pack(anchor="w", pady=(0, 12))
+                 bg=self.CARD, fg=self.TEXT, font=("Arial", 9),
+                 anchor="w").pack(anchor="w", pady=(8, 0))
 
         tk.Label(card, text="With best regards,",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9), anchor="w").pack(anchor="w", pady=(0, 20))
+                 bg=self.CARD, fg=self.TEXT, font=("Arial", 9),
+                 anchor="w").pack(anchor="w", pady=(6, 0))
 
-        tk.Label(card, text="Amol Lunawat",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 11, "bold"), anchor="w").pack(anchor="w")
+        tk.Frame(card, bg=self.CARD, height=16).pack()
 
-        tk.Label(card, text=self.company.get("name", "ARMATECH ASSOCIATES"),
-                 bg=self.CARD, fg=self.RED,
-                 font=("Arial", 10), anchor="w").pack(anchor="w")
+        # Signature block (right-aligned)
+        sig = tk.Frame(card, bg=self.CARD)
+        sig.pack(fill="x")
+        tk.Label(sig, text="For ARMATECH ASSOCIATES",
+                 bg=self.CARD, fg=self.TEXT, font=("Arial", 9),
+                 anchor="e").pack(anchor="e")
+        tk.Frame(sig, bg=self.CARD, height=24).pack()
+        tk.Label(sig, text="Amol Lunawat",
+                 bg=self.CARD, fg=self.TEXT, font=("Arial", 11, "bold"),
+                 anchor="e").pack(anchor="e")
+        tk.Label(sig, text="Authorized Representative",
+                 bg=self.CARD, fg=self.MUTED, font=("Arial", 8),
+                 anchor="e").pack(anchor="e")
 
-    # ========================================================
+    # ═══════════════════════════════════════════════════════════
     # ACTIONS
-    # ========================================================
+    # ═══════════════════════════════════════════════════════════
 
     def _finalise(self):
-        """Hand control back to the form to actually generate the file."""
-        if self.on_finalise is not None:
-            self.confirmed = True
+        self.confirmed = True
+        if self.on_finalise:
             try:
                 self.on_finalise()
-            except Exception as exc:
-                messagebox.showerror(
-                    "Generation failed",
-                    f"{type(exc).__name__}: {exc}",
-                    parent=self,
-                )
+            except Exception as e:
+                messagebox.showerror("Generation failed", str(e))
                 return
-        self.destroy()
+        self._close()
 
     def _close(self):
-        self.confirmed = False
+        try:
+            self._canvas.unbind_all("<MouseWheel>")
+        except Exception:
+            pass
+        try:
+            self.grab_release()
+        except Exception:
+            pass
         self.destroy()
-
-
-# ============================================================
-# STANDALONE TEST
-# ============================================================
-
-if __name__ == "__main__":
-
-    root = tk.Tk()
-    root.withdraw()
-
-    form_data = {
-        "customer_name": "Test Customer",
-        "company": "Test Company",
-        "address": "Pune, Maharashtra",
-        "phone": "0000000000",
-        "email": "test@example.com",
-        "category": "Automatic VMM with Cabinet",
-        "model": "AA-9043AC",
-        "machine_price": 1450000,
-        "machine_qty": 1,
-        "transportation": 5000,
-        "packing_percent": 3.5,
-        "cgst_percent": 9,
-        "sgst_percent": 9,
-        "include_terms": True,
-        "selected_terms": [
-            {"title": "PRICES", "value": "EX WORKS PUNE."},
-            {"title": "PAYMENT", "value": "100% advance along with purchase order."},
-        ],
-    }
-
-    totals = {
-        "machine_total": Decimal("1450000"),
-        "accessory_total": Decimal("0"),
-        "subtotal": Decimal("1450000"),
-        "packing": Decimal("50750"),
-        "transportation": Decimal("5000"),
-        "taxable": Decimal("1505750"),
-        "cgst": Decimal("135517.50"),
-        "sgst": Decimal("135517.50"),
-        "grand_total": Decimal("1776785.00"),
-        "accessories": [],
-    }
-
-    try:
-        import json
-        from pathlib import Path
-        catalog_path = Path(__file__).resolve().parents[1] / "data" / "catalog.json"
-        catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-        product = next(
-            (p for p in catalog.get("products", [])
-             if p.get("model") == "AA-9043AC"),
-            {},
-        )
-    except Exception:
-        product = {}
-
-    company = {
-        "name": "ARMATECH ASSOCIATES",
-        "brand": "CRYSTAL VMM",
-        "address": "W-174A, 'S' Block, M.I.D.C., Bhosari Industrial Estate, PUNE - 411 026. (INDIA)",
-        "phone": "+91 7020991684 / +91 9699820070",
-        "email": "armatech@gmail.com",
-        "website": "www.armatechassociates.com",
-    }
-
-    QuotationPreview(
-        parent=root,
-        form_data=form_data,
-        totals=totals,
-        product=product,
-        quotation_number="AA/VMM/26-27/TEST",
-        quotation_date="28-09-2026",
-        company=company,
-    )
-
-    root.mainloop()

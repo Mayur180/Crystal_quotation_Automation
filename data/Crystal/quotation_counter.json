@@ -1,5 +1,4 @@
 {
-  "last_number": 0,
-  "prefix": "",
-  "format": "{number:04d}"
+    "financial_year": "26-27",
+    "last_number": 11
 }

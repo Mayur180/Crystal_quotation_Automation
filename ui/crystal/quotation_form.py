@@ -7,9 +7,8 @@
 # WORKFLOW:
 #   1. Customer
 #   2. Product
-#   3. Accessories
-#   4. Pricing
-#   5. Terms & Conditions
+#   3. Pricing
+#   4. Terms & Conditions
 #   6. Generate
 #
 # File:
@@ -47,17 +46,13 @@ try:
         get_product_categories,
         get_products_by_category,
         get_product,
-        get_accessories,
     )
 except Exception:
     get_product_categories = None
     get_products_by_category = None
     get_product = None
-    get_accessories = None
-
-
 try:
-    from quotation_generator import generate_quotation
+    from quotation_generator_crystal import generate_quotation
 except Exception:
     generate_quotation = None
 
@@ -200,16 +195,6 @@ MODEL_SIZE = {
 }
 
 
-# ============================================================
-# ACCESSORIES  (fallback only — real data comes from catalog)
-# ============================================================
-
-FALLBACK_ACCESSORIES = [
-    "Computer System",
-    "Table",
-    "Online UPS",
-    "Machine Cabinet",
-]
 
 
 # ============================================================
@@ -217,28 +202,16 @@ FALLBACK_ACCESSORIES = [
 # ============================================================
 
 STANDARD_TERMS = [
-    ("PRICES",
-     "EX WORKS PUNE"),
-    ("GST",
-     "As applicable at time of delivery"),
-    ("PAYMENT",
-     "50% advance along with purchase order & 50% Balance against Proforma invoice"),
-    ("VALIDITY",
-     "30 days"),
-    ("WARRANTY",
-     "One year against manufacturing defects"),
-    ("PACKING",
-     "Extra Applicable"),
-    ("INSURANCE",
-     "Extra if required"),
-    ("DISPATCH",
-     "By road transport / courier cargo"),
-    ("DELIVERY",
-     "Within 4-6 weeks from receiving date of confirmed order"),
-    ("FREIGHT",
-     "To pay basis"),
-    ("INSTALLATION & COMMISSIONING",
-     "Free of cost by our Engineers"),
+    ("Delivery",
+     "WITHIN 2-3 WEEKS"),
+    ("Payment",
+     "50% ADVANCE AND BALANCE AGAINST PROFORMA INVOICE"),
+    ("Transport Charges",
+     "FREIGHT TO PAY BASIS"),
+    ("Validity",
+     "15 DAYS"),
+    ("Warranty",
+     "1 Year warranty from the date of purchase. Warranty applicable on manufacturing defects only."),
 ]
 
 
@@ -246,11 +219,18 @@ STANDARD_TERMS = [
 # TERMS PERSISTENCE FILE
 # ============================================================
 
-TERMS_FILE = os.path.join(
-    PROJECT_ROOT,
-    "data",
-    "custom_terms.json"
-)
+# Module-aware terms file:
+#   Crystal → data/Crystal/custom_terms.json
+#   VMM     → data/VMM/custom_terms.json
+try:
+    from app.services.paths import get_data_dir
+    TERMS_FILE = str(get_data_dir() / "custom_terms.json")
+except Exception:
+    TERMS_FILE = os.path.join(
+        PROJECT_ROOT,
+        "data",
+        "custom_terms.json",
+    )
 
 
 # ============================================================
@@ -320,9 +300,6 @@ class QuotationForm(tk.Toplevel):
         self._prefill = prefill or {}
 
         self.completed_steps = set()
-
-        self.accessory_rows = []
-
         self.term_rows = []
 
         # Custom terms loaded from disk
@@ -364,6 +341,7 @@ class QuotationForm(tk.Toplevel):
 
                     data = json.load(handle)
 
+                # Shape A — list of {"title": ..., "value": ...}
                 if isinstance(data, list) and data:
 
                     result = []
@@ -388,6 +366,27 @@ class QuotationForm(tk.Toplevel):
 
                     if result:
                         return result
+
+                # Shape B — {"terms": {"Delivery": "...", ...}}
+                if isinstance(data, dict) and "terms" in data:
+
+                    terms_dict = data.get("terms") or {}
+
+                    if isinstance(terms_dict, dict):
+
+                        result = []
+
+                        for title, value in terms_dict.items():
+
+                            t = str(title).strip()
+                            v = str(value).strip()
+
+                            if t and v:
+
+                                result.append((t, v))
+
+                        if result:
+                            return result
 
         except Exception:
             pass
@@ -478,7 +477,7 @@ class QuotationForm(tk.Toplevel):
         self.buyback = tk.StringVar(value="0")
 
         # Packing can be entered either as a percentage of the
-        # Machine + Accessories subtotal or as a fixed amount.
+        # Machine subtotal or as a fixed amount.
         self.packing_mode = tk.StringVar(value="Percentage (%)")
         self.packing_value = tk.StringVar(value="3.5")
 
@@ -885,9 +884,8 @@ class QuotationForm(tk.Toplevel):
         steps = [
             (1, "Customer", "Buyer details"),
             (2, "Product", "Select machine"),
-            (3, "Accessories", "Optional add-ons"),
-            (4, "Pricing", "Final amount"),
-            (5, "Terms", "Conditions"),
+            (3, "Pricing", "Final amount"),
+            (4, "Terms", "Conditions"),
         ]
 
         self.step_widgets = []
@@ -1738,334 +1736,9 @@ class QuotationForm(tk.Toplevel):
         return True
 
 
-    def _render_accessories(self):
-
-        self._clear_content()
-
-        card = self._create_card(
-            self.content_area
-        )
-
-        self._section_header(
-            card,
-            3,
-            "Add accessories",
-            "Optional — add only what belongs in this quotation."
-        )
-
-        self.accessory_rows = []
-
-        accessories = self._get_accessories()
-
-        for accessory in accessories:
-
-            # ---- Normalise record shape ----
-
-            if isinstance(accessory, dict):
-
-                code = str(
-                    accessory.get("code", "")
-                ).strip()
-
-                name = str(
-                    accessory.get("name", code)
-                ).strip() or code
-
-                description = str(
-                    accessory.get("description", "")
-                ).strip() or "Additional quotation item"
-
-                status = str(
-                    accessory.get("status", "active")
-                ).strip().lower()
-
-                # Skip inactive accessories
-                if status != "active":
-                    continue
-
-                # Safe price
-                raw_price = accessory.get("price", 0)
-
-                if raw_price is None or raw_price == "":
-                    raw_price = 0
-
-                try:
-                    price_value = float(Decimal(str(raw_price)))
-                except (InvalidOperation, ValueError, TypeError):
-                    price_value = 0.0
-
-                # Safe default quantity
-                raw_qty = accessory.get("default_quantity", 1)
-
-                if raw_qty is None or raw_qty == "":
-                    raw_qty = 1
-
-                try:
-                    default_qty = int(Decimal(str(raw_qty)))
-                except (InvalidOperation, ValueError, TypeError):
-                    default_qty = 1
-
-                if default_qty < 1:
-                    default_qty = 1
-
-            else:
-
-                # Legacy fallback — plain string
-                code = str(accessory)
-                name = code
-                description = "Additional quotation item"
-                price_value = 0.0
-                default_qty = 1
-
-            selected = tk.BooleanVar(value=False)
-            quantity = tk.StringVar(value=str(default_qty))
-            price = tk.StringVar(value=f"{price_value:g}")
-            total = tk.StringVar(value="₹ 0.00")
-
-            row = tk.Frame(
-                card,
-                bg=self.CARD,
-                highlightbackground=self.BORDER,
-                highlightthickness=1
-            )
-
-            row.pack(
-                fill="x",
-                pady=4
-            )
-
-            # Row dict is built further down; we need it before
-            # the checkbox so the toggle handler can reach it.
-            row_state = {
-                "code": code,
-                "name": name,
-                "selected": selected,
-                "quantity": quantity,
-                "price": price,
-                "total": total,
-                "base_price": f"{price_value:g}",
-                "entry": None,  # filled in below
-            }
-
-            tk.Checkbutton(
-                row,
-                variable=selected,
-                bg=self.CARD,
-                activebackground=self.CARD,
-                selectcolor=self.CARD,
-                command=lambda r=row_state: self._on_accessory_toggle(r)
-            ).pack(
-                side="left",
-                padx=(12, 7)
-            )
-
-            text_box = tk.Frame(
-                row,
-                bg=self.CARD
-            )
-
-            text_box.pack(
-                side="left",
-                fill="x",
-                expand=True,
-                pady=11
-            )
-
-            tk.Label(
-                text_box,
-                text=name,
-                bg=self.CARD,
-                fg=self.TEXT,
-                font=("Arial", 10, "bold")
-            ).pack(
-                anchor="w"
-            )
-
-            tk.Label(
-                text_box,
-                text=description,
-                bg=self.CARD,
-                fg=self.MUTED,
-                font=("Arial", 8)
-            ).pack(
-                anchor="w",
-                pady=(2, 0)
-            )
-
-            tk.Label(
-                row,
-                text="Qty",
-                bg=self.CARD,
-                fg=self.MUTED,
-                font=("Arial", 8)
-            ).pack(
-                side="left"
-            )
-
-            tk.Entry(
-                row,
-                textvariable=quantity,
-                width=6,
-                relief="solid",
-                bd=1
-            ).pack(
-                side="left",
-                padx=(5, 12),
-                ipady=4
-            )
-
-            tk.Label(
-                row,
-                text="₹",
-                bg=self.CARD,
-                fg=self.MUTED
-            ).pack(
-                side="left"
-            )
-
-            price_entry = tk.Entry(
-                row,
-                textvariable=price,
-                width=16,
-                relief="solid",
-                bd=1,
-                disabledbackground=self.SOFT,
-                disabledforeground=self.MUTED,
-            )
-            price_entry.pack(
-                side="left",
-                padx=(3, 12),
-                ipady=4
-            )
-            row_state["entry"] = price_entry
-
-            tk.Label(
-                row,
-                textvariable=total,
-                bg=self.CARD,
-                fg=self.TEXT,
-                font=("Arial", 9, "bold"),
-                width=13,
-                anchor="e"
-            ).pack(
-                side="right",
-                padx=14
-            )
-
-            quantity.trace_add(
-                "write",
-                lambda *_: self._recalculate()
-            )
-
-            price.trace_add(
-                "write",
-                lambda *_: self._recalculate()
-            )
-
-            self.accessory_rows.append(row_state)
-
-            # Apply initial state: unticked rows show "Extra If Required"
-            self._set_accessory_row_state(row_state)
-
-        note = tk.Frame(
-            card,
-            bg=self.SOFT
-        )
-
-        note.pack(
-            fill="x",
-            pady=(14, 0)
-        )
-
-        tk.Label(
-            note,
-            text=(
-                "Accessories are optional. "
-                "You can continue without selecting anything."
-            ),
-            bg=self.SOFT,
-            fg=self.MUTED,
-            font=("Arial", 9)
-        ).pack(
-            anchor="w",
-            padx=14,
-            pady=11
-        )
-
-        self.status_text.set(
-            "Accessories are optional."
-        )
-
-
     # ========================================================
     # GET ACCESSORIES  (from catalog — active only)
     # ========================================================
-
-    def _set_accessory_row_state(self, row_state):
-        """Enable/disable the price entry depending on the tick state.
-
-        - Ticked   -> numeric price, editable, normal state
-        - Unticked -> text 'Extra If Required', disabled, greyed
-        """
-        try:
-            entry = row_state.get("entry")
-            if entry is None:
-                return
-
-            selected = bool(row_state["selected"].get())
-            price_var = row_state["price"]
-
-            if selected:
-                # Restore numeric price
-                price_var.set(str(row_state.get("base_price", "0")))
-                try:
-                    entry.configure(state="normal")
-                except tk.TclError:
-                    pass
-            else:
-                # Placeholder text, disabled
-                price_var.set("Extra If Required")
-                try:
-                    entry.configure(state="disabled")
-                except tk.TclError:
-                    pass
-        except Exception:
-            pass
-
-    def _on_accessory_toggle(self, row_state):
-        """Called when an accessory checkbox is clicked."""
-        self._set_accessory_row_state(row_state)
-        self._recalculate()
-
-    def _get_accessories(self):
-
-        if get_accessories:
-
-            try:
-
-                result = get_accessories()
-
-                if result:
-                    return result
-
-            except Exception:
-                pass
-
-        # Fallback — uniform dict shape so renderer is happy
-        return [
-            {
-                "code": name.upper().replace(" ", "-"),
-                "name": name,
-                "category": "Accessory",
-                "description": "Additional quotation item",
-                "unit": "Nos",
-                "price": 0.0,
-                "default_quantity": 1,
-                "status": "active",
-            }
-            for name in FALLBACK_ACCESSORIES
-        ]
-
 
     # ========================================================
     # STEP 4 — PRICING
@@ -2097,7 +1770,7 @@ class QuotationForm(tk.Toplevel):
 
         # Dynamic tax rows. The labels are updated according to GST Type.
         rows = [
-            ("Machine + Accessories", "subtotal"),
+            ("Machine", "subtotal"),
             ("Packing", "packing"),
             ("Transportation", "transportation"),
             ("BuyBack Offer", "buyback"),
@@ -2817,30 +2490,13 @@ class QuotationForm(tk.Toplevel):
             padx=22
         )
 
-        self.summary_accessories = tk.Label(
-            outer,
-            text="No accessories",
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 9),
-            anchor="w",
-            justify="left",
-            wraplength=300
-        )
-
-        self.summary_accessories.pack(
-            fill="x",
-            padx=22,
-            pady=(6, 0)
-        )
-
         self._summary_separator(
             outer
         )
 
         self.summary_total_label = tk.Label(
             outer,
-            text="PRODUCT + ACCESSORIES",
+            text="PRODUCT",
             bg=self.CARD,
             fg=self.MUTED,
             font=("Arial", 8, "bold")
@@ -3021,12 +2677,9 @@ class QuotationForm(tk.Toplevel):
             self._render_product()
 
         elif step == 3:
-            self._render_accessories()
-
-        elif step == 4:
             self._render_pricing()
 
-        elif step == 5:
+        elif step == 4:
             self._render_terms()
 
         self._update_stepper()
@@ -3051,13 +2704,11 @@ class QuotationForm(tk.Toplevel):
 
             1: "Continue to Product  →",
 
-            2: "Continue to Accessories  →",
+            2: "Continue to Pricing  →",
 
-            3: "Continue to Pricing  →",
+            3: "Continue to Terms  →",
 
-            4: "Continue to Terms  →",
-
-            5: "Review Quotation  →",
+            4: "Review Quotation  →",
         }
 
         self.generate_button.configure(
@@ -3096,12 +2747,12 @@ class QuotationForm(tk.Toplevel):
             if not self._validate_product():
                 return
 
-        elif self.current_step == 4:
+        elif self.current_step == 3:
 
             if not self._validate_pricing():
                 return
 
-        elif self.current_step == 5:
+        elif self.current_step == 4:
 
             # Step 5 is a REVIEW stage. Do not generate immediately.
             # The review window lets the user inspect everything, go back
@@ -3116,7 +2767,7 @@ class QuotationForm(tk.Toplevel):
 
         next_step = min(
             self.current_step + 1,
-            5
+            4
         )
 
         self._load_step(
@@ -3359,32 +3010,6 @@ class QuotationForm(tk.Toplevel):
 
         accessory_count = 0
 
-        for row in self.accessory_rows:
-
-            if row["selected"].get():
-
-                accessory_count += 1
-
-                accessory_quantity = self._decimal(
-                    row["quantity"].get()
-                )
-
-                accessory_price = self._decimal(
-                    row["price"].get()
-                )
-
-                amount = accessory_quantity * accessory_price
-
-            else:
-
-                amount = Decimal("0")
-
-            row["total"].set(
-                f"₹ {amount:,.2f}"
-            )
-
-            subtotal += amount
-
         # Product + accessory cost is shown before Pricing.
         # Packing, transportation and GST are applied only from Step 4.
         # Initialize these so they are always defined
@@ -3538,7 +3163,7 @@ class QuotationForm(tk.Toplevel):
                 )
             else:
                 self.summary_total_label.configure(
-                    text="PRODUCT + ACCESSORIES"
+                    text="PRODUCT"
                 )
         except Exception:
             pass
@@ -3586,27 +3211,6 @@ class QuotationForm(tk.Toplevel):
 
                 self.pricing_tax_labels["igst"].configure(
                     text="IGST (Not applicable)"
-                )
-
-        except Exception:
-            pass
-
-        try:
-
-            if accessory_count:
-
-                self.summary_accessories.configure(
-                    text=(
-                        f"{accessory_count} "
-                        f"accessor"
-                        f"{'y' if accessory_count == 1 else 'ies'} selected"
-                    )
-                )
-
-            else:
-
-                self.summary_accessories.configure(
-                    text="No accessories"
                 )
 
         except Exception:
@@ -3677,38 +3281,7 @@ class QuotationForm(tk.Toplevel):
 
     def get_form_data(self):
 
-        accessories = []
-
-        # Pass ALL accessories (checked + unchecked) so page 4 can
-        # display them, with their 'selected' flag.
-        # The generator's _normalize_accessories() filters out
-        # unchecked ones for page 5 totals.
-        for row in self.accessory_rows:
-
-            is_selected = bool(row["selected"].get())
-
-            try:
-                qty = float(self._decimal(row["quantity"].get()))
-            except Exception:
-                qty = 1.0
-            if qty <= 0:
-                qty = 1.0
-
-            try:
-                unit_price = float(self._decimal(row["price"].get()))
-            except Exception:
-                unit_price = 0.0
-
-            accessories.append(
-                {
-                    "code": row["code"],
-                    "name": row["name"],
-                    "qty": qty,
-                    "unit_price": unit_price,
-                    "total": qty * unit_price,
-                    "selected": is_selected,
-                }
-            )
+        accessories = []  # Crystal has no accessories
 
         selected_terms = []
 
@@ -4447,14 +4020,14 @@ class QuotationForm(tk.Toplevel):
 
         # ---- 3. Resolve product from catalog ----
         try:
-            from quotation_generator import (
+            from quotation_generator_crystal import (
                 _resolve_product,
                 calculate_totals,
             )
         except Exception as exc:
             messagebox.showerror(
                 "Preview unavailable",
-                f"Could not import quotation_generator.\n\n"
+                f"Could not import quotation_generator_crystal.\n\n"
                 f"{type(exc).__name__}: {exc}",
                 parent=self,
             )
@@ -4568,37 +4141,50 @@ class QuotationForm(tk.Toplevel):
     def _peek_offer_number(self, data):
         """
         Read the NEXT offer number without incrementing the counter.
-        Also returns the quotation date string.
+        Uses the module-aware quotation_number_service so Crystal gets
+        CRY/26-27/NNN and VMM gets AA/VMM/26-27/NNN.
         """
-
-        prefix = "AA/VMM"
-        fy = "26-27"
-
-        try:
-            from app.company import QUOTATION
-            prefix = QUOTATION.get("prefix", prefix)
-            fy = QUOTATION.get("financial_year", fy)
-        except Exception:
-            pass
 
         import json as _json
         from pathlib import Path as _Path
 
-        counter_file = _Path(PROJECT_ROOT) / "data" / "offer_counter.json"
-
-        serial = 1
+        # ─── Resolve the NEXT number without incrementing ───
+        qn = None
         try:
+            from app.services.quotation_number_service import (
+                get_next_quotation_number,
+                _get_quotation_prefix,
+            )
+            # get_next_quotation_number() increments, so we can't use it here.
+            # Instead, read the counter file directly, using the correct
+            # module-aware prefix and file location.
+            from app.services.paths import get_data_dir
+            counter_file = get_data_dir() / "quotation_counter.json"
+
+            prefix = _get_quotation_prefix()
+            fy = "26-27"
+
+            serial = 1
             if counter_file.is_file():
                 counter = _json.loads(counter_file.read_text(encoding="utf-8")) or {}
-                serial = int(counter.get(f"{prefix}/{fy}", 0)) + 1
+                last = int(counter.get("last_number", 0))
+                serial = last + 1
+
+            qn = f"{prefix}/{fy}/{serial:04d}"
         except Exception:
-            pass
+            # Fallback — try the old path just in case
+            try:
+                counter_file = _Path(PROJECT_ROOT) / "data" / "offer_counter.json"
+                serial = 1
+                if counter_file.is_file():
+                    counter = _json.loads(counter_file.read_text(encoding="utf-8")) or {}
+                    serial = int(counter.get("AA/VMM/26-27", 0)) + 1
+                qn = f"CRY/26-27/{serial:04d}"
+            except Exception:
+                qn = "CRY/26-27/0001"
 
-        qn = f"{prefix}/{fy}/{serial:03d}"
-
-        # Date — take from data or today
+        # ─── Date — take from data or today ───
         qd = data.get("quotation_date") or ""
-
         try:
             from datetime import date as _d, datetime as _dt
             # If ISO, reformat to DD-MM-YYYY
@@ -4607,6 +4193,13 @@ class QuotationForm(tk.Toplevel):
                 qd = f"{d}-{m}-{y}"
         except Exception:
             pass
+
+        if not qd:
+            try:
+                from datetime import datetime as _dt2
+                qd = _dt2.now().strftime("%d-%m-%Y")
+            except Exception:
+                qd = ""
 
         return qn, qd
 
@@ -4738,9 +4331,6 @@ class QuotationForm(tk.Toplevel):
         )
 
         self.completed_steps.clear()
-
-        self.accessory_rows = []
-
         self.term_rows = []
 
         self._load_step(1)

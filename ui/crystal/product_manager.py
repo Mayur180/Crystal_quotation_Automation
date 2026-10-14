@@ -2,7 +2,7 @@
 # CRYSTAL / ARMATECH ASSOCIATES
 # PRODUCT / PRICE MANAGER
 #
-# Modal window — two tabs (Products / Accessories).
+# Modal window — Products catalog.
 #
 # File:
 #   ui/product_manager.py
@@ -26,7 +26,6 @@ try:
     from app.services.catalog_admin_service import (
         load_catalog,
         update_product,
-        update_accessory,
         bulk_adjust_product_prices,
         list_backups,
         restore_backup,
@@ -34,7 +33,6 @@ try:
 except Exception:
     load_catalog = None
     update_product = None
-    update_accessory = None
     bulk_adjust_product_prices = None
     list_backups = None
     restore_backup = None
@@ -268,168 +266,6 @@ class ProductEditDialog(tk.Toplevel):
         self.destroy()
 
 
-# ============================================================
-# ACCESSORY EDIT DIALOG
-# ============================================================
-
-class AccessoryEditDialog(tk.Toplevel):
-
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    SOFT = "#F8F9FA"
-
-    FIELDS = [
-        ("code", "Code", True),
-        ("name", "Name", False),
-        ("category", "Category", False),
-        ("price", "Price (INR)", False),
-        ("default_quantity", "Default Quantity", False),
-        ("unit", "Unit", False),
-        ("status", "Status (active/inactive)", False),
-        ("description", "Description", False),
-    ]
-
-    def __init__(self, parent, accessory):
-        super().__init__(parent)
-
-        self.result = None
-        self.accessory = accessory or {}
-        self.original_code = self.accessory.get("code", "")
-
-        self.title(f"Edit Accessory — {self.original_code}")
-        self.geometry("640x600")
-        self.minsize(560, 480)
-        self.configure(bg=self.BG)
-        self.transient(parent)
-        self.grab_set()
-
-        self.vars = {}
-        self._build_interface()
-
-        self.protocol("WM_DELETE_WINDOW", self._cancel)
-
-        # ---- Keyboard shortcuts ----
-        try:
-            from ui.common.ui_helpers import install_modal_shortcuts
-            install_modal_shortcuts(
-                self,
-                on_escape=self._cancel,
-                on_enter=self._save,
-            )
-        except Exception:
-            pass
-
-    def _build_interface(self):
-
-        header = tk.Frame(self, bg=self.CARD, height=68)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-
-        tk.Label(header,
-                 text=f"Edit Accessory — {self.original_code}",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 14, "bold")).pack(anchor="w", padx=22,
-                                                  pady=(18, 0))
-
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
-
-        card = tk.Frame(self, bg=self.CARD,
-                        highlightbackground=self.BORDER, highlightthickness=1)
-        card.pack(fill="both", expand=True, padx=18, pady=14)
-
-        body = tk.Frame(card, bg=self.CARD)
-        body.pack(fill="both", expand=True, padx=18, pady=16)
-
-        for key, label, readonly in self.FIELDS:
-
-            box = tk.Frame(body, bg=self.CARD)
-            box.pack(fill="x", pady=5)
-
-            tk.Label(box, text=label, bg=self.CARD, fg=self.TEXT,
-                     font=("Arial", 9, "bold"), width=20,
-                     anchor="w").pack(side="left")
-
-            value = self.accessory.get(key, "")
-            self.vars[key] = tk.StringVar(value=str(value) if value is not None else "")
-
-            e = tk.Entry(box, textvariable=self.vars[key],
-                         bg="white", fg=self.TEXT,
-                         relief="solid", bd=1,
-                         font=("Arial", 10),
-                         insertbackground=self.RED)
-            e.pack(side="left", fill="x", expand=True, ipady=6)
-
-            if readonly:
-                e.configure(state="readonly",
-                            readonlybackground=self.SOFT)
-
-        footer = tk.Frame(self, bg="white", height=66,
-                          highlightbackground=self.BORDER,
-                          highlightthickness=1)
-        footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
-
-        tk.Button(footer, text="Cancel", command=self._cancel,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6", activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  width=14, height=2).pack(side="right", padx=(8, 22), pady=14)
-
-        tk.Button(footer, text="Save Accessory", command=self._save,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK, activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 10, "bold"), cursor="hand2",
-                  width=18, height=2).pack(side="right", pady=14)
-
-    def _save(self):
-
-        if update_accessory is None:
-            messagebox.showerror("Unavailable",
-                                 "Catalog admin service not loaded.",
-                                 parent=self)
-            return
-
-        data = {}
-        for key, _label, readonly in self.FIELDS:
-            if readonly:
-                continue
-            var = self.vars.get(key)
-            if isinstance(var, tk.StringVar):
-                data[key] = var.get().strip()
-
-        # Coerce numeric fields
-        for num_key in ("price",):
-            try:
-                data[num_key] = int(Decimal(str(data.get(num_key, 0))))
-            except Exception:
-                pass
-
-        try:
-            data["default_quantity"] = int(Decimal(
-                str(data.get("default_quantity", 1))))
-        except Exception:
-            data["default_quantity"] = 1
-
-        ok, err = update_accessory(self.original_code, data)
-
-        if not ok:
-            messagebox.showerror("Save failed", str(err), parent=self)
-            return
-
-        self.result = data
-        self.destroy()
-
-    def _cancel(self):
-        self.result = None
-        self.destroy()
-
 
 # ============================================================
 # MAIN WINDOW
@@ -452,7 +288,7 @@ class ProductManager(tk.Toplevel):
     def __init__(self, parent):
         super().__init__(parent)
 
-        self.title("CRYSTAL | Products & Prices")
+        self.title("CRYSTAL | Products")
         self.geometry("1180x760")
         self.minsize(1000, 640)
         self.configure(bg=self.BG)
@@ -527,7 +363,6 @@ class ProductManager(tk.Toplevel):
 
         self.tab_buttons = {}
         for key, label in [("products", "Products"),
-                            ("accessories", "Accessories"),
                             ("backups", "Backups")]:
             btn = tk.Button(inner, text=label,
                             command=lambda k=key: self._switch_tab(k),
@@ -620,8 +455,6 @@ class ProductManager(tk.Toplevel):
 
         if self.current_tab == "products":
             self._render_products()
-        elif self.current_tab == "accessories":
-            self._render_accessories()
         elif self.current_tab == "backups":
             self._render_backups()
 
@@ -718,63 +551,6 @@ class ProductManager(tk.Toplevel):
     # ACCESSORIES
     # --------------------------------------------------------
 
-    def _render_accessories(self):
-
-        catalog = load_catalog() or {}
-        accessories = catalog.get("accessories", []) or []
-
-        cols = ("code", "name", "category", "price", "qty", "status")
-        tree = ttk.Treeview(self.body, columns=cols, show="headings",
-                            style="PM.Treeview", height=16)
-
-        headings = {
-            "code": "Code",
-            "name": "Name",
-            "category": "Category",
-            "price": "Price",
-            "qty": "Default Qty",
-            "status": "Status",
-        }
-        widths = {
-            "code": 140, "name": 220, "category": 120,
-            "price": 110, "qty": 100, "status": 100,
-        }
-
-        for c in cols:
-            tree.heading(c, text=headings[c])
-            tree.column(c, width=widths[c], anchor="w",
-                        stretch=(c in ("name",)))
-
-        for a in accessories:
-            tree.insert("", "end", iid=a.get("code", ""),
-                        values=(
-                            a.get("code", ""),
-                            a.get("name", ""),
-                            a.get("category", ""),
-                            _money(a.get("price", 0)),
-                            a.get("default_quantity", 1),
-                            a.get("status", ""),
-                        ))
-
-        vsb = ttk.Scrollbar(self.body, orient="vertical",
-                            command=tree.yview)
-        tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
-
-        tree.bind("<<TreeviewSelect>>", self._on_select)
-        tree.bind("<Double-1>", lambda e: self._edit_selected())
-
-        self.tree = tree
-        self.count_label.configure(text=f"{len(accessories)} accessory item(s)")
-
-        # Keyboard shortcuts
-        self._install_tree_shortcuts(tree, self._edit_selected)
-
-    # --------------------------------------------------------
-    # BACKUPS
-    # --------------------------------------------------------
-
     def _render_backups(self):
 
         backups = list_backups() if list_backups else []
@@ -845,22 +621,6 @@ class ProductManager(tk.Toplevel):
             if dialog.result is not None:
                 self._reload()
 
-        elif self.current_tab == "accessories":
-            catalog = load_catalog() or {}
-            accessory = None
-            for a in catalog.get("accessories", []):
-                if a.get("code") == self.selected_key:
-                    accessory = a
-                    break
-            if accessory is None:
-                messagebox.showerror("Not found",
-                                     "Accessory not found in catalog.",
-                                     parent=self)
-                return
-            dialog = AccessoryEditDialog(self, accessory)
-            self.wait_window(dialog)
-            if dialog.result is not None:
-                self._reload()
 
     # --------------------------------------------------------
     # BULK ADJUST

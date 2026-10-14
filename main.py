@@ -117,7 +117,14 @@ def _phase_dashboard(session):
     # Route to the correct module dashboard
     from app.services.paths import get_active_module
     if get_active_module() == "Crystal":
-        from ui.crystal.dashboard import Dashboard
+        from ui.crystal.dashboard import Dashboard as CrystalDashboard
+        app = CrystalDashboard(
+            username=getattr(session, "username", "Admin"),
+            module="Crystal",
+            on_logout=lambda: None,
+        )
+        app.mainloop()
+        return
     else:
         from ui.vmm.dashboard import Dashboard
 
