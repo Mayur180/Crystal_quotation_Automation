@@ -201,7 +201,6 @@ class Dashboard(tk.Tk):
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
         handlers = {
-            "home":        self._go_home,
             "dashboard":   self._go_home,
             "quotes":      self._open_history,
             "products":    self._open_products,

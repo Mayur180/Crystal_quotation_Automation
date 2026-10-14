@@ -4,7 +4,6 @@ from ui.crystal import theme as T
 
 
 NAV_ITEMS = [
-    ("home",        "🏠", "Home",             "_go_home"),
     ("dashboard",   "◉",  "Dashboard",        "_go_dashboard"),
     ("quotes",      "📄", "Quotes",           "_go_quotes"),
     ("products",    "📦", "Products",         "_go_products"),
