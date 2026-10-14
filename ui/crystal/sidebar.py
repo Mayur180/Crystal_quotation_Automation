@@ -19,6 +19,7 @@ class Sidebar(tk.Frame):
                  on_navigate, on_quit):
         super().__init__(parent, bg=T.SURFACE, width=T.SIDEBAR_WIDTH)
         self.pack_propagate(False)
+        self._collapsed = False
 
         # right border
         tk.Frame(self, bg=T.BORDER, width=1).pack(side="right", fill="y")
@@ -108,6 +109,16 @@ class Sidebar(tk.Frame):
     def clear_active(self):
         for refs in self._items.values():
             _set_ref_active(refs, False)
+
+    # ─────────────────────────────────────────────────────
+    def toggle(self):
+        """Collapse / expand the sidebar in place."""
+        if self._collapsed:
+            self.grid()
+            self._collapsed = False
+        else:
+            self.grid_remove()
+            self._collapsed = True
 
 
 def _paint(refs, bg, icon_fg, text_fg):

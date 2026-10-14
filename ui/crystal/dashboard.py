@@ -92,7 +92,7 @@ class Dashboard(tk.Tk):
         left = tk.Frame(bar, bg=T.SURFACE)
         left.pack(side="left", fill="y", padx=(20, 0))
 
-        W.IconButton(left, "☰", lambda: None).pack(side="left", pady=12)
+        W.IconButton(left, "☰", self._sidebar.toggle).pack(side="left", pady=12)
         tk.Label(left, text="Dashboard", bg=T.SURFACE, fg=T.TEXT,
                  font=T.FONT_H2).pack(side="left", padx=(12, 0))
 
