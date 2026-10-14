@@ -47,9 +47,14 @@ class Sidebar(tk.Frame):
         # ─── Divider ───
         tk.Frame(self, bg=T.BORDER, height=1).pack(fill="x", padx=16, pady=(8, 4))
 
-        # ─── Quit ───
-        self._quit = self._make_item(self, "_quit", "🚪", "Quit",
-                                      lambda _k: on_quit(), danger=True)
+        # ─── Logout ───
+        self._logout = self._make_item(self, "_logout", "🚪", "Logout",
+                                       lambda _k: on_quit(), danger=True)
+
+        # ─── Quit App ───
+        self._quit_app = self._make_item(self, "_quit_app", "⏻", "Quit App",
+                                         lambda _k: _confirm_quit_app(),
+                                         danger=True)
 
         # mark active
         self.set_active(active_key)
