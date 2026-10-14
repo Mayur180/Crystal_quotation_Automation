@@ -27,7 +27,16 @@ from pathlib import Path
 from app.services.paths import get_data_dir
 DATA_DIR = get_data_dir()
 BACKUP_DIR = DATA_DIR / "backups"
-CATALOG_FILE = DATA_DIR / "catalog.json"
+# Module-aware catalog path — resolved at call time so it respects
+# paths.set_active_module() changes.
+def _catalog_file():
+    """Return the catalog.json path for the CURRENT module."""
+    try:
+        from app.services.paths import get_data_dir
+        return get_data_dir() / "catalog.json"
+    except Exception:
+        # Fallback to old behavior
+        return DATA_DIR / "catalog.json"
 
 
 # ============================================================
@@ -67,12 +76,33 @@ def _timestamp():
 # ============================================================
 
 def load_catalog():
-    """Return the full catalog dict, or {} on error."""
+    """Return the full catalog as {"products": [...], "accessories": [...]}.
+
+    Handles both JSON shapes:
+      (A) list      : [ {product}, ... ]                    ← Crystal v4
+      (B) dict      : { "products": [...], "accessories": [...] }  ← VMM legacy
+
+    Returns {} on error.
+    """
     try:
-        if CATALOG_FILE.is_file():
-            with open(CATALOG_FILE, "r", encoding="utf-8") as fh:
+        if _catalog_file().is_file():
+            with open(_catalog_file(), "r", encoding="utf-8") as fh:
                 data = json.load(fh)
+
+            if isinstance(data, list):
+                data = {"products": data, "accessories": []}
+
             if isinstance(data, dict):
+                products = data.get("products", []) or []
+                # Normalize field aliases so consumers always see
+                # product_name and price (catalog stores name / rate).
+                for prod in products:
+                    if not isinstance(prod, dict):
+                        continue
+                    if "product_name" not in prod and "name" in prod:
+                        prod["product_name"] = prod["name"]
+                    if "price" not in prod and "rate" in prod:
+                        prod["price"] = prod["rate"]
                 return data
     except Exception:
         pass
@@ -82,12 +112,12 @@ def load_catalog():
 def make_backup():
     """Copy the current catalog.json to data/backups/. Returns path or None."""
     _ensure_dirs()
-    if not CATALOG_FILE.is_file():
+    if not _catalog_file().is_file():
         return None
     name = f"catalog_{_timestamp()}.json"
     target = BACKUP_DIR / name
     try:
-        shutil.copy2(CATALOG_FILE, target)
+        shutil.copy2(_catalog_file(), target)
         return target
     except Exception:
         return None
@@ -96,10 +126,10 @@ def make_backup():
 def _write_catalog(catalog):
     """Atomic write: temp file then os.replace."""
     _ensure_dirs()
-    tmp = CATALOG_FILE.with_suffix(".tmp")
+    tmp = _catalog_file().with_suffix(".tmp")
     with open(tmp, "w", encoding="utf-8") as fh:
         json.dump(catalog, fh, indent=4, ensure_ascii=False)
-    os.replace(tmp, CATALOG_FILE)
+    os.replace(tmp, _catalog_file())
 
 
 def list_backups():
@@ -248,8 +278,8 @@ if __name__ == "__main__":
     print("=" * 60)
     print("CATALOG ADMIN SERVICE")
     print("=" * 60)
-    print(f"File: {CATALOG_FILE}")
-    print(f"Exists: {CATALOG_FILE.is_file()}")
+    print(f"File: {_catalog_file()}")
+    print(f"Exists: {_catalog_file().is_file()}")
 
     catalog = load_catalog()
     print(f"Products: {len(catalog.get('products', []))}")

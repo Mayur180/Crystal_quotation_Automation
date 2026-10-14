@@ -506,10 +506,13 @@ class ProductManager(tk.Toplevel):
             tree.column(c, width=widths[c], anchor="w",
                         stretch=(c in ("category", "name")))
 
-        for p in products:
+        for _item in tree.get_children():
+            tree.delete(_item)
+
+        for idx, p in enumerate(products):
             try:
                 model_val = p.get("model", "")
-                tree.insert("", "end", iid=model_val,
+                tree.insert("", "end", iid=f"row_{idx}",
                             values=(
                                 p.get("model", ""),
                                 p.get("category", ""),
