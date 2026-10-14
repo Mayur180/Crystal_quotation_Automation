@@ -125,14 +125,8 @@ class QuotationPreview(tk.Toplevel):
         tk.Label(brand, text="  /  Quotation Preview", bg=self.CARD,
                  fg=self.MUTED, font=("Arial", 10)).pack(side="left", pady=24)
 
-        right = tk.Frame(header, bg=self.CARD)
-        right.pack(side="right", padx=26)
-        tk.Label(right, text=f"Offer No.  {self.quotation_number}",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 11, "bold")).pack(anchor="e", pady=(18, 0))
-        tk.Label(right, text=f"Date  {self.quotation_date}",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 9)).pack(anchor="e")
+        # Note: offer number is shown inside the content card
+        # (_render_header_card) — no need to duplicate it here.
 
         tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
 
