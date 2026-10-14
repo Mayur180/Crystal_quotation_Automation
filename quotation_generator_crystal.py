@@ -1655,13 +1655,13 @@ def _crystal_page(
     from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
     from docx.oxml.ns import qn
 
-    # ─── Palette ───
-    ACCENT = RGBColor(0xC8, 0x10, 0x2E)
-    TEXT   = RGBColor(0x0F, 0x17, 0x20)
-    MUTED  = RGBColor(0x7B, 0x85, 0x98)
-    BLACK  = RGBColor(0x00, 0x00, 0x00)
-    BG_HDR = "C2CEC2"        # grey-green header background
-    RED    = "C8102E"
+    # ─── Palette (uniform grey-green; logo image keeps its own red) ───
+    ACCENT  = RGBColor(0x6B, 0x78, 0x6B)   # muted olive
+    TEXT    = RGBColor(0x0F, 0x17, 0x20)
+    MUTED   = RGBColor(0x7B, 0x85, 0x98)
+    BLACK   = RGBColor(0x00, 0x00, 0x00)
+    BG_HDR  = "C2CEC2"
+    RED     = "C8102E"
 
     # ─── Helpers ───
     def set_cell(cell, text, *, bold=False, size=9, color=TEXT,
@@ -1708,11 +1708,10 @@ def _crystal_page(
         return p
 
     # ═══════════════════════════════════════════════════════════
-    # 1. HEADER — logo (left) + Armatech block (right)
+    # 1. HEADER — logo on top, Armatech block below (stacked)
     # ═══════════════════════════════════════════════════════════
-    hdr = new_table(1, 2, widths_mm=[70, 116])
 
-    # Left: CRYSTAL (logo attempt)
+    # ── Logo (top-left) ──
     logo_path = None
     try:
         from quotation_generator_crystal import find_logo
@@ -1720,128 +1719,123 @@ def _crystal_page(
     except Exception:
         pass
 
-    left_cell = hdr.cell(0, 0)
-    left_cell.text = ""
-    lp = left_cell.paragraphs[0]
     if logo_path:
         try:
-            from docx.shared import Mm as _Mm
-            run = lp.add_run()
-            run.add_picture(str(logo_path), width=_Mm(45))
+            p = doc.add_paragraph()
+            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            p.paragraph_format.space_after = Pt(2)
+            p.paragraph_format.space_before = Pt(0)
+            run = p.add_run()
+            run.add_picture(str(logo_path), width=Mm(38))
         except Exception:
-            r = lp.add_run("CRYSTAL")
-            r.font.size = Pt(22); r.font.bold = True; r.font.color.rgb = ACCENT
+            para("CRYSTAL", size=20, bold=True, color=ACCENT,
+                 align=WD_ALIGN_PARAGRAPH.LEFT, space_after=2)
     else:
-        r = lp.add_run("CRYSTAL")
-        r.font.size = Pt(22); r.font.bold = True; r.font.color.rgb = ACCENT
-    para("", size=1, space_after=0)
+        para("CRYSTAL", size=20, bold=True, color=ACCENT,
+             align=WD_ALIGN_PARAGRAPH.LEFT, space_after=2)
 
-    # Right: Armatech block
-    right_cell = hdr.cell(0, 1)
-    right_cell.text = ""
-    rp = right_cell.paragraphs[0]
-    rp.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    rp.paragraph_format.space_after = Pt(2)
-    r = rp.add_run("ARMATECH ASSOCIATES")
-    r.font.size = Pt(14); r.font.bold = True; r.font.color.rgb = ACCENT
+    # ── Armatech block below logo (LEFT aligned) ──
+    para("ARMATECH ASSOCIATES", size=14, bold=True, color=ACCENT,
+         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
+    para("A Name With Magnetic Fame", size=9, color=TEXT,
+         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
+    para("W-174A, 'S' BLOCK, BHOSARI", size=9, color=TEXT,
+         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
+    para("Mob No.: 7020991684 | Email: armatech@gmail.com",
+         size=9, color=TEXT, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4)
 
-    for line, sz, bd in [
-        ("A Name With Magnetic Fame", 9, False),
-        ("W-174A, 'S' BLOCK, BHOSARI, PUNE - 411026", 9, False),
-        ("Mob No.: 7020991684    Email: armatech@gmail.com", 9, False),
-    ]:
-        p = right_cell.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-        p.paragraph_format.space_after = Pt(1)
-        r = p.add_run(line)
-        r.font.size = Pt(sz); r.font.bold = bd; r.font.color.rgb = TEXT
-
-    # QUOTATION centered bar
+    # ── QUOTATION centered bar ──
     q_bar = new_table(1, 1)
     set_cell(q_bar.cell(0, 0), "QUOTATION", bold=True, size=12,
+             color=BLACK,
              align=WD_ALIGN_PARAGRAPH.CENTER, bg=BG_HDR)
 
     # ═══════════════════════════════════════════════════════════
-    # 2. CUSTOMER (left) + META (right) — two columns
     # ═══════════════════════════════════════════════════════════
-    block = new_table(1, 2, widths_mm=[100, 86])
+    # 2. CUSTOMER (full width) + META (full width, below)
+    # ═══════════════════════════════════════════════════════════
+    cust = customer or {}
 
-    # ── Left: To / Customer ──
-    lc = block.cell(0, 0)
-    lc.text = ""
-    p = lc.paragraphs[0]; p.paragraph_format.space_after = Pt(3)
+    # ── 2a. Customer box (full width, single column) ──
+    cust_tbl = new_table(1, 1)
+    cust_cell = cust_tbl.cell(0, 0)
+    cust_cell.text = ""
+
+    # "To" heading
+    p = cust_cell.paragraphs[0]
+    p.paragraph_format.space_after = Pt(3)
     r = p.add_run("To")
     r.font.size = Pt(10); r.font.bold = True; r.font.color.rgb = BLACK
 
-    cust = customer or {}
-    buyer_lines = []
-    if cust.get("company"):
-        buyer_lines.append((cust["company"].upper(), True))
-    if cust.get("contact_person"):
-        buyer_lines.append((f"Attn: {cust['contact_person']}", False))
-    if cust.get("address"):
-        buyer_lines.append((cust["address"], False))
-    city_line = " ".join(filter(None, [cust.get("city")]))
-    if city_line:
-        buyer_lines.append((city_line, False))
-    state_line = " ".join(filter(None, [cust.get("state")]))
-    if state_line:
-        buyer_lines.append((state_line, False))
-    pin = cust.get("pincode")
-    if pin:
-        buyer_lines.append((f"PIN: {pin}", False))
-    if cust.get("phone"):
-        buyer_lines.append((f"Phone: {cust['phone']}", False))
-    if cust.get("email"):
-        buyer_lines.append((f"Email: {cust['email']}", False))
-    if cust.get("gstin"):
-        buyer_lines.append((f"GSTIN: {cust['gstin']}", False))
-    buyer_lines.append(("State Code : 27 Maharashtra", False))
-
-    for line, bold in buyer_lines:
-        p = lc.add_paragraph()
+    def cust_line(text, *, bold=False):
+        p = cust_cell.add_paragraph()
         p.paragraph_format.space_after = Pt(1)
-        r = p.add_run(line)
+        r = p.add_run(text)
         r.font.size = Pt(9); r.font.bold = bold; r.font.color.rgb = TEXT
 
-    # ── Right: Quotation meta ──
-    rc = block.cell(0, 1)
-    rc.text = ""
-    meta = [
-        ("Quotation No.", str(quotation_number)),
-        ("Quotation Date:", str(quotation_date)),
-        ("Ref. No.", "BY MAIL"),
-        ("Ref. Date:", str(quotation_date)),
-        ("Cr Days", "0"),
-    ]
+    if cust.get("company"):
+        cust_line(cust["company"].upper(), bold=True)
+    if cust.get("customer_name") and cust.get("customer_name") != cust.get("company"):
+        cust_line(f"Attn: {cust['customer_name']}")
+    if cust.get("address"):
+        cust_line(cust["address"])
+    if cust.get("city"):
+        cust_line(cust["city"])
+    if cust.get("state"):
+        cust_line(cust["state"])
+    if cust.get("pincode"):
+        cust_line(f"PIN: {cust['pincode']}")
+    if cust.get("phone"):
+        cust_line(f"Phone: {cust['phone']}")
+    if cust.get("email"):
+        cust_line(f"Email: {cust['email']}")
+    if cust.get("gstin"):
+        cust_line(f"GSTIN: {cust['gstin']}")
+    cust_line("State Code : 27 Maharashtra")
 
-    first = True
-    for label, value in meta:
-        if first:
-            p = rc.paragraphs[0]
-            first = False
-        else:
-            p = rc.add_paragraph()
-        p.paragraph_format.space_after = Pt(2)
-        r1 = p.add_run(f"{label}  ")
-        r1.font.size = Pt(9); r1.font.bold = True; r1.font.color.rgb = TEXT
-        r2 = p.add_run(value)
-        r2.font.size = Pt(9); r2.font.color.rgb = TEXT
+    para("", size=2, space_after=0)
 
-    # Kind Attn fallback chain:
-    #   contact_person → customer_name → "Sir/Madam"
+    # ── 2b. Meta box (full width, below customer) ──
+    meta_tbl = new_table(1, 1)
+    mc = meta_tbl.cell(0, 0)
+    mc.text = ""
+
+    # Line 1: Quotation No + Date on the same line
+    p = mc.paragraphs[0]
+    p.paragraph_format.space_after = Pt(3)
+    r1 = p.add_run(f"Quotation No. {quotation_number}     ")
+    r1.font.size = Pt(9); r1.font.bold = True; r1.font.color.rgb = BLACK
+    r2 = p.add_run(f"Quotation Date: {quotation_date}")
+    r2.font.size = Pt(9); r2.font.color.rgb = TEXT
+
+    # Line 2: Ref. No + Ref. Date on the same line
+    p = mc.add_paragraph()
+    p.paragraph_format.space_after = Pt(3)
+    r1 = p.add_run("Ref. No.  BY MAIL         ")
+    r1.font.size = Pt(9); r1.font.bold = True; r1.font.color.rgb = BLACK
+    r2 = p.add_run(f"Ref. Date: {quotation_date}")
+    r2.font.size = Pt(9); r2.font.color.rgb = TEXT
+
+    # Line 3: Cr Days alone
+    p = mc.add_paragraph()
+    p.paragraph_format.space_after = Pt(3)
+    r = p.add_run("Cr Days     0")
+    r.font.size = Pt(9); r.font.color.rgb = TEXT
+
+    # Kind Attn is placed OUTSIDE the meta table — a plain line below it.
+
+    # ── Kind Attn line (outside meta box) ──
     attn_name = (
         cust.get("contact_person")
+        or cust.get("customer_name")
         or cust.get("name")
         or "Sir/Madam"
     ).strip()
-    # Phone fallback: customer phone → "--"
     attn_phone = (cust.get("phone") or "--").strip()
-
-    p = rc.add_paragraph()
-    p.paragraph_format.space_before = Pt(4)
-    r = p.add_run(f"Kind Attn : {attn_name}   Mob.No. {attn_phone}")
-    r.font.size = Pt(9); r.font.bold = True; r.font.color.rgb = BLACK
+    para("", size=2, space_after=0)
+    para(f"Kind Attn : {attn_name}     Mob.No. {attn_phone}",
+         size=9, bold=True, color=BLACK,
+         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
 
     # ═══════════════════════════════════════════════════════════
     # 3. GREETING + ACKNOWLEDGEMENT
@@ -1858,6 +1852,7 @@ def _crystal_page(
     # ═══════════════════════════════════════════════════════════
     pd_bar = new_table(1, 1)
     set_cell(pd_bar.cell(0, 0), "PRODUCT DETAILS", bold=True, size=10,
+             color=BLACK,
              align=WD_ALIGN_PARAGRAPH.CENTER, bg=BG_HDR)
 
     # Product table
@@ -1954,15 +1949,12 @@ def _crystal_page(
     # 6. SUBJECT LINE
     # ═══════════════════════════════════════════════════════════
     para('" Subject to Pune jurisdiction only "',
-         size=9, bold=True, align=WD_ALIGN_PARAGRAPH.CENTER, space_after=6)
+         size=9, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
 
     # ═══════════════════════════════════════════════════════════
     # 7. TERMS & CONDITIONS — 2-column table
     # ═══════════════════════════════════════════════════════════
-    tc_bar = new_table(1, 1)
-    set_cell(tc_bar.cell(0, 0), "Terms & Conditions :", bold=True, size=9,
-             align=WD_ALIGN_PARAGRAPH.LEFT, bg=BG_HDR)
-
+    # ── Terms & Conditions — outer box with green header + inner terms table ──
     terms = selected_terms or [
         {"title": "Delivery",          "value": "WITHIN 2-3 WEEKS"},
         {"title": "Payment",           "value": "50% ADVANCE AND BALANCE AGAINST PROFORMA INVOICE"},
@@ -1971,12 +1963,32 @@ def _crystal_page(
         {"title": "Warranty",          "value": "1 Year warranty from the date of purchase. Warranty applicable on manufacturing defects only."},
     ]
 
-    terms_tbl = new_table(len(terms), 2, widths_mm=[50, 126])
+    # Outer box (1 col, 2 rows) — row 0 = green header, row 1 = content box
+    outer = doc.add_table(rows=2, cols=1)
+    outer.style = "Table Grid"
+
+    # Green header row inside outer box
+    set_cell(outer.cell(0, 0), "Terms & Conditions",
+             bold=True, size=10, color=BLACK,
+             align=WD_ALIGN_PARAGRAPH.LEFT, bg=BG_HDR)
+
+    # Content cell — place the inner terms table inside it
+    content_cell = outer.cell(1, 0)
+    content_cell.text = ""
+
+    # Inner terms table (nested inside the outer content cell)
+    inner = content_cell.add_table(rows=len(terms), cols=2)
+    inner.style = "Table Grid"
+    for row in inner.rows:
+        row.cells[0].width = Mm(50)
+        row.cells[1].width = Mm(115)
+
     for i, term in enumerate(terms):
         title = term.get("title") or term.get("key") or ""
         value = term.get("value") or ""
-        set_cell(terms_tbl.cell(i, 0), title, bold=True, size=8, bg=BG_HDR)
-        set_cell(terms_tbl.cell(i, 1), value, size=8)
+        set_cell(inner.cell(i, 0), title, bold=True, size=8, bg=BG_HDR)
+        set_cell(inner.cell(i, 1), value, size=8)
+
 
     # ═══════════════════════════════════════════════════════════
     # 8. FOOTER — GST TIN (left) + Signatory (right)
@@ -2008,6 +2020,7 @@ def _crystal_page(
     # ═══════════════════════════════════════════════════════════
     bank_bar = new_table(1, 1)
     set_cell(bank_bar.cell(0, 0), "Bank Account Details", bold=True, size=9,
+             color=BLACK,
              align=WD_ALIGN_PARAGRAPH.LEFT, bg=BG_HDR)
 
     bank_tbl = new_table(1, 1)
