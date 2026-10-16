@@ -294,15 +294,32 @@ class Field(tk.Frame):
         wrap.pack(fill="x")
         wrap.pack_propagate(False)
 
+        # Inner frame to hold the entry with a thin 1px padding,
+        # so focus highlight is a clean 1px ring.
+        inner = tk.Frame(wrap, bg=T.SURFACE)
+        inner.pack(fill="both", expand=True, padx=1, pady=1)
+
         self.var = tk.StringVar()
-        self.entry = tk.Entry(wrap, textvariable=self.var,
+        self.entry = tk.Entry(inner, textvariable=self.var,
                               bg=T.SURFACE, fg=T.TEXT,
                               font=T.FONT_BODY, bd=0,
-                              highlightthickness=0, show=show)
+                              highlightthickness=0,
+                              insertbackground=T.TEXT,
+                              show=show)
         self.entry.pack(fill="both", expand=True, padx=10, pady=8)
 
-        self.entry.bind("<FocusIn>",  lambda e: wrap.configure(bg=T.ACCENT))
-        self.entry.bind("<FocusOut>", lambda e: wrap.configure(bg=T.BORDER_HARD))
+        # Subtle 1px focus ring — blue, not red
+        def _focus_in(_e):
+            try:
+                wrap.configure(bg=T.FOCUS)
+            except Exception:
+                wrap.configure(bg=T.ACCENT)
+
+        def _focus_out(_e):
+            wrap.configure(bg=T.BORDER_HARD)
+
+        self.entry.bind("<FocusIn>",  _focus_in)
+        self.entry.bind("<FocusOut>", _focus_out)
 
     def get(self):  return self.var.get()
     def set(self, v): self.var.set(v or "")

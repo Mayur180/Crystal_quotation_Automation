@@ -131,6 +131,15 @@ def _get_fallback_categories():
 FALLBACK_CATEGORIES = _get_fallback_categories()
 
 
+# Canonical Crystal categories — always offered in the dropdown,
+# merged with whatever the catalog actually contains.
+CANONICAL_CRYSTAL_CATEGORIES = [
+    "MAGNETIC",
+    "NON-MAGNETIC",
+    "REPAIRING AND RECONDITIONING",
+]
+
+
 FALLBACK_MODELS = {
 
     "Manual VMM": [
@@ -1409,7 +1418,7 @@ class QuotationForm(tk.Toplevel):
             values=self._get_models(
                 self.category.get()
             ),
-            state="readonly",
+            state="normal",
             style="Crystal.TCombobox"
         )
 
@@ -1421,6 +1430,11 @@ class QuotationForm(tk.Toplevel):
         self.model_combo.bind(
             "<<ComboboxSelected>>",
             self._model_changed
+        )
+
+        self.model_combo.bind(
+            "<KeyRelease>",
+            self._on_model_keyrelease
         )
 
         product_box = tk.Frame(
@@ -1554,6 +1568,8 @@ class QuotationForm(tk.Toplevel):
 
     def _get_categories(self):
 
+        merged = []
+
         if get_product_categories:
 
             try:
@@ -1561,14 +1577,24 @@ class QuotationForm(tk.Toplevel):
                 categories = get_product_categories()
 
                 if categories:
-
-                    return [
-                        str(x)
-                        for x in categories
-                    ]
+                    merged = [str(x) for x in categories]
 
             except Exception:
                 pass
+
+        # Always include the canonical Crystal categories first,
+        # then append any extras that came from the catalog.
+        try:
+            from app.services import paths as _paths
+            if _paths.get_active_module() == "Crystal":
+                for cat in CANONICAL_CRYSTAL_CATEGORIES:
+                    if cat not in merged:
+                        merged.append(cat)
+        except Exception:
+            pass
+
+        if merged:
+            return merged
 
         return FALLBACK_CATEGORIES
 
@@ -1625,6 +1651,72 @@ class QuotationForm(tk.Toplevel):
             category,
             []
         )
+
+
+    # ────────────────────────────────────────────────────────
+    # TYPE-TO-SEARCH HELPERS (Feature B)
+    # ────────────────────────────────────────────────────────
+
+    def _get_products_for_category(self, category):
+        """Return list of {model, name} dicts for a category (best-effort)."""
+        out = []
+        try:
+            if get_products_by_category:
+                products = get_products_by_category(category) or []
+                for prod in products:
+                    if isinstance(prod, dict):
+                        m = prod.get("model") or prod.get("catalog_no") or prod.get("code")
+                        n = prod.get("product_name") or prod.get("name") or ""
+                        if m:
+                            out.append({"model": str(m), "name": str(n)})
+                    else:
+                        out.append({"model": str(prod), "name": ""})
+        except Exception:
+            pass
+        return out
+
+    def _filter_models(self, query, category):
+        """Return model list matching query on model OR name (case-insensitive)."""
+        all_products = self._get_products_for_category(category)
+        if not all_products:
+            # fall back to the plain model list
+            all_products = [{"model": m, "name": ""} for m in self._get_models(category)]
+
+        q = (query or "").strip().lower()
+        if not q:
+            return [p["model"] for p in all_products]
+
+        hits = [
+            p["model"] for p in all_products
+            if q in p["model"].lower() or q in p["name"].lower()
+        ]
+        return hits
+
+    def _on_model_keyrelease(self, event=None):
+        """Called on each keystroke in the model combobox.
+
+        Filter the dropdown options to matching models (by model OR name),
+        scoped to the currently selected category.
+        """
+        # Ignore navigation / commit keys
+        if event is not None and event.keysym in (
+            "Up", "Down", "Left", "Right", "Return", "Escape", "Tab"
+        ):
+            return
+
+        query = self.model.get()
+        category = self.category.get()
+
+        matches = self._filter_models(query, category)
+        self.model_combo["values"] = matches
+
+        # If the typed text exactly matches a model, commit it as a selection
+        if query and query in matches:
+            # Defer so the dropdown value is actually set first
+            try:
+                self.after(1, self._model_changed)
+            except Exception:
+                self._model_changed()
 
 
     # ========================================================

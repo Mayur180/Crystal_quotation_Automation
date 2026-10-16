@@ -112,19 +112,45 @@ def _phase_launcher(session):
 
 
 def _phase_dashboard(session):
-    """Launch the actual dashboard. This is the final, main Tk."""
+    """Launch the actual dashboard. This is the final, main Tk.
+
+    Returns "logout" if the user clicked Logout, otherwise None.
+    """
     from app.services import paths
     # Route to the correct module dashboard
     from app.services.paths import get_active_module
+
+    logged_out = {"value": False}
+
     if get_active_module() == "Crystal":
         from ui.crystal.dashboard import Dashboard as CrystalDashboard
+        from tkinter import messagebox
+
+        def _do_logout():
+            if not messagebox.askyesno(
+                "Log Out",
+                "Log out and return to login?",
+            ):
+                return
+            logged_out["value"] = True
+            app.quit()
+
         app = CrystalDashboard(
             username=getattr(session, "username", "Admin"),
             module="Crystal",
-            on_logout=lambda: None,
+            on_logout=_do_logout,
         )
         app.mainloop()
-        return
+
+        # Release Tk before next phase
+        try:
+            app.destroy()
+        except Exception:
+            pass
+        import gc; gc.collect()
+
+        return "logout" if logged_out["value"] else None
+
     else:
         from ui.vmm.dashboard import Dashboard
 
@@ -204,7 +230,9 @@ def main():
     print(f"🚀 Launching module: {session.active_module}")
 
     # ---- PHASE 3: DASHBOARD ----
-    _phase_dashboard(session)
+    result = _phase_dashboard(session)
+    if result == "logout":
+        return main()
 
 
 if __name__ == "__main__":

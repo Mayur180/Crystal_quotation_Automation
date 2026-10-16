@@ -7,3 +7,13 @@
 {"timestamp": "2026-10-14T12:22:20", "event": "created", "quotation_number": "CRY/26-27/012", "detail": "", "user": "ADMIN"}
 {"timestamp": "2026-10-14T13:13:21", "event": "created", "quotation_number": "CRY/26-27/013", "detail": "", "user": "ADMIN"}
 {"timestamp": "2026-10-14T13:23:37", "event": "created", "quotation_number": "CRY/26-27/014", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:35:54", "event": "deleted", "quotation_number": "CRY/26-27/013", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:35:57", "event": "deleted", "quotation_number": "CRY/26-27/012", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:00", "event": "deleted", "quotation_number": "CRY/26-27/007", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:03", "event": "deleted", "quotation_number": "CRY/26-27/008", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:06", "event": "deleted", "quotation_number": "CRY/26-27/009", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:08", "event": "deleted", "quotation_number": "CRY/26-27/014", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:11", "event": "deleted", "quotation_number": "CRY/26-27/011", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T15:36:14", "event": "deleted", "quotation_number": "CRY/26-27/010", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-14T20:43:41", "event": "created", "quotation_number": "CRY/26-27/015", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-16T14:05:27", "event": "created", "quotation_number": "CRY/26-27/016", "detail": "", "user": "ADMIN"}

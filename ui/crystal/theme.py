@@ -80,3 +80,7 @@ SHADOW_LAYERS = [
     (2, 2, SHADOW_SOFT),
     (1, 1, SHADOW),
 ]
+
+
+# Focus ring
+FOCUS = "#2563EB"    # subtle blue focus
