@@ -2492,18 +2492,18 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             pass
         
+        # BRUTE FORCE FIX: Only block if cart is EMPTY. Do not check the model dropdown at all.
         has_cart = bool(getattr(self, "items", []))
         
-        # Only block if they are on Step 2 AND the cart is completely empty
         if self.current_step == 2 and not has_cart:
-            messagebox.showwarning("Product required", "Please add at least one model to the cart.", parent=self)
+            messagebox.showwarning("Product required", "Please add at least one model to the cart using the 'Add to Quotation' button.", parent=self)
             return
         
         if self.current_step < 4:
             self.completed_steps.add(self.current_step)
             self._load_step(self.current_step + 1)
         else:
-            # We are on Step 4 (Terms), so generate the quotation
+            # We are on Step 4, generate the quotation
             if hasattr(self, '_generate_quotation'):
                 self._generate_quotation()
             else:
