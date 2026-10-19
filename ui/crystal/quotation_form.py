@@ -1387,11 +1387,17 @@ class QuotationForm(tk.Toplevel):
         tk.Entry(row, textvariable=self.machine_price, width=12, font=("Arial", 10)).pack(side="left", padx=10)
         
         tk.Label(row, text="Qty", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(15, 0))
-        tk.Entry(row, textvariable=self.machine_qty, width=8, font=("Arial", 10)).pack(side="left", padx=10)
+        tk.Entry(row, textvariable=self.machine_qty, width=8, font=("Arial", 10)).pack(side="left", padx=(10, 20))
 
-        tk.Label(row, text="Discount (₹)", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(15, 0))
+        # --- Discount UI ---
+        tk.Label(row, text="Discount:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
+        
+        self.disc_mode = tk.StringVar(value="Amount (₹)")
+        disc_mode_box = ttk.Combobox(row, textvariable=self.disc_mode, values=["Amount (₹)", "Percentage (%)"], state="readonly", width=15, font=("Arial", 9))
+        disc_mode_box.pack(side="left", padx=(0, 5))
+        
         self.disc_var = tk.StringVar(value="0")
-        tk.Entry(row, textvariable=self.disc_var, width=8, font=("Arial", 10)).pack(side="left", padx=10)
+        tk.Entry(row, textvariable=self.disc_var, width=10, font=("Arial", 10)).pack(side="left", padx=(0, 20))
 
         tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
@@ -1422,13 +1428,30 @@ class QuotationForm(tk.Toplevel):
         except: price = 0.0
         try: qty = int(float(str(self.machine_qty.get() or "1").strip() or "1"))
         except: qty = 1
-        try: disc = float(str(self.disc_var.get() or "0").strip() or "0")
-        except: disc = 0.0
+        try: disc_val = float(str(self.disc_var.get() or "0").strip() or "0")
+        except: disc_val = 0.0
             
         if price <= 0 or qty <= 0:
             if not silent: messagebox.showerror("Invalid", "Price and Qty must be > 0.", parent=self)
             return
-        total = (price * qty) - disc
+            
+        subtotal = price * qty
+        disc = 0.0
+        
+        # Check if discount is Percentage or Amount
+        mode = getattr(self, 'disc_mode', None)
+        mode_val = mode.get() if mode else "Amount (₹)"
+        
+        if mode_val == "Percentage (%)":
+            disc = subtotal * (disc_val / 100.0)
+        else:
+            disc = disc_val
+            
+        # Ensure discount doesn't exceed subtotal
+        if disc > subtotal:
+            disc = subtotal
+            
+        total = subtotal - disc
         self.items.append({"model": model, "price": price, "qty": qty, "discount": disc, "total": total})
         self._refresh_cart_table()
         self.model.set("")
