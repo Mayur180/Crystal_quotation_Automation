@@ -24,6 +24,12 @@ class Dashboard(tk.Tk):
         self._username = username
         self._module = module
         self._on_logout = on_logout
+        self._is_admin = False
+        try:
+            from app.services.user_service import is_admin
+            self._is_admin = is_admin(username)
+        except Exception:
+            pass
 
         self._build()
 
@@ -42,6 +48,7 @@ class Dashboard(tk.Tk):
             active_key="dashboard",
             on_navigate=self._on_nav,
             on_quit=self._quit,
+            is_admin=self._is_admin
         )
         self._sidebar.grid(row=0, column=0, sticky="ns")
 
@@ -118,63 +125,92 @@ class Dashboard(tk.Tk):
 
     def _build_body(self):
         pad = 28
+        summary = self._load_summary()
 
         # ─── KPI row ───
         kpi_row = tk.Frame(self._body, bg=T.BG)
         kpi_row.pack(fill="x", padx=pad, pady=(pad, 0))
 
-        summary = self._load_summary()
+        # Added icons to match VMM style
         kpis = [
-            ("3,323", "Products",     T.ACCENT),
-            ("0",     "Quotes",       None),
+            ("📦", f"{summary['products']:,}", "Products",     T.ACCENT),
+            ("👥", f"{summary['customers']:,}", "Customers",   None),
+            ("📄", f"{summary['quotes']:,}",   "Quotations",  None),
         ]
-        for i, (val, label, accent) in enumerate(kpis):
-            card = W.StatCard(kpi_row, value=val, label=label,
-                              accent_color=accent)
-            card.pack(side="left", fill="both", expand=True,
-                      padx=(0 if i == 0 else 16, 0))
+        for i, (icon, val, label, accent) in enumerate(kpis):
+            card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
+            card_wrap.pack(side="left", fill="both", expand=True, padx=(0 if i == 0 else 16, 0))
+            
+            icon_lbl = tk.Label(card_wrap, text=icon, bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 24))
+            icon_lbl.pack(side="left", padx=(20, 10), pady=20)
+            
+            card = W.StatCard(card_wrap, value=val, label=label, accent_color=accent)
+            card.pack(side="left", fill="both", expand=True, pady=10, padx=(0, 20))
 
         # ─── Two-column row ───
         two_col = tk.Frame(self._body, bg=T.BG)
         two_col.pack(fill="both", expand=True, padx=pad, pady=(24, pad))
 
-        # left: Quick Actions
+        # Left: Recent Activity
         left = tk.Frame(two_col, bg=T.BG)
         left.pack(side="left", fill="both", expand=True)
+        
+        tk.Label(left, text="Recent Quotations", bg=T.BG, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w")
+        tk.Label(left, text="Your last 5 generated quotes", bg=T.BG, fg=T.TEXT_BODY,
+                 font=T.FONT_BODY).pack(anchor="w", pady=(2, 12))
+        
+        if not summary["recent"]:
+            # Empty State Fix
+            empty_box = tk.Frame(left, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
+            empty_box.pack(fill="both", expand=True)
+            
+            tk.Label(empty_box, text="📄", bg=T.SURFACE, fg=T.BORDER, font=("Arial", 48)).pack(pady=(40, 10))
+            tk.Label(empty_box, text="No quotations yet", bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H2).pack()
+            tk.Label(empty_box, text="Create your first quote to see it here.", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY).pack(pady=(5, 20))
+            
+            btn = tk.Button(empty_box, text="+ Create New Quotation", bg=T.ACCENT, fg="white", 
+                            font=T.FONT_BODY_B, relief="flat", cursor="hand2", command=self._new_quotation)
+            btn.pack(pady=10, ipadx=10, ipady=5)
+        else:
+            for r in summary["recent"]:
+                row = tk.Frame(left, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
+                row.pack(fill="x", pady=2)
+                tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B).pack(side="left", padx=10, pady=6)
+                tk.Label(row, text=r["customer"] or "—", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY).pack(side="left", padx=10)
+                try:
+                    amt = f"₹{float(r['total']):,.0f}"
+                except Exception:
+                    amt = "₹0"
+                tk.Label(row, text=amt, bg=T.SURFACE, fg=T.ACCENT, font=T.FONT_BODY_B).pack(side="right", padx=10)
 
-        self._section_label(left, "Quick Actions", "Primary workflow shortcuts")
-
-        actions = [
-            ("＋", "New Quotation",      "Create a fresh quote",   True,  self._new_quotation),
-            ("📦", "Manage Products",    "3,323 products",         False, self._open_products),
-            ("👥", "Customers",          "Buyer database",         False, self._open_customers),
-        ]
-        for icon, label, sub, primary, cmd in actions:
-            row = W.ActionRow(left, icon=icon, label=label,
-                              sublabel=sub, command=cmd, primary=primary)
-            row.pack(fill="x", pady=6)
-
-        # right: Recent Activity
-        right = tk.Frame(two_col, bg=T.BG, width=380)
-        right.pack(side="right", fill="both", padx=(24, 0))
+        # Right: Quick Actions
+        right = tk.Frame(two_col, bg=T.BG, width=300)
+        right.pack(side="right", fill="y", padx=(24, 0))
         right.pack_propagate(False)
-
-        self._section_label(right, "Recent Activity", "Latest actions")
-
-        activity_card = W.Card(right)
-        activity_card.pack(fill="both", expand=True, pady=(8, 0))
-
-        empty = tk.Frame(activity_card.body, bg=T.SURFACE)
-        empty.pack(fill="both", expand=True, pady=40)
-
-        tk.Label(empty, text="📭", bg=T.SURFACE, fg=T.TEXT_FAINT,
-                 font=(T.FONT_FAMILY_E, 30)).pack()
-        tk.Label(empty, text="No activity yet",
-                 bg=T.SURFACE, fg=T.TEXT_BODY,
-                 font=T.FONT_BODY_B).pack(pady=(10, 2))
-        tk.Label(empty, text="Quotes you create will appear here.",
-                 bg=T.SURFACE, fg=T.TEXT_MUTED,
-                 font=T.FONT_SMALL).pack()
+        
+        tk.Label(right, text="Quick Actions", bg=T.BG, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w")
+        tk.Label(right, text="Primary workflow shortcuts", bg=T.BG,
+                 fg=T.TEXT_BODY, font=T.FONT_BODY).pack(anchor="w", pady=(2, 12))
+        
+        actions = [
+            ("+", "New Quotation", "Create a fresh quote", self._new_quotation),
+            ("📦", "Manage Products", f"{summary['products']:,} products", self._open_products),
+            ("👥", "Customers", "Buyer database", self._open_customers),
+        ]
+        for icon, title, subtitle, cmd in actions:
+            card = tk.Frame(right, bg=T.SURFACE, cursor="hand2", highlightbackground=T.BORDER, highlightthickness=1)
+            card.pack(fill="x", pady=6)
+            
+            tk.Label(card, text=icon, bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 18)).pack(side="left", padx=16, pady=12)
+            box = tk.Frame(card, bg=T.SURFACE)
+            box.pack(side="left", fill="x", expand=True)
+            tk.Label(box, text=title, bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B).pack(anchor="w")
+            tk.Label(box, text=subtitle, bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY).pack(anchor="w")
+            
+            for w in (card, box, *box.winfo_children()):
+                w.bind("<Button-1>", lambda e, c=cmd: c())
 
     def _section_label(self, parent, title, subtitle=None):
         tk.Label(parent, text=title, bg=T.BG, fg=T.TEXT,
@@ -188,15 +224,60 @@ class Dashboard(tk.Tk):
     # ═════════════════════════════════════════════════════════
 
     def _load_summary(self):
+        import json
+        from app.services.paths import get_data_dir
+        data_dir = get_data_dir()
+        
+        # --- products count from catalog ---
+        p_count = 0
         try:
-            from app.services.catalog_service import get_catalog_summary
-            return get_catalog_summary() or {}
+            cat_file = data_dir / "catalog.json"
+            if cat_file.exists():
+                cat = json.loads(cat_file.read_text(encoding="utf-8"))
+                p_count = len(cat.get("products", []))
         except Exception:
-            return {}
+            pass
 
-    # ═════════════════════════════════════════════════════════
-    # NAVIGATION HOOKS
-    # ═════════════════════════════════════════════════════════
+        # --- customers count ---
+        c_count = 0
+        try:
+            c_file = data_dir / "customers.json"
+            if c_file.exists():
+                c_data = json.loads(c_file.read_text(encoding="utf-8"))
+                if isinstance(c_data, list):
+                    c_count = len(c_data)
+                else:
+                    c_count = len(c_data.get("customers", []))
+        except Exception:
+            pass
+
+        # --- quotes count + recent activity ---
+        q_count = 0
+        recent = []
+        try:
+            q_file = data_dir / "quotations.json"
+            if q_file.exists():
+                q_data = json.loads(q_file.read_text(encoding="utf-8"))
+                qs = q_data.get("quotations", [])
+                q_count = len(qs)
+                # Sort newest first, take last 5
+                qs_sorted = sorted(qs, key=lambda x: x.get("date", ""), reverse=True)[:5]
+                for q in qs_sorted:
+                    recent.append({
+                        "number": q.get("quotation_number", ""),
+                        "customer": q.get("customer_name", ""),
+                        "total": q.get("grand_total", 0),
+                        "date": q.get("date", ""),
+                    })
+        except Exception:
+            pass
+
+        return {
+            "products": p_count,
+            "customers": c_count,
+            "quotes": q_count,
+            "recent": recent,
+        }
 
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
@@ -206,6 +287,8 @@ class Dashboard(tk.Tk):
             "products":    self._open_products,
             "customers":   self._open_customers,
             "reports":     self._open_reports,
+            "leads":       self._open_leads,
+            "users":       self._open_user_manager,
             "settings":    self._open_settings,
         }
         handler = handlers.get(key)
@@ -222,6 +305,21 @@ class Dashboard(tk.Tk):
         self._sidebar.set_active("dashboard")
         self.lift()
         self.focus_force()
+
+    def _open_leads(self):
+        try:
+            from ui.crystal.leads_manager import LeadsManager
+            LeadsManager(self, on_convert=self._convert_lead)
+        except Exception as e:
+            W.Toast.show(self, f"Could not open Leads: {e}", kind="error")
+
+    def _convert_lead(self, lead):
+        try:
+            from ui.crystal.quotation_form import QuotationForm
+            # Open the quotation form, passing the lead data to pre-fill it
+            QuotationForm(app=self, parent=self, prefill=lead)
+        except Exception as e:
+            W.Toast.show(self, f"Could not open Quotation: {e}", kind="error")
 
     def _open_products(self):
         try:
@@ -264,6 +362,13 @@ class Dashboard(tk.Tk):
             QuotationForm(app=self, parent=self)
         except Exception as e:
             W.Toast.show(self, f"Could not open Quotation Form: {e}", kind="error")
+
+    def _open_user_manager(self):
+        try:
+            from ui.crystal.user_manager import UserManager
+            UserManager(self, current_username=self._username)
+        except Exception as e:
+            W.Toast.show(self, f"Could not open User Management: {e}", kind="error")
 
     def _quit(self):
         if self._on_logout:
