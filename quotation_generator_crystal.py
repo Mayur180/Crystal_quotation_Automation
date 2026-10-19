@@ -2397,7 +2397,7 @@ def generate_quotation(
     # keyword-argument errors (e.g. selected_terms arriving twice).
     call_kwargs = dict(kwargs)
     for k in ("selected_terms", "customer", "product", "model",
-              "quotation_number", "quotation_date"):
+              "quotation_number", "quotation_date", "items"):
         call_kwargs.pop(k, None)
 
     _crystal_page(
