@@ -2493,10 +2493,10 @@ class QuotationForm(tk.Toplevel):
             pass
         
         has_cart = bool(getattr(self, "items", []))
-        has_model = bool(self.model.get().strip() if hasattr(self, "model") else False)
         
-        if self.current_step == 2 and not (has_cart or has_model):
-            messagebox.showwarning("Product required", "Please select a model.", parent=self)
+        # Only block if they are on Step 2 AND the cart is completely empty
+        if self.current_step == 2 and not has_cart:
+            messagebox.showwarning("Product required", "Please add at least one model to the cart.", parent=self)
             return
         
         if self.current_step < 4:
