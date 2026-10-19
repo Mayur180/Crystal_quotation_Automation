@@ -582,19 +582,6 @@ class QuotationForm(tk.Toplevel):
     # MAIN INTERFACE
     # ========================================================
 
-    def _update_pricing_display(self):
-        """Recalculate UI when packing mode changes."""
-        try:
-            # Clear the existing content area so it doesn't stack
-            if hasattr(self, 'content_area'):
-                for widget in self.content_area.winfo_children():
-                    widget.destroy()
-            
-            # Rebuild the interface
-            self._build_interface()
-        except Exception as e:
-            print(f"Refresh error: {e}")
-
     def _build_interface(self):
 
         self._build_header()
@@ -1792,13 +1779,13 @@ class QuotationForm(tk.Toplevel):
             width=15
         )
         packing_mode_box.pack(side="left", padx=(0, 15))
-        packing_mode_box.bind("<<ComboboxSelected>>", lambda e: self._update_pricing_display())
+        
         
         tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         
         packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
         packing_val_entry.pack(side="left")
-        packing_val_entry.bind("<KeyRelease>", lambda e: self._update_pricing_display())
+        
         # -------------------------
 
         # 3. Calculate GST (Fixed Math)
@@ -1809,7 +1796,11 @@ class QuotationForm(tk.Toplevel):
             
         packing_amt = 0.0
         mode = self.packing_mode.get()
-        if mode == "Percentage (%)":
+        
+        # Strict check to ensure "No Packing" zeroes it out
+        if mode == "No Packing":
+            packing_amt = 0.0
+        elif mode == "Percentage (%)":
             packing_amt = items_total * (pack_val / 100.0)
         elif mode == "Amount (₹)":
             packing_amt = pack_val
@@ -4506,42 +4497,3 @@ class TermsEditor(tk.Toplevel):
 # ============================================================
 
 
-    def _update_pricing_display(self):
-        """Recalculate packing based on mode and update the UI."""
-        try:
-            # 1. Get items total (assuming it's stored as self.items_total or calculated)
-            # We need to find where items_total is calculated. 
-            # For now, we will trigger the existing calculation method if it exists.
-            if hasattr(self, '_calculate_totals'):
-                self._calculate_totals()
-            elif hasattr(self, '_recalculate'):
-                self._recalculate()
-        except Exception as e:
-            print(f"Error updating pricing: {e}")
-
-
-    def _update_pricing_display(self):
-        """Recalculate packing based on mode and update the UI."""
-        try:
-            # 1. Get items total (assuming it's stored as self.items_total or calculated)
-            # We need to find where items_total is calculated. 
-            # For now, we will trigger the existing calculation method if it exists.
-            if hasattr(self, '_calculate_totals'):
-                self._calculate_totals()
-            elif hasattr(self, '_recalculate'):
-                self._recalculate()
-        except Exception as e:
-            print(f"Error updating pricing: {e}")
-
-if __name__ == "__main__":
-
-    root = tk.Tk()
-
-    root.withdraw()
-
-    QuotationForm(
-        root,
-        root
-    )
-
-    root.mainloop()
