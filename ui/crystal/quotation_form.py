@@ -1750,6 +1750,29 @@ class QuotationForm(tk.Toplevel):
         
         grand = taxable + gst_amt
 
+        # --- Packing Controls ---
+        packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
+        packing_ctrl_frame.pack(fill="x", pady=(10, 10))
+        
+        tk.Label(packing_ctrl_frame, text="Packing Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        
+        packing_mode_box = ttk.Combobox(
+            packing_ctrl_frame,
+            textvariable=self.packing_mode,
+            values=["Percentage (%)", "Amount (₹)", "No Packing"],
+            state="readonly",
+            width=15
+        )
+        packing_mode_box.pack(side="left", padx=(0, 15))
+        packing_mode_box.bind("<<ComboboxSelected>>", lambda e: self._update_pricing_display())
+        
+        tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        
+        packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
+        packing_val_entry.pack(side="left")
+        packing_val_entry.bind("<KeyRelease>", lambda e: self._update_pricing_display())
+        # -------------------------
+
         # 4. Display Rows
         fmt = lambda v: f"₹{v:,.2f}"
         rows = [
@@ -4431,6 +4454,20 @@ class TermsEditor(tk.Toplevel):
 # ============================================================
 # STANDALONE TEST
 # ============================================================
+
+
+    def _update_pricing_display(self):
+        """Recalculate packing based on mode and update the UI."""
+        try:
+            # 1. Get items total (assuming it's stored as self.items_total or calculated)
+            # We need to find where items_total is calculated. 
+            # For now, we will trigger the existing calculation method if it exists.
+            if hasattr(self, '_calculate_totals'):
+                self._calculate_totals()
+            elif hasattr(self, '_recalculate'):
+                self._recalculate()
+        except Exception as e:
+            print(f"Error updating pricing: {e}")
 
 if __name__ == "__main__":
 
