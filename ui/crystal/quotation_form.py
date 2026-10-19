@@ -585,6 +585,12 @@ class QuotationForm(tk.Toplevel):
     def _update_pricing_display(self):
         """Recalculate UI when packing mode changes."""
         try:
+            # Clear the existing content area so it doesn't stack
+            if hasattr(self, 'content_area'):
+                for widget in self.content_area.winfo_children():
+                    widget.destroy()
+            
+            # Rebuild the interface
             self._build_interface()
         except Exception as e:
             print(f"Refresh error: {e}")
