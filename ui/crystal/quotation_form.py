@@ -2502,6 +2502,12 @@ class QuotationForm(tk.Toplevel):
         if self.current_step < 4:
             self.completed_steps.add(self.current_step)
             self._load_step(self.current_step + 1)
+        else:
+            # We are on Step 4 (Terms), so generate the quotation
+            if hasattr(self, '_generate_quotation'):
+                self._generate_quotation()
+            else:
+                messagebox.showerror("Error", "Generation function not found.", parent=self)
 
     def _back(self):
 
