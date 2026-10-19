@@ -127,3 +127,217 @@ def revoke_module(user_id: str, module: str) -> None:
     perms = [p for p in load_permissions()
              if not (p.get("user_id") == user_id and p.get("module") == module)]
     save_permissions(perms)
+
+
+# ============================================================
+# ROLE / ADMIN HELPERS
+# ============================================================
+
+def is_admin(user_or_username) -> bool:
+    if isinstance(user_or_username, dict):
+        return (user_or_username.get("role") or "").lower() == "admin"
+    u = find_user_by_username(str(user_or_username))
+    return bool(u) and (u.get("role") or "").lower() == "admin"
+
+
+def get_role(user_id: str) -> str:
+    u = find_user_by_id(user_id)
+    return (u.get("role") or "user").lower() if u else ""
+
+
+# ============================================================
+# CREATE / UPDATE / DEACTIVATE / PASSWORD
+# ============================================================
+
+def _next_user_id() -> str:
+    existing = {u.get("user_id", "") for u in load_users()}
+    i = 1
+    while True:
+        candidate = f"U{i:03d}"
+        if candidate not in existing:
+            return candidate
+        i += 1
+
+
+def create_user(*, username, password, full_name="", role="user",
+                modules=None, created_by=""):
+    import datetime
+    username = (username or "").strip()
+    password = (password or "").strip()
+    role = (role or "user").strip().lower()
+
+    if not username:
+        raise ValueError("Username is required.")
+    if not password:
+        raise ValueError("Password is required.")
+    if role not in ("admin", "user"):
+        raise ValueError("Role must be 'admin' or 'user'.")
+    if find_user_by_username(username):
+        raise ValueError(f"Username '{username}' already exists.")
+
+    user_id = _next_user_id()
+    user = {
+        "user_id":    user_id,
+        "username":   username,
+        "password":   password,
+        "full_name":  full_name.strip() or username,
+        "role":       role,
+        "is_active":  True,
+        "created_at": datetime.date.today().isoformat(),
+        "created_by": created_by,
+    }
+    add_user(user)
+    for mod in (modules or []):
+        grant_module(user_id, mod)
+    sync_user_to_sheet(user)
+    return user
+
+
+def update_user(user_id, **fields):
+    allowed = {"full_name", "role", "is_active", "username"}
+    users = load_users()
+    found = None
+    for u in users:
+        if u.get("user_id") == user_id:
+            found = u
+            break
+    if not found:
+        raise ValueError(f"User {user_id} not found.")
+
+    if "role" in fields:
+        role = (fields["role"] or "user").strip().lower()
+        if role not in ("admin", "user"):
+            raise ValueError("Role must be 'admin' or 'user'.")
+        fields["role"] = role
+
+    if "username" in fields:
+        new_name = (fields["username"] or "").strip()
+        if not new_name:
+            raise ValueError("Username cannot be empty.")
+        for u in users:
+            if u.get("user_id") != user_id and \
+               u.get("username", "").lower() == new_name.lower():
+                raise ValueError(f"Username '{new_name}' already in use.")
+        fields["username"] = new_name
+
+    for k, v in fields.items():
+        if k in allowed:
+            found[k] = v
+
+    save_users(users)
+    sync_user_to_sheet(found)
+    return found
+
+
+def deactivate_user(user_id):
+    users = load_users()
+    target = next((u for u in users if u.get("user_id") == user_id), None)
+    if not target:
+        raise ValueError(f"User {user_id} not found.")
+    if (target.get("role") or "user").lower() == "admin":
+        active_admins = [
+            u for u in users
+            if u.get("is_active", True)
+            and (u.get("role") or "").lower() == "admin"
+            and u.get("user_id") != user_id
+        ]
+        if not active_admins:
+            raise ValueError("Cannot deactivate the last active admin.")
+    target["is_active"] = False
+    save_users(users)
+    sync_user_to_sheet(target)
+    return target
+
+
+def set_password(user_id, new_password):
+    if not (new_password or "").strip():
+        raise ValueError("Password cannot be empty.")
+    users = load_users()
+    found = None
+    for u in users:
+        if u.get("user_id") == user_id:
+            found = u
+            break
+    if not found:
+        raise ValueError(f"User {user_id} not found.")
+    found["password"] = new_password.strip()
+    save_users(users)
+    return found
+
+
+def set_user_modules(user_id, modules):
+    for m in ("VMM", "Crystal"):
+        revoke_module(user_id, m)
+    for m in modules or []:
+        if m in ("VMM", "Crystal"):
+            grant_module(user_id, m)
+
+
+def sync_user_to_sheet(user):
+    try:
+        from app.services.google_sheet_service import send_to_sheet
+        if not user:
+            return
+        send_to_sheet({
+            "action":     "user",
+            "user_id":    user.get("user_id", ""),
+            "username":   user.get("username", ""),
+            "full_name":  user.get("full_name", ""),
+            "role":       user.get("role", "user"),
+            "is_active":  "yes" if user.get("is_active", True) else "no",
+            "modules":    ",".join(get_user_modules(user.get("user_id", ""))),
+            "created_at": user.get("created_at", ""),
+            "created_by": user.get("created_by", ""),
+        })
+    except Exception as e:
+        print(f"[user-sync] failed: {e}")
+
+
+def activate_user(user_id):
+    """Mark a user active again."""
+    users = load_users()
+    target = next((u for u in users if u.get("user_id") == user_id), None)
+    if not target:
+        raise ValueError(f"User {user_id} not found.")
+    target["is_active"] = True
+    save_users(users)
+    sync_user_to_sheet(target)
+    return target
+
+
+def delete_user(user_id, *, by_username=""):
+    """Permanently remove a user and all their module permissions.
+
+    Safety checks:
+      - Cannot delete the last active admin.
+      - Cannot delete yourself.
+      - Cannot delete the base U001 'admin' account.
+    """
+    users = load_users()
+    target = next((u for u in users if u.get("user_id") == user_id), None)
+    if not target:
+        raise ValueError(f"User {user_id} not found.")
+
+    if by_username and target.get("username", "").lower() == by_username.lower():
+        raise ValueError("You cannot delete your own account.")
+
+    if target.get("user_id") == "U001":
+        raise ValueError("The base admin account (U001) cannot be deleted.")
+
+    if (target.get("role") or "user").lower() == "admin":
+        other_admins = [
+            u for u in users
+            if u.get("user_id") != user_id
+            and u.get("is_active", True)
+            and (u.get("role") or "").lower() == "admin"
+        ]
+        if not other_admins:
+            raise ValueError("Cannot delete the last active admin.")
+
+    users = [u for u in users if u.get("user_id") != user_id]
+    save_users(users)
+
+    perms = [p for p in load_permissions() if p.get("user_id") != user_id]
+    save_permissions(perms)
+
+    return target
