@@ -309,6 +309,7 @@ class QuotationForm(tk.Toplevel):
         self._prefill = prefill or {}
 
         self.completed_steps = set()
+        self.items = []
         self.term_rows = []
 
         # Custom terms loaded from disk
@@ -618,12 +619,7 @@ class QuotationForm(tk.Toplevel):
             width=350
         )
 
-        self.right_area.pack(
-            side="right",
-            fill="y",
-            padx=(12, 26),
-            pady=16
-        )
+        self.right_area.pack_forget()
 
         self.right_area.pack_propagate(False)
 
@@ -1360,211 +1356,93 @@ class QuotationForm(tk.Toplevel):
 
 
     def _render_product(self):
-
         self._clear_content()
+        card = self._create_card(self.content_area)
+        self._section_header(card, 2, "Choose your machine", "Add machines to the quotation.")
 
-        card = self._create_card(
-            self.content_area
-        )
+        top = tk.Frame(card, bg=self.CARD)
+        top.pack(fill="x", pady=(0, 20))
 
-        self._section_header(
-            card,
-            2,
-            "Choose your machine",
-            "Select the CRYSTAL product and model."
-        )
+        tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
+        self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox")
+        self.category_combo.pack(fill="x", pady=(6, 16))
+        self.category_combo.bind("<<ComboboxSelected>>", self._category_changed)
 
-        tk.Label(
-            card,
-            text="PRODUCT CATEGORY",
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 8, "bold")
-        ).pack(
-            anchor="w"
-        )
+        tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
+        self.model_combo = ttk.Combobox(top, textvariable=self.model, values=self._get_models(self.category.get()), state="normal", style="Crystal.TCombobox")
+        self.model_combo.pack(fill="x", pady=(6, 16))
+        self.model_combo.bind("<<ComboboxSelected>>", self._model_changed)
+        self.model_combo.bind("<KeyRelease>", self._on_model_keyrelease)
 
-        self.category_combo = ttk.Combobox(
-            card,
-            textvariable=self.category,
-            values=self._get_categories(),
-            state="readonly",
-            style="Crystal.TCombobox"
-        )
+        row = tk.Frame(top, bg=self.CARD)
+        row.pack(fill="x", pady=10)
+        tk.Label(row, text="Price (₹)", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left")
+        tk.Entry(row, textvariable=self.machine_price, width=12, font=("Arial", 10)).pack(side="left", padx=10)
+        
+        tk.Label(row, text="Qty", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(15, 0))
+        tk.Entry(row, textvariable=self.machine_qty, width=8, font=("Arial", 10)).pack(side="left", padx=10)
 
-        self.category_combo.pack(
-            fill="x",
-            pady=(6, 18)
-        )
+        tk.Label(row, text="Discount (₹)", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(15, 0))
+        self.disc_var = tk.StringVar(value="0")
+        tk.Entry(row, textvariable=self.disc_var, width=8, font=("Arial", 10)).pack(side="left", padx=10)
 
-        self.category_combo.bind(
-            "<<ComboboxSelected>>",
-            self._category_changed
-        )
+        tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
-        tk.Label(
-            card,
-            text="SELECT MODEL",
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 8, "bold")
-        ).pack(
-            anchor="w"
-        )
+        self.cart_frame = tk.Frame(card, bg=self.CARD)
+        self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
+        
+        cols = ("model", "qty", "price", "discount", "total")
+        self.cart_tree = ttk.Treeview(self.cart_frame, columns=cols, show="headings", height=6)
+        for c, w, t in [("model", 200, "Model"), ("qty", 60, "Qty"), ("price", 100, "Price"), ("discount", 100, "Discount"), ("total", 100, "Total")]:
+            self.cart_tree.heading(c, text=t)
+            self.cart_tree.column(c, width=w, anchor="w")
+        
+        vsb = ttk.Scrollbar(self.cart_frame, orient="vertical", command=self.cart_tree.yview)
+        self.cart_tree.configure(yscrollcommand=vsb.set)
+        self.cart_tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
 
-        self.model_combo = ttk.Combobox(
-            card,
-            textvariable=self.model,
-            values=self._get_models(
-                self.category.get()
-            ),
-            state="normal",
-            style="Crystal.TCombobox"
-        )
+        tk.Button(card, text="🗑 Remove Selected", bg=self.SOFT, fg=self.TEXT, font=("Arial", 9), command=self._remove_cart_item).pack(anchor="w", pady=10)
 
-        self.model_combo.pack(
-            fill="x",
-            pady=(6, 16)
-        )
+        self._refresh_cart_table()
 
-        self.model_combo.bind(
-            "<<ComboboxSelected>>",
-            self._model_changed
-        )
+    def _add_item_to_cart(self, silent=False):
+        model = self.model.get().strip()
+        if not model:
+            if not silent: messagebox.showwarning("Empty", "Select a model first.", parent=self)
+            return
+        try: price = float(str(self.machine_price.get() or "0").strip() or "0")
+        except: price = 0.0
+        try: qty = int(float(str(self.machine_qty.get() or "1").strip() or "1"))
+        except: qty = 1
+        try: disc = float(str(self.disc_var.get() or "0").strip() or "0")
+        except: disc = 0.0
+            
+        if price <= 0 or qty <= 0:
+            if not silent: messagebox.showerror("Invalid", "Price and Qty must be > 0.", parent=self)
+            return
+        total = (price * qty) - disc
+        self.items.append({"model": model, "price": price, "qty": qty, "discount": disc, "total": total})
+        self._refresh_cart_table()
+        self.model.set("")
+        self.machine_price.set("")
+        self.machine_qty.set("1")
+        self.disc_var.set("0")
 
-        self.model_combo.bind(
-            "<KeyRelease>",
-            self._on_model_keyrelease
-        )
+    def _remove_cart_item(self):
+        sel = self.cart_tree.selection()
+        if not sel: return
+        idx = int(sel[0].replace("row_", ""))
+        del self.items[idx]
+        self._refresh_cart_table()
 
-        product_box = tk.Frame(
-            card,
-            bg=self.SOFT,
-            highlightbackground=self.BORDER,
-            highlightthickness=1
-        )
-
-        product_box.pack(
-            fill="x",
-            pady=(0, 18)
-        )
-
-        tk.Label(
-            product_box,
-            textvariable=self.product_title,
-            bg=self.SOFT,
-            fg=self.TEXT,
-            font=("Arial", 15, "bold")
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=(16, 4)
-        )
-
-        tk.Label(
-            product_box,
-            textvariable=self.product_subtitle,
-            bg=self.SOFT,
-            fg=self.MUTED,
-            font=("Arial", 9)
-        ).pack(
-            anchor="w",
-            padx=18,
-            pady=(0, 16)
-        )
-
-        row = tk.Frame(
-            card,
-            bg=self.CARD
-        )
-
-        row.pack(
-            fill="x"
-        )
-
-        row.grid_columnconfigure(
-            0,
-            weight=2
-        )
-
-        row.grid_columnconfigure(
-            1,
-            weight=1
-        )
-
-        price_box = self._make_entry(
-            row,
-            "Machine unit price (₹)",
-            self.machine_price,
-            True
-        )
-
-        price_box.grid(
-            row=0,
-            column=0,
-            sticky="ew",
-            padx=(0, 10)
-        )
-
-        qty_box = self._make_entry(
-            row,
-            "Quantity",
-            self.machine_qty,
-            True
-        )
-
-        qty_box.grid(
-            row=0,
-            column=1,
-            sticky="ew",
-            padx=(10, 0)
-        )
-
-        self.machine_price.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.machine_qty.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        # ---- 'Also update catalog' checkbox ----
-        update_box = tk.Frame(card, bg=self.CARD)
-        update_box.pack(fill="x", pady=(14, 0))
-
-        tk.Checkbutton(
-            update_box,
-            text="Also update catalog price for this model",
-            variable=self.update_catalog,
-            bg=self.CARD,
-            activebackground=self.CARD,
-            selectcolor="white",
-            fg=self.TEXT,
-            font=("Arial", 10),
-        ).pack(anchor="w")
-
-        tk.Label(
-            update_box,
-            text=(
-                "Unchecked: only this quotation uses the new price.  "
-                "Checked: all future quotations for this model will use it."
-            ),
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 8, "italic"),
-            anchor="w",
-        ).pack(anchor="w", padx=(24, 0), pady=(0, 4))
-
-        self.status_text.set(
-            "Select a model and enter its price."
-        )
-
-
-    # ========================================================
-    # CATEGORIES
-    # ========================================================
+    def _refresh_cart_table(self):
+        if not hasattr(self, "cart_tree"): return
+        self.cart_tree.delete(*self.cart_tree.get_children())
+        for i, item in enumerate(self.items):
+            self.cart_tree.insert("", "end", iid=f"row_{i}", values=(
+                item["model"], item["qty"], f"₹{item['price']:,.0f}", f"₹{item['discount']:,.0f}", f"₹{item['total']:,.0f}"
+            ))
 
     def _get_categories(self):
 
@@ -1837,349 +1715,64 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _render_pricing(self):
-
         self._clear_content()
+        card = self._create_card(self.content_area)
+        self._section_header(card, 3, "Final pricing", "Review the commercial calculation before continuing.")
 
-        card = self._create_card(
-            self.content_area
-        )
+        # 1. Calculate Cart Total
+        items_total = sum(float(item.get("total", 0)) for item in getattr(self, "items", []))
+        
+        # 2. Get Packing and GST from the inputs
+        try:
+            packing_val = float(self.packing_value.get() or "0")
+            if self.packing_mode.get() == "Percentage (%)":
+                packing_amt = items_total * (packing_val / 100.0)
+            else:
+                packing_amt = packing_val
+        except Exception:
+            packing_amt = 0.0
+            
+        try:
+            gst_rate = float(self.gst_rate.get() or "0")
+        except Exception:
+            gst_rate = 0.0
+            
+        try:
+            transport = float(self.transportation.get() or "0")
+        except Exception:
+            transport = 0.0
 
-        self._section_header(
-            card,
-            4,
-            "Final pricing",
-            "Review the commercial calculation before continuing."
-        )
+        # 3. Calculate GST
+        taxable = items_total + packing_amt + transport
+        gst_amt = taxable * (gst_rate / 100.0)
+        cgst = gst_amt / 2.0
+        sgst = gst_amt / 2.0
+        
+        grand = taxable + gst_amt
 
-        table = tk.Frame(
-            card,
-            bg=self.CARD
-        )
-
-        table.pack(
-            fill="x"
-        )
-
-        # Dynamic tax rows. The labels are updated according to GST Type.
+        # 4. Display Rows
+        fmt = lambda v: f"₹{v:,.2f}"
         rows = [
-            ("Machine", "subtotal"),
-            ("Packing", "packing"),
-            ("Transportation", "transportation"),
-            ("BuyBack Offer", "buyback"),
-            ("Taxable Value", "taxable"),
+            ("Machine (Cart Total)", fmt(items_total)),
+            *([("Packing", fmt(packing_amt))] if packing_amt > 0 else []),
+            ("Transportation", fmt(transport)),
+            ("BuyBack Offer", "₹0.00"),
+            ("Taxable Value", fmt(taxable)),
+            (f"CGST ({gst_rate/2:g}%)", fmt(cgst)),
+            (f"SGST ({gst_rate/2:g}%)", fmt(sgst)),
+            ("IGST (0%)", "₹0.00"),
+            ("GRAND TOTAL", fmt(grand))
         ]
 
-        self.pricing_tax_labels = {}
-
-        for index, (label, key) in enumerate(rows):
-
-            background = (
-                self.CARD
-                if index % 2 == 0
-                else self.SOFT
-            )
-
-            tk.Label(
-                table,
-                text=label,
-                bg=background,
-                fg=self.TEXT,
-                font=(
-                    "Arial",
-                    10,
-                    "bold" if key == "taxable" else "normal"
-                ),
-                anchor="w"
-            ).grid(
-                row=index,
-                column=0,
-                sticky="ew",
-                padx=14,
-                pady=11
-            )
-
-            tk.Label(
-                table,
-                textvariable=self.summary_values[key],
-                bg=background,
-                fg=self.TEXT,
-                font=("Arial", 10, "bold"),
-                anchor="e"
-            ).grid(
-                row=index,
-                column=1,
-                sticky="e",
-                padx=14,
-                pady=11
-            )
-
-        # CGST / SGST / IGST rows are always present so the form does not
-        # jump in size, but their labels/values change with GST Type.
-        tax_rows = [
-            ("cgst", "CGST"),
-            ("sgst", "SGST"),
-            ("igst", "IGST"),
-        ]
-
-        for offset, (key, default_label) in enumerate(
-            tax_rows,
-            start=len(rows)
-        ):
-
-            background = (
-                self.CARD
-                if offset % 2 == 0
-                else self.SOFT
-            )
-
-            label_widget = tk.Label(
-                table,
-                text=default_label,
-                bg=background,
-                fg=self.TEXT,
-                font=("Arial", 10),
-                anchor="w"
-            )
-
-            label_widget.grid(
-                row=offset,
-                column=0,
-                sticky="ew",
-                padx=14,
-                pady=11
-            )
-
-            tk.Label(
-                table,
-                textvariable=self.summary_values[key],
-                bg=background,
-                fg=self.TEXT,
-                font=("Arial", 10, "bold"),
-                anchor="e"
-            ).grid(
-                row=offset,
-                column=1,
-                sticky="e",
-                padx=14,
-                pady=11
-            )
-
-            self.pricing_tax_labels[key] = label_widget
-
-        table.grid_columnconfigure(
-            0,
-            weight=1
-        )
-
-        settings = tk.Frame(
-            card,
-            bg=self.CARD
-        )
-
-        settings.pack(
-            fill="x",
-            pady=(18, 0)
-        )
-
-        packing_mode_wrap = tk.Frame(settings, bg=self.CARD)
-        packing_mode_wrap.pack(
-            side="left", fill="x", expand=True, padx=(0, 6)
-        )
-
-        tk.Label(
-            packing_mode_wrap,
-            text="Packing Type",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 9, "bold"), anchor="w"
-        ).pack(anchor="w", pady=(0, 6))
-
-        packing_mode_box = ttk.Combobox(
-            packing_mode_wrap,
-            textvariable=self.packing_mode,
-            values=["Percentage (%)", "Amount (₹)", "No Packing"],
-            state="readonly",
-            style="Crystal.TCombobox"
-        )
-        packing_mode_box.pack(fill="x", ipady=2)
-        packing_mode_box.bind(
-            "<<ComboboxSelected>>",
-            lambda event: self._recalculate()
-        )
-
-        self.packing_value_wrap = tk.Frame(settings, bg=self.CARD)
-        self.packing_value_wrap.pack(
-            side="left", fill="x", expand=True, padx=6
-        )
-
-        tk.Label(
-            self.packing_value_wrap,
-            text="Packing Value",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 9, "bold"), anchor="w"
-        ).pack(anchor="w", pady=(0, 6))
-
-        self.packing_value_entry = tk.Entry(
-            self.packing_value_wrap,
-            textvariable=self.packing_value,
-            bg="white", fg=self.TEXT,
-            relief="solid", bd=1,
-            font=("Arial", 10),
-        )
-        self.packing_value_entry.pack(fill="x", ipady=8)
-
-        gst_type_wrap = tk.Frame(
-            settings,
-            bg=self.CARD
-        )
-
-        gst_type_wrap.pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=6
-        )
-
-        tk.Label(
-            gst_type_wrap,
-            text="GST Type",
-            bg=self.CARD,
-            fg=self.TEXT,
-            font=("Arial", 9, "bold"),
-            anchor="w"
-        ).pack(
-            anchor="w",
-            pady=(0, 6)
-        )
-
-        gst_type_box = ttk.Combobox(
-            gst_type_wrap,
-            textvariable=self.gst_type,
-            values=[
-                "CGST + SGST",
-                "IGST",
-                "No GST"
-            ],
-            state="readonly",
-            style="Crystal.TCombobox"
-        )
-
-        gst_type_box.pack(
-            fill="x",
-            ipady=2
-        )
-
-        gst_type_box.bind(
-            "<<ComboboxSelected>>",
-            lambda event: self._recalculate()
-        )
-
-        self._make_entry(
-            settings,
-            "GST Rate (%)",
-            self.gst_rate
-        ).pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=6
-        )
-
-        self._make_entry(
-            settings,
-            "Transportation (₹)",
-            self.transportation
-        ).pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=(6, 0)
-        )
-
-        self._make_entry(
-            settings,
-            "BuyBack Offer (₹)",
-            self.buyback
-        ).pack(
-            side="left",
-            fill="x",
-            expand=True,
-            padx=(6, 0)
-        )
-
-        self.packing_mode.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.packing_value.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.gst_type.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.gst_rate.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.transportation.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        self.buyback.trace_add(
-            "write",
-            lambda *_: self._recalculate()
-        )
-
-        total_box = tk.Frame(
-            card,
-            bg=self.GREEN_LIGHT
-        )
-
-        total_box.pack(
-            fill="x",
-            pady=(22, 0)
-        )
-
-        tk.Label(
-            total_box,
-            text="GRAND TOTAL",
-            bg=self.GREEN_LIGHT,
-            fg=self.GREEN,
-            font=("Arial", 11, "bold")
-        ).pack(
-            side="left",
-            padx=18,
-            pady=17
-        )
-
-        tk.Label(
-            total_box,
-            textvariable=self.summary_values["grand"],
-            bg=self.GREEN_LIGHT,
-            fg=self.GREEN,
-            font=("Arial", 20, "bold")
-        ).pack(
-            side="right",
-            padx=18,
-            pady=13
-        )
-
-        self.status_text.set(
-            "Review the final quotation amount."
-        )
+        for label, value in rows:
+            row = tk.Frame(card, bg=self.CARD)
+            row.pack(fill="x", pady=6)
+            # Make the Grand Total bold
+            font_style = ("Arial", 11, "bold") if label == "GRAND TOTAL" else ("Arial", 10)
+            tk.Label(row, text=label, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="left")
+            tk.Label(row, text=value, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="right")
 
         self._recalculate()
-
-
-    # ========================================================
-    # STEP 5 — TERMS  (with editor)
-    # ========================================================
 
     def _render_terms(self):
 
@@ -2828,48 +2421,23 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _next(self):
-
-        if self.current_step == 1:
-
-            if not self._validate_customer():
-                return
-
-        elif self.current_step == 2:
-
-            if not self._validate_product():
-                return
-
-        elif self.current_step == 3:
-
-            if not self._validate_pricing():
-                return
-
-        elif self.current_step == 4:
-
-            # Step 5 is a REVIEW stage. Do not generate immediately.
-            # The review window lets the user inspect everything, go back
-            # and edit the quotation, or confirm and generate the files.
-            self._open_preview()
-
+        try:
+            if hasattr(self, "model") and self.model.get().strip() and hasattr(self, "machine_price"):
+                if self.machine_price.get().strip():
+                    self._add_item_to_cart(silent=True)
+        except Exception:
+            pass
+        
+        has_cart = bool(getattr(self, "items", []))
+        has_model = bool(self.model.get().strip() if hasattr(self, "model") else False)
+        
+        if self.current_step == 2 and not (has_cart or has_model):
+            messagebox.showwarning("Product required", "Please select a model.", parent=self)
             return
-
-        self.completed_steps.add(
-            self.current_step
-        )
-
-        next_step = min(
-            self.current_step + 1,
-            4
-        )
-
-        self._load_step(
-            next_step
-        )
-
-
-    # ========================================================
-    # BACK
-    # ========================================================
+        
+        if self.current_step < 4:
+            self.completed_steps.add(self.current_step)
+            self._load_step(self.current_step + 1)
 
     def _back(self):
 
@@ -3078,252 +2646,23 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _recalculate(self, *_args):
-
-        machine_price = self._decimal(
-            self.machine_price.get()
-        )
-
-        quantity = self._decimal(
-            self.machine_qty.get()
-        )
-
-        subtotal = machine_price * quantity
-
-        # Defaults — overridden later if step >= 4
-        packing = Decimal("0")
-        transportation = Decimal("0")
-        buyback = Decimal("0")
-        taxable = subtotal
-        cgst = Decimal("0")
-        sgst = Decimal("0")
-        igst = Decimal("0")
-        gst_total = Decimal("0")
-        grand = subtotal
-
-        accessory_count = 0
-
-        # Product + accessory cost is shown before Pricing.
-        # Packing, transportation and GST are applied only from Step 4.
-        # Initialize these so they are always defined
-        packing = Decimal("0")
-        transportation = Decimal("0")
-        buyback = Decimal("0")
-        taxable = subtotal
-        cgst = Decimal("0")
-        sgst = Decimal("0")
-        igst = Decimal("0")
-        gst_total = Decimal("0")
-        grand = subtotal
-
-        if self.current_step >= 4:
-            packing_mode = self.packing_mode.get().strip()
-            packing_value = self._decimal(self.packing_value.get())
-
-            if packing_mode == "Percentage (%)":
-                packing_percent = packing_value
-                packing = subtotal * packing_percent / Decimal("100")
-            elif packing_mode == "Amount (₹)":
-                packing_percent = Decimal("0")
-                packing = packing_value
-            else:
-                packing_percent = Decimal("0")
-                packing = Decimal("0")
-
-            transportation = self._decimal(
-                self.transportation.get()
-            )
-
-            buyback = self._decimal(
-                self.buyback.get()
-            )
-
-            taxable = (
-                subtotal
-                + packing
-                + transportation
-                - buyback
-            )
-
-            if taxable < Decimal("0"):
-                taxable = Decimal("0")
-
-            gst_rate = self._decimal(
-                self.gst_rate.get()
-            )
-
-            gst_type = self.gst_type.get().strip()
-
-            cgst = Decimal("0")
-            sgst = Decimal("0")
-            igst = Decimal("0")
-
-            if gst_type == "CGST + SGST":
-
-                half_rate = gst_rate / Decimal("2")
-
-                cgst = (
-                    taxable
-                    * half_rate
-                    / Decimal("100")
-                )
-
-                sgst = (
-                    taxable
-                    * half_rate
-                    / Decimal("100")
-                )
-
-            elif gst_type == "IGST":
-
-                igst = (
-                    taxable
-                    * gst_rate
-                    / Decimal("100")
-                )
-
-            gst_total = cgst + sgst + igst
-            grand = taxable + gst_total
-
-        else:
-            packing = Decimal("0")
-            transportation = Decimal("0")
-            taxable = subtotal
-            cgst = Decimal("0")
-            sgst = Decimal("0")
-            igst = Decimal("0")
-            gst_total = Decimal("0")
-            grand = subtotal
-            gst_rate = Decimal("0")
-            gst_type = "Not applied yet"
-        # Keep legacy percentage variables synchronized.
-        self._sync_gst_percentages()
-
-        if self.packing_mode.get().strip() == "Percentage (%)":
-            self.packing_percent.set(
-                str(self._decimal(self.packing_value.get()))
-            )
-        else:
-            self.packing_percent.set("0")
-
-        # Update all live summary values.
-        self.summary_values["subtotal"].set(
-            f"₹ {subtotal:,.2f}"
-        )
-
-        self.summary_values["packing"].set(
-            f"₹ {packing:,.2f}"
-        )
-
-        self.summary_values["transportation"].set(
-            f"₹ {transportation:,.2f}"
-        )
-
-        self.summary_values["buyback"].set(
-            f"₹ {buyback:,.2f}" if buyback > 0 else "—"
-        )
-
-        self.summary_values["taxable"].set(
-            f"₹ {taxable:,.2f}"
-        )
-
-        self.summary_values["cgst"].set(
-            f"₹ {cgst:,.2f}"
-        )
-
-        self.summary_values["sgst"].set(
-            f"₹ {sgst:,.2f}"
-        )
-
-        self.summary_values["igst"].set(
-            f"₹ {igst:,.2f}"
-        )
-
-        self.summary_values["grand"].set(
-            f"₹ {grand:,.2f}"
-        )
-
-        # Update the right-hand live total even before the pricing step
-        # is opened.
+        items_total = sum(float(item.get("total", 0)) for item in getattr(self, "items", []))
+        fmt = lambda v: f"₹{v:,.2f}"
+        
+        if hasattr(self, "summary_values"):
+            def _set(k, v):
+                try:
+                    if k in self.summary_values: self.summary_values[k].set(v)
+                except: pass
+            _set("grand", fmt(items_total))
+            _set("subtotal", fmt(items_total))
+            _set("taxable", fmt(items_total))
+            
+        # Force update the direct red label
         try:
-            self.summary_total.configure(
-                text=f"₹ {grand:,.2f}"
-            )
-
-            if self.current_step >= 4:
-                self.summary_total_label.configure(
-                    text="TOTAL INCLUDING TAX"
-                )
-            else:
-                self.summary_total_label.configure(
-                    text="PRODUCT"
-                )
-        except Exception:
-            pass
-
-        # Dynamic tax labels.
-        try:
-
-            if gst_type == "CGST + SGST":
-
-                self.pricing_tax_labels["cgst"].configure(
-                    text=f"CGST ({gst_rate / Decimal('2'):g}%)"
-                )
-
-                self.pricing_tax_labels["sgst"].configure(
-                    text=f"SGST ({gst_rate / Decimal('2'):g}%)"
-                )
-
-                self.pricing_tax_labels["igst"].configure(
-                    text="IGST (Not applicable)"
-                )
-
-            elif gst_type == "IGST":
-
-                self.pricing_tax_labels["cgst"].configure(
-                    text="CGST (Not applicable)"
-                )
-
-                self.pricing_tax_labels["sgst"].configure(
-                    text="SGST (Not applicable)"
-                )
-
-                self.pricing_tax_labels["igst"].configure(
-                    text=f"IGST ({gst_rate:g}%)"
-                )
-
-            else:
-
-                self.pricing_tax_labels["cgst"].configure(
-                    text="CGST (Not applicable)"
-                )
-
-                self.pricing_tax_labels["sgst"].configure(
-                    text="SGST (Not applicable)"
-                )
-
-                self.pricing_tax_labels["igst"].configure(
-                    text="IGST (Not applicable)"
-                )
-
-        except Exception:
-            pass
-
-        return {
-            "subtotal": subtotal,
-            "packing": packing,
-            "transportation": transportation,
-            "taxable": taxable,
-            "cgst": cgst,
-            "sgst": sgst,
-            "igst": igst,
-            "gst": gst_total,
-            "grand": grand,
-        }
-
-
-    # ========================================================
-    # UPDATE SUMMARY
-    # ========================================================
+            if hasattr(self, "lbl_grand_total"):
+                self.lbl_grand_total.configure(text=fmt(items_total))
+        except: pass
 
     def _update_summary(self):
 
@@ -3372,140 +2711,41 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def get_form_data(self):
-
-        accessories = []  # Crystal has no accessories
+        items = getattr(self, "items", [])
+        items_total = sum(float(i.get("total", 0)) for i in items)
+        first_model = items[0]["model"] if items else self.model.get().strip()
+        final_price = items_total if items_total > 0 else float(self.machine_price.get() or 0)
 
         selected_terms = []
-
         for row in self.term_rows:
-
             if row["selected"].get():
-
-                selected_terms.append(
-                    {
-                        "title": row["title"],
-                        "value": row["value"],
-                    }
-                )
+                selected_terms.append({"title": row["title"], "value": row["value"]})
 
         return {
-
-            "customer_name":
-                self.customer_name.get().strip(),
-
-            "company":
-                self.company.get().strip(),
-
-            "contact_person":
-                self.contact_person.get().strip(),
-
-            "address":
-                self.address.get().strip(),
-
-            "city":
-                self.city.get().strip(),
-
-            "state":
-                self.state.get().strip(),
-
-            "pincode":
-                self.pincode.get().strip(),
-
-            "country":
-                self.country.get().strip(),
-
-            "gstin":
-                self.gstin.get().strip().upper(),
-
-            "phone":
-                self.phone.get().strip(),
-
-            "email":
-                self.email.get().strip(),
-
-            "category":
-                self.category.get(),
-
-            "model":
-                self.model.get(),
-
-            "machine_price":
-                float(self._decimal(
-                    self.machine_price.get()
-                )),
-
-            "machine_qty":
-                float(self._decimal(
-                    self.machine_qty.get()
-                )),
-
-            "accessories":
-                accessories,
-
-            "transportation":
-                float(self._decimal(
-                    self.transportation.get()
-                )),
-
-            "buyback":
-                float(self._decimal(
-                    self.buyback.get()
-                )),
-
-            "packing_mode":
-                self.packing_mode.get().strip(),
-
-            "packing_value":
-                float(self._decimal(
-                    self.packing_value.get()
-                )),
-
-            "packing_percent":
-                float(self._decimal(
-                    self.packing_percent.get()
-                )),
-
-            "gst_type":
-                self.gst_type.get().strip(),
-
-            "gst_rate":
-                float(self._decimal(
-                    self.gst_rate.get()
-                )),
-
-            "cgst_percent":
-                float(self._decimal(
-                    self.cgst_percent.get()
-                )),
-
-            "sgst_percent":
-                float(self._decimal(
-                    self.sgst_percent.get()
-                )),
-
-            "igst_percent":
-                float(
-                    self._sync_gst_percentages()
-                )
-                if self.gst_type.get().strip() == "IGST"
-                else 0.0,
-
-            "include_terms":
-                bool(
-                    self.include_terms.get()
-                ),
-
-            "selected_terms":
-                selected_terms,
-
-            "quotation_date":
-                date.today().isoformat(),
+            "customer_name": self.customer_name.get().strip(),
+            "company": self.company.get().strip(),
+            "contact_person": self.contact_person.get().strip(),
+            "phone": self.phone.get().strip(),
+            "email": self.email.get().strip(),
+            "address": self.address.get().strip(),
+            "city": self.city.get().strip(),
+            "state": self.state.get().strip(),
+            "pincode": self.pincode.get().strip(),
+            "gstin": self.gstin.get().strip(),
+            "model": first_model,
+            "category": self.category.get(),
+            "machine_price": final_price,
+            "machine_qty": 1,
+            "items": items,
+            "packing_type": self.packing_mode.get(),
+            "packing_value": self.packing_value.get(),
+            "gst_type": self.gst_type.get(),
+            "gst_rate": self.gst_rate.get(),
+            "transportation": self.transportation.get(),
+            "buyback": self.buyback.get(),
+            "terms": selected_terms,
+            "accessories": []
         }
-
-
-    # ========================================================
-    # GENERATE QUOTATION
-    # ========================================================
 
     def _apply_prefill(self, data):
         """Populate form fields from a record and jump to Step 2 (Product).
@@ -3736,116 +2976,33 @@ class QuotationForm(tk.Toplevel):
 
         try:
 
-            result = generate_quotation(
-
-                customer_name=data[
-                    "customer_name"
-                ],
-
-                company=data[
-                    "company"
-                ],
-
-                address=data[
-                    "address"
-                ],
-
-                phone=data[
-                    "phone"
-                ],
-
-                email=data[
-                    "email"
-                ],
-
-                contact_person=data[
-                    "contact_person"
-                ],
-
-                city=data[
-                    "city"
-                ],
-
-                state=data[
-                    "state"
-                ],
-
-                pincode=data[
-                    "pincode"
-                ],
-
-                country=data[
-                    "country"
-                ],
-
-                gstin=data[
-                    "gstin"
-                ],
-
-                model=data[
-                    "model"
-                ],
-
-                machine_price=data[
-                    "machine_price"
-                ],
-
-                machine_qty=data[
-                    "machine_qty"
-                ],
-
-                accessories=data[
-                    "accessories"
-                ],
-
-                transportation=data[
-                    "transportation"
-                ],
-
-                packing_percent=data[
-                    "packing_percent"
-                ],
-
-                packing_mode=data[
-                    "packing_mode"
-                ],
-
-                packing_value=data[
-                    "packing_value"
-                ],
-
-                cgst_percent=data[
-                    "cgst_percent"
-                ],
-
-                sgst_percent=data[
-                    "sgst_percent"
-                ],
-
-                gst_type=data[
-                    "gst_type"
-                ],
-
-                gst_rate=data[
-                    "gst_rate"
-                ],
-
-                igst_percent=data[
-                    "igst_percent"
-                ],
-
-                quotation_date=data[
-                    "quotation_date"
-                ],
-
-                include_terms=data[
-                    "include_terms"
-                ],
-
-                selected_terms=data[
-                    "selected_terms"
-                ],
-            )
+            result = generate_quotation(**{
+                "customer_name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "contact_person": data.get("contact_person", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "country": data.get("country", "India"),
+                "gstin": data.get("gstin", ""),
+                "model": data.get("model", ""),
+                "machine_price": data.get("machine_price", 0),
+                "machine_qty": data.get("machine_qty", 1),
+                "accessories": data.get("accessories", []),
+                "transportation": data.get("transportation", 0),
+                "packing_percent": data.get("packing_percent", 3.5),
+                "packing_mode": data.get("packing_mode", "Percentage (%)"),
+                "packing_value": data.get("packing_value", ""),
+                "cgst_percent": data.get("cgst_percent", 9),
+                "sgst_percent": data.get("sgst_percent", 9),
+                "gst_rate": data.get("gst_rate", 18),
+                "gst_type": data.get("gst_type", "CGST + SGST"),
+                "selected_terms": data.get("terms", []),
+                "items": data.get("items", []),
+            })
 
             output_path = None
 
