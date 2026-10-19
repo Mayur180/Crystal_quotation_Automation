@@ -2485,6 +2485,7 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _next(self):
+        # 1. Auto-add the current item if the user forgot to click "Add"
         try:
             if hasattr(self, "model") and self.model.get().strip() and hasattr(self, "machine_price"):
                 if self.machine_price.get().strip():
@@ -2492,22 +2493,26 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             pass
         
-        # BRUTE FORCE FIX: Only block if cart is EMPTY. Do not check the model dropdown at all.
+        # 2. Check if cart has items. If yes, NEVER block them.
         has_cart = bool(getattr(self, "items", []))
         
+        # 3. Only block on Step 2 if the cart is completely empty.
         if self.current_step == 2 and not has_cart:
-            messagebox.showwarning("Product required", "Please add at least one model to the cart using the 'Add to Quotation' button.", parent=self)
+            import tkinter.messagebox as mb
+            mb.showwarning("Product required", "Please add at least one model to the cart using the 'Add to Quotation' button.", parent=self)
             return
         
+        # 4. Navigation logic
         if self.current_step < 4:
             self.completed_steps.add(self.current_step)
             self._load_step(self.current_step + 1)
         else:
-            # We are on Step 4, generate the quotation
+            # 5. Step 4 (Terms) -> Generate
             if hasattr(self, '_generate_quotation'):
                 self._generate_quotation()
             else:
-                messagebox.showerror("Error", "Generation function not found.", parent=self)
+                import tkinter.messagebox as mb
+                mb.showerror("Error", "Generation function not found.", parent=self)
 
     def _back(self):
 
