@@ -1646,6 +1646,7 @@ def _crystal_page(
     machine_qty,
     totals,
     selected_terms=None,
+    items=None,
     **kwargs,
 ):
     """Build the complete single-page Crystal quotation — Mark-Server format."""
@@ -1870,39 +1871,60 @@ def _crystal_page(
         set_cell(tbl.cell(0, i), h, bold=True, size=8,
                  align=align, bg=BG_HDR)
 
-    # Product row
-    desc = (product or {}).get("description") or ""
-    name = (product or {}).get("name") or ""
-    model_str = str(model)
+    # Product rows — loop through cart items if provided, otherwise single product
+    item_list = items if items else [{
+        "model": model,
+        "price": float(machine_price),
+        "qty": float(machine_qty),
+        "discount": 0.0,
+        "total": float(machine_price) * float(machine_qty)
+    }]
 
-    # Prefer the description (it has full multi-line detail).
-    # If missing, fall back to name.
-    body = (desc or name).strip()
+    # If the table only has 2 rows (header + 1 placeholder), we need to expand it
+    # to fit all items
+    if len(item_list) > 1:
+        # Add extra rows to the table
+        while len(tbl.rows) < len(item_list) + 1:
+            tbl.add_row()
 
-    full_desc = body
-    if model_str and model_str not in body:
-        full_desc = f"{body}\nModel: {model_str}"
+    for idx, item in enumerate(item_list, start=1):
+        item_model = item.get("model", "")
+        item_qty = float(item.get("qty", 1))
+        item_price = float(item.get("price", 0))
+        item_disc = float(item.get("discount", 0))
+        item_total = float(item.get("total", 0))
 
-    hsn = str((product or {}).get("hsn") or "85059000")
-    tax_pct = (product or {}).get("tax_percent", 18.0)
-    try:
-        tax_str = f"{float(tax_pct):.2f}"
-    except Exception:
-        tax_str = "18.00"
-    unit = str((product or {}).get("unit") or "NOS")
-    qty_str = f"{float(machine_qty):g}"
-    rate_str = f"{float(machine_price):,.2f}"
-    disc = 0.0
-    disc_str = f"{disc:g}" if disc else "0"
-    amount = float(machine_price) * float(machine_qty) * (1 - disc / 100.0)
-    amount_str = f"{amount:,.2f}"
+        # Look up product details for THIS item
+        try:
+            item_prod = _resolve_product(item_model) or {}
+        except Exception:
+            item_prod = {}
 
-    row_vals = ["1", full_desc, hsn, tax_str, qty_str, unit, rate_str, disc_str, amount_str]
-    for i, v in enumerate(row_vals):
-        align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (
-            WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT
-        )
-        set_cell(tbl.cell(1, i), v, size=8, align=align)
+        desc = item_prod.get("description") or ""
+        name = item_prod.get("name") or ""
+        body = (desc or name).strip()
+        full_desc = body
+        if item_model and item_model not in body:
+            full_desc = f"{body}\nModel: {item_model}"
+
+        hsn = str(item_prod.get("hsn") or "85059000")
+        tax_pct = item_prod.get("tax_percent", 18.0)
+        try:
+            tax_str = f"{float(tax_pct):.2f}"
+        except Exception:
+            tax_str = "18.00"
+        unit = str(item_prod.get("unit") or "NOS")
+        qty_str = f"{item_qty:g}"
+        rate_str = f"{item_price:,.2f}"
+        disc_str = f"{item_disc:g}" if item_disc else "0"
+        amount_str = f"{item_total:,.2f}"
+
+        row_vals = [str(idx), full_desc, hsn, tax_str, qty_str, unit, rate_str, disc_str, amount_str]
+        for i, v in enumerate(row_vals):
+            align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (
+                WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT
+            )
+            set_cell(tbl.cell(idx, i), v, size=8, align=align)
 
     # ═══════════════════════════════════════════════════════════
     # 5. TOTALS BLOCK — right-aligned
@@ -2389,6 +2411,7 @@ def generate_quotation(
         machine_qty,
         totals,
         selected_terms=selected_terms,
+        items=call_kwargs.get("items"),
         **call_kwargs,
     )
 
@@ -2515,6 +2538,7 @@ def generate_quotation(
         except Exception:
             pass
 
+
     return result
 
 
@@ -2580,3 +2604,30 @@ if __name__ == "__main__":
     )
 
     print("=" * 70)
+
+
+# ============================================================
+# GOOGLE SHEET — UPLOAD GENERATED FILES
+# ============================================================
+
+
+
+# ============================================================
+# GOOGLE SHEET — SAVE QUOTATION WITH FILES
+# ============================================================
+
+def _safe_json_num(v):
+    """Convert Decimal / int / float / None / str to a JSON-safe value."""
+    if v is None or v == "":
+        return ""
+    try:
+        from decimal import Decimal
+        if isinstance(v, Decimal):
+            f = float(v)
+            return int(f) if f.is_integer() else f
+    except Exception:
+        pass
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return str(v)
