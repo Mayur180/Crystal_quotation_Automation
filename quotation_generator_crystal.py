@@ -1930,7 +1930,7 @@ def _crystal_page(
     # 5. TOTALS BLOCK — right-aligned
     # ═══════════════════════════════════════════════════════════
     t = totals or {}
-    total_amt = amount      # single line for now
+    total_amt = grand       # single line for now
 
     gst_pct = 9.0
     cgst = total_amt * gst_pct / 100.0
