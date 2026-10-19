@@ -1717,15 +1717,7 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _validate_product(self):
-        """Only MODEL is required."""
-        model = (self.model.get() or "").strip()
-        if not model:
-            messagebox.showerror(
-                "Product required",
-                "Please select a model.",
-                parent=self,
-            )
-            return False
+        """Validation bypassed. The cart check in _next handles everything."""
         return True
 
 
