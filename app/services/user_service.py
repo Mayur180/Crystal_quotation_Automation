@@ -275,23 +275,18 @@ def set_user_modules(user_id, modules):
 
 def sync_user_to_sheet(user):
     try:
+        import threading
         from app.services.google_sheet_service import send_to_sheet
-        if not user:
-            return
-        send_to_sheet({
-            "action":     "user",
-            "user_id":    user.get("user_id", ""),
-            "username":   user.get("username", ""),
-            "full_name":  user.get("full_name", ""),
-            "role":       user.get("role", "user"),
-            "is_active":  "yes" if user.get("is_active", True) else "no",
-            "modules":    ",".join(get_user_modules(user.get("user_id", ""))),
-            "created_at": user.get("created_at", ""),
-            "created_by": user.get("created_by", ""),
-        })
+        
+        def _background_sync():
+            try:
+                send_to_sheet(user)
+            except Exception as e:
+                print(f"[sheet-sync] Background error: {e}")
+        
+        threading.Thread(target=_background_sync, daemon=True).start()
     except Exception as e:
-        print(f"[user-sync] failed: {e}")
-
+        print(f"[sheet-sync] Import error: {e}")
 
 def activate_user(user_id):
     """Mark a user active again."""
