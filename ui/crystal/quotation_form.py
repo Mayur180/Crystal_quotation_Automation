@@ -582,6 +582,13 @@ class QuotationForm(tk.Toplevel):
     # MAIN INTERFACE
     # ========================================================
 
+    def _update_pricing_display(self):
+        """Recalculate UI when packing mode changes."""
+        try:
+            self._build_interface()
+        except Exception as e:
+            print(f"Refresh error: {e}")
+
     def _build_interface(self):
 
         self._build_header()
