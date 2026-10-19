@@ -1742,7 +1742,42 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             transport = 0.0
 
-        # 3. Calculate GST
+        # --- Single Packing UI ---
+        packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
+        packing_ctrl_frame.pack(fill="x", pady=(10, 10))
+        
+        tk.Label(packing_ctrl_frame, text="Packing Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        
+        packing_mode_box = ttk.Combobox(
+            packing_ctrl_frame,
+            textvariable=self.packing_mode,
+            values=["Percentage (%)", "Amount (₹)", "No Packing"],
+            state="readonly",
+            width=15
+        )
+        packing_mode_box.pack(side="left", padx=(0, 15))
+        packing_mode_box.bind("<<ComboboxSelected>>", lambda e: self._update_pricing_display())
+        
+        tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        
+        packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
+        packing_val_entry.pack(side="left")
+        packing_val_entry.bind("<KeyRelease>", lambda e: self._update_pricing_display())
+        # -------------------------
+
+        # 3. Calculate GST (Fixed Math)
+        try:
+            pack_val = float(self.packing_value.get() or 0)
+        except ValueError:
+            pack_val = 0.0
+            
+        packing_amt = 0.0
+        mode = self.packing_mode.get()
+        if mode == "Percentage (%)":
+            packing_amt = items_total * (pack_val / 100.0)
+        elif mode == "Amount (₹)":
+            packing_amt = pack_val
+            
         taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         cgst = gst_amt / 2.0
@@ -1750,51 +1785,7 @@ class QuotationForm(tk.Toplevel):
         
         grand = taxable + gst_amt
 
-        # --- Packing Controls ---
-        packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
-        packing_ctrl_frame.pack(fill="x", pady=(10, 10))
-        
-        tk.Label(packing_ctrl_frame, text="Packing Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        
-        packing_mode_box = ttk.Combobox(
-            packing_ctrl_frame,
-            textvariable=self.packing_mode,
-            values=["Percentage (%)", "Amount (₹)", "No Packing"],
-            state="readonly",
-            width=15
-        )
-        packing_mode_box.pack(side="left", padx=(0, 15))
-        packing_mode_box.bind("<<ComboboxSelected>>", lambda e: self._update_pricing_display())
-        
-        tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        
-        packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
-        packing_val_entry.pack(side="left")
-        packing_val_entry.bind("<KeyRelease>", lambda e: self._update_pricing_display())
-        # -------------------------
 
-        # --- Packing Controls ---
-        packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
-        packing_ctrl_frame.pack(fill="x", pady=(10, 10))
-        
-        tk.Label(packing_ctrl_frame, text="Packing Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        
-        packing_mode_box = ttk.Combobox(
-            packing_ctrl_frame,
-            textvariable=self.packing_mode,
-            values=["Percentage (%)", "Amount (₹)", "No Packing"],
-            state="readonly",
-            width=15
-        )
-        packing_mode_box.pack(side="left", padx=(0, 15))
-        packing_mode_box.bind("<<ComboboxSelected>>", lambda e: self._update_pricing_display())
-        
-        tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        
-        packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
-        packing_val_entry.pack(side="left")
-        packing_val_entry.bind("<KeyRelease>", lambda e: self._update_pricing_display())
-        # -------------------------
 
         # 4. Display Rows
         fmt = lambda v: f"₹{v:,.2f}"
