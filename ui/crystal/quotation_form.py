@@ -1867,10 +1867,35 @@ class QuotationForm(tk.Toplevel):
             ("GRAND TOTAL", fmt(grand))
         ]
 
+        # --- Professional Pricing Table ---
+        table_frame = tk.Frame(card, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
+        table_frame.pack(fill="x", pady=(10, 20), padx=20)
+        
         for label, value in rows:
-            row = tk.Frame(card, bg=self.CARD)
-            row.pack(fill="x", pady=6)
-            # Make the Grand Total bold
+            is_grand_total = (label == "GRAND TOTAL")
+            
+            # Highlight the Grand Total row
+            row_bg = self.SOFT if is_grand_total else self.CARD
+            
+            row = tk.Frame(table_frame, bg=row_bg)
+            row.pack(fill="x", pady=0)
+            
+            # Padding for inner rows
+            pad_y = 12 if is_grand_total else 8
+            
+            # Label
+            lbl_font = ("Arial", 11, "bold") if is_grand_total else ("Arial", 10)
+            lbl_fg = self.TEXT if is_grand_total else self.MUTED
+            tk.Label(row, text=label, bg=row_bg, fg=lbl_fg, font=lbl_font).pack(side="left", padx=15, pady=pad_y)
+            
+            # Value
+            val_font = ("Arial", 12, "bold") if is_grand_total else ("Arial", 10, "bold")
+            val_fg = self.RED if is_grand_total else self.TEXT
+            tk.Label(row, text=value, bg=row_bg, fg=val_fg, font=val_font).pack(side="right", padx=15, pady=pad_y)
+            
+            # Add subtle separator lines (except for the last row)
+            if not is_grand_total:
+                tk.Frame(table_frame, bg=self.BORDER, height=1).pack(fill="x", padx=10)
             font_style = ("Arial", 11, "bold") if label == "GRAND TOTAL" else ("Arial", 10)
             tk.Label(row, text=label, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="left")
             tk.Label(row, text=value, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="right")
