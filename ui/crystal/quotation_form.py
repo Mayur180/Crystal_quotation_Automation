@@ -1898,12 +1898,13 @@ class QuotationForm(tk.Toplevel):
 
         # 4. Display Rows
         fmt = lambda v: f"₹{v:,.2f}"
-        rows = [
-            ("Machine (Cart Total)", fmt(items_total)),
-            *([("Packing", fmt(packing_amt))] if packing_amt > 0 else []),
-            ("Transportation", fmt(transport)),
-            ("Taxable Value", fmt(taxable)),
-        ]
+        
+        rows = []
+        rows.append(("Machine (Cart Total)", fmt(items_total)))
+        if packing_amt > 0:
+            rows.append(("Packing", fmt(packing_amt)))
+        rows.append(("Transportation", fmt(transport)))
+        rows.append(("Taxable Value", fmt(taxable)))
         
         # Add the correct tax rows based on selection
         if is_igst:
@@ -1913,14 +1914,7 @@ class QuotationForm(tk.Toplevel):
             rows.append((f"SGST ({gst_rate/2:g}%)", fmt(sgst)))
             
         rows.append(("GRAND TOTAL", fmt(grand)))
-            *([(f"CGST ({gst_rate/2:g}%)", fmt(cgst)), (f"SGST ({gst_rate/2:g}%)", fmt(sgst))] if not is_igst else [(f"IGST ({gst_rate:g}%)", fmt(igst))]),
-            ("GRAND TOTAL", fmt(grand))
-        ]
 
-        # --- Professional Pricing Table ---
-        table_frame = tk.Frame(card, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
-        table_frame.pack(fill="x", pady=(10, 20), padx=20)
-        
         for label, value in rows:
             is_grand_total = (label == "GRAND TOTAL")
             row_bg = self.SOFT if is_grand_total else self.CARD
