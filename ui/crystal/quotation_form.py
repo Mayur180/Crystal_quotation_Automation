@@ -1915,6 +1915,10 @@ class QuotationForm(tk.Toplevel):
             
         rows.append(("GRAND TOTAL", fmt(grand)))
 
+        # --- Professional Pricing Table ---
+        table_frame = tk.Frame(card, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
+        table_frame.pack(fill="x", pady=(10, 20), padx=20)
+
         for label, value in rows:
             is_grand_total = (label == "GRAND TOTAL")
             row_bg = self.SOFT if is_grand_total else self.CARD
