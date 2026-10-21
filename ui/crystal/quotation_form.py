@@ -1405,9 +1405,9 @@ class QuotationForm(tk.Toplevel):
         self.cart_frame = tk.Frame(card, bg=self.CARD)
         self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
         
-        cols = ("model", "qty", "price", "discount", "total")
+        cols = ("model", "hsn", "qty", "price", "discount", "total")
         self.cart_tree = ttk.Treeview(self.cart_frame, columns=cols, show="headings", height=6)
-        for c, w, t in [("model", 200, "Model"), ("qty", 60, "Qty"), ("price", 100, "Price"), ("discount", 100, "Discount"), ("total", 100, "Total")]:
+        for c, w, t in [("model", 200, "Model"), ("hsn", 80, "HSN"), ("qty", 60, "Qty"), ("price", 100, "Price"), ("discount", 100, "Discount"), ("total", 100, "Total")]:
             self.cart_tree.heading(c, text=t)
             self.cart_tree.column(c, width=w, anchor="w")
         
@@ -1453,7 +1453,7 @@ class QuotationForm(tk.Toplevel):
             disc = subtotal
             
         total = subtotal - disc
-        self.items.append({"model": model, "price": price, "qty": qty, "discount": disc, "total": total})
+        self.items.append({"model": model, "hsn": getattr(self, "hsn_var", tk.StringVar(value="85059000")).get(), "price": price, "qty": qty, "discount": disc, "total": total})
         self._refresh_cart_table()
         self.model.set("")
         self.machine_price.set("")
@@ -1472,7 +1472,7 @@ class QuotationForm(tk.Toplevel):
         self.cart_tree.delete(*self.cart_tree.get_children())
         for i, item in enumerate(self.items):
             self.cart_tree.insert("", "end", iid=f"row_{i}", values=(
-                item["model"], item["qty"], f"₹{item['price']:,.0f}", f"₹{item['discount']:,.0f}", f"₹{item['total']:,.0f}"
+                item["model"], item.get("hsn", "85059000"), item["qty"], f"₹{item['price']:,.0f}", f"₹{item['discount']:,.0f}", f"₹{item['total']:,.0f}"
             ))
 
     def _get_categories(self):
