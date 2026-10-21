@@ -1834,8 +1834,23 @@ class QuotationForm(tk.Toplevel):
         
         packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
         packing_val_entry.pack(side="left")
-        
         # -------------------------
+
+        # --- Transport, BuyBack, and GST Controls ---
+        extra_ctrl_frame = tk.Frame(card, bg=self.CARD)
+        extra_ctrl_frame.pack(fill="x", pady=(0, 15))
+        
+        tk.Label(extra_ctrl_frame, text="Transport (₹):", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        self.transport_var = tk.StringVar(value="0")
+        tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10).pack(side="left", padx=(0, 20))
+        
+        self.buyback_enabled = tk.BooleanVar(value=False)
+        tk.Checkbutton(extra_ctrl_frame, text="Apply BuyBack Offer", variable=self.buyback_enabled, bg=self.CARD, font=("Arial", 9)).pack(side="left", padx=(0, 20))
+        
+        tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        self.gst_type = tk.StringVar(value="CGST + SGST")
+        gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
+        gst_type_box.pack(side="left")
 
         # 3. Calculate GST (Fixed Math)
         try:
@@ -1853,8 +1868,21 @@ class QuotationForm(tk.Toplevel):
             packing_amt = items_total * (pack_val / 100.0)
         elif mode == "Amount (₹)":
             packing_amt = pack_val
+
+        # Define missing variables
+        try:
+            transport = float(self.transport_var.get() or "0") if hasattr(self, "transport_var") else 0.0
+        except Exception:
+            transport = 0.0
             
-                taxable = items_total + packing_amt + transport - buyback
+        buyback = 0.0 # Logic for buyback input can be added later
+        
+        try:
+            gst_rate = float(self.gst_rate.get() or "18")
+        except Exception:
+            gst_rate = 18.0
+            
+        taxable = items_total + packing_amt + transport - buyback
         gst_amt = taxable * (gst_rate / 100.0)
         
         is_igst = getattr(self, "gst_type", tk.StringVar(value="CGST + SGST")).get() == "IGST"
