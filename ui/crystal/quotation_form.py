@@ -1844,9 +1844,7 @@ class QuotationForm(tk.Toplevel):
         self.transport_var = tk.StringVar(value="0")
         tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10).pack(side="left", padx=(0, 20))
         
-        self.buyback_enabled = tk.BooleanVar(value=False)
-        tk.Checkbutton(extra_ctrl_frame, text="Apply BuyBack Offer", variable=self.buyback_enabled, bg=self.CARD, font=("Arial", 9)).pack(side="left", padx=(0, 20))
-        
+
         tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
@@ -1875,14 +1873,12 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             transport = 0.0
             
-        buyback = 0.0 # Logic for buyback input can be added later
-        
         try:
             gst_rate = float(self.gst_rate.get() or "18")
         except Exception:
             gst_rate = 18.0
             
-        taxable = items_total + packing_amt + transport - buyback
+        taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         
         is_igst = getattr(self, "gst_type", tk.StringVar(value="CGST + SGST")).get() == "IGST"
@@ -1906,8 +1902,7 @@ class QuotationForm(tk.Toplevel):
             ("Machine (Cart Total)", fmt(items_total)),
             *([("Packing", fmt(packing_amt))] if packing_amt > 0 else []),
             ("Transportation", fmt(transport)),
-            ("BuyBack Offer", "₹0.00"),
-            ("Taxable Value", fmt(taxable)),
+                        ("Taxable Value", fmt(taxable)),
             (f"CGST ({gst_rate/2:g}%)", fmt(cgst)),
             (f"SGST ({gst_rate/2:g}%)", fmt(sgst)),
             ("IGST (0%)", "₹0.00"),
@@ -1918,16 +1913,13 @@ class QuotationForm(tk.Toplevel):
         table_frame = tk.Frame(card, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
         table_frame.pack(fill="x", pady=(10, 20), padx=20)
         
-        for label, value in rows:
+                for label, value in rows:
             is_grand_total = (label == "GRAND TOTAL")
-            
-            # Highlight the Grand Total row
             row_bg = self.SOFT if is_grand_total else self.CARD
             
             row = tk.Frame(table_frame, bg=row_bg)
             row.pack(fill="x", pady=0)
             
-            # Padding for inner rows
             pad_y = 12 if is_grand_total else 8
             
             # Label
@@ -1943,11 +1935,6 @@ class QuotationForm(tk.Toplevel):
             # Add subtle separator lines (except for the last row)
             if not is_grand_total:
                 tk.Frame(table_frame, bg=self.BORDER, height=1).pack(fill="x", padx=10)
-            font_style = ("Arial", 11, "bold") if label == "GRAND TOTAL" else ("Arial", 10)
-            tk.Label(row, text=label, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="left")
-            tk.Label(row, text=value, bg=self.CARD, fg=self.TEXT, font=font_style).pack(side="right")
-
-        self._recalculate()
 
     def _render_terms(self):
 
