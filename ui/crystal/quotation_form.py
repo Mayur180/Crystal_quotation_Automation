@@ -1902,7 +1902,17 @@ class QuotationForm(tk.Toplevel):
             ("Machine (Cart Total)", fmt(items_total)),
             *([("Packing", fmt(packing_amt))] if packing_amt > 0 else []),
             ("Transportation", fmt(transport)),
-                        ("Taxable Value", fmt(taxable)),
+            ("Taxable Value", fmt(taxable)),
+        ]
+        
+        # Add the correct tax rows based on selection
+        if is_igst:
+            rows.append((f"IGST ({gst_rate:g}%)", fmt(igst)))
+        else:
+            rows.append((f"CGST ({gst_rate/2:g}%)", fmt(cgst)))
+            rows.append((f"SGST ({gst_rate/2:g}%)", fmt(sgst)))
+            
+        rows.append(("GRAND TOTAL", fmt(grand)))
             *([(f"CGST ({gst_rate/2:g}%)", fmt(cgst)), (f"SGST ({gst_rate/2:g}%)", fmt(sgst))] if not is_igst else [(f"IGST ({gst_rate:g}%)", fmt(igst))]),
             ("GRAND TOTAL", fmt(grand))
         ]
