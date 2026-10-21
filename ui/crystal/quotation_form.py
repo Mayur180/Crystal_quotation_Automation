@@ -1360,8 +1360,20 @@ class QuotationForm(tk.Toplevel):
         card = self._create_card(self.content_area)
         self._section_header(card, 2, "Choose your machine", "Add machines to the quotation.")
 
-        top = tk.Frame(card, bg=self.CARD)
-        top.pack(fill="x", pady=(0, 20))
+        # Create a 2-column layout
+        main_layout = tk.Frame(card, bg=self.CARD)
+        main_layout.pack(fill="both", expand=True, pady=(0, 20))
+        
+        # Left Column (Inputs)
+        left_col = tk.Frame(main_layout, bg=self.CARD)
+        left_col.pack(side="left", fill="both", expand=True, padx=(0, 20))
+        
+        # Right Column (Product Info)
+        right_col = tk.Frame(main_layout, bg=self.CARD)
+        right_col.pack(side="right", fill="both", expand=True)
+
+        top = tk.Frame(left_col, bg=self.CARD)
+        top.pack(fill="x")
 
         tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
         self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox", width=50)
