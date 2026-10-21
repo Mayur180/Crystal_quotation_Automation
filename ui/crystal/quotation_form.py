@@ -1369,16 +1369,24 @@ class QuotationForm(tk.Toplevel):
         self.category_combo.bind("<<ComboboxSelected>>", self._category_changed)
 
         tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
-        self.model_combo = ttk.Combobox(top, textvariable=self.model, values=self._get_models(self.category.get()), state="normal", style="Crystal.TCombobox")
-        self.model_combo.pack(fill="x", pady=(6, 16))
+        self.model_combo = ttk.Combobox(top, textvariable=self.model, values=self._get_models(self.category.get()), state="normal", style="Crystal.TCombobox", width=50)
+        self.model_combo.pack(anchor="w", pady=(6, 16))
         self.model_combo.bind("<<ComboboxSelected>>", self._model_changed)
         self.model_combo.bind("<KeyRelease>", self._on_model_keyrelease)
 
         row = tk.Frame(top, bg=self.CARD)
         row.pack(fill="x", pady=10)
+        
+        # HSN Code
+        tk.Label(row, text="HSN/SAC:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
+        self.hsn_var = tk.StringVar(value="85059000")
+        tk.Entry(row, textvariable=self.hsn_var, width=12, font=("Arial", 10)).pack(side="left", padx=(0, 20))
+
+        # Price
         tk.Label(row, text="Price (₹)", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
         tk.Entry(row, textvariable=self.machine_price, width=10, font=("Arial", 10)).pack(side="left", padx=(0, 20))
 
+        # Qty
         tk.Label(row, text="Qty", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
         tk.Entry(row, textvariable=self.machine_qty, width=6, font=("Arial", 10)).pack(side="left", padx=(0, 20))
 
