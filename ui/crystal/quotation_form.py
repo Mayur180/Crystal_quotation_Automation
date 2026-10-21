@@ -1402,6 +1402,18 @@ class QuotationForm(tk.Toplevel):
         
         tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
+        # --- Product Info Panel (fills the empty space) ---
+        self.info_frame = tk.Frame(card, bg=self.SOFT, highlightbackground=self.BORDER, highlightthickness=1)
+        self.info_frame.pack(fill="x", pady=(10, 10))
+        
+        self.info_label = tk.Label(
+            self.info_frame, 
+            text="Select a model to see product details here.", 
+            bg=self.SOFT, fg=self.MUTED, font=("Arial", 10, "italic"),
+            anchor="w", justify="left"
+        )
+        self.info_label.pack(fill="x", padx=15, pady=15)
+
         self.cart_frame = tk.Frame(card, bg=self.CARD)
         self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
         
@@ -1708,6 +1720,21 @@ class QuotationForm(tk.Toplevel):
                 self.machine_price.set(str(auto_price))
         else:
             self.machine_price.set("")
+            
+        # Auto-fill HSN from catalog
+        if get_product is not None and 'product' in locals() and isinstance(product, dict):
+            hsn = product.get("hsn") or product.get("hsn_code") or ""
+            if hasattr(self, "hsn_var"):
+                self.hsn_var.set(str(hsn))
+
+        # Update Product Info Panel
+        if hasattr(self, "info_label") and get_product is not None and 'product' in locals() and isinstance(product, dict):
+            desc = product.get("description") or product.get("name") or "No description available."
+            size = product.get("size") or ""
+            info_text = f"Model: {model}\n{desc}"
+            if size:
+                info_text += f"\nSize: {size}"
+            self.info_label.config(text=info_text)
 
         # Update summary panel
         try:
