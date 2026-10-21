@@ -1402,17 +1402,17 @@ class QuotationForm(tk.Toplevel):
         
         tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
-        # --- Product Info Panel (fills the empty space) ---
-        self.info_frame = tk.Frame(card, bg=self.SOFT, highlightbackground=self.BORDER, highlightthickness=1)
-        self.info_frame.pack(fill="x", pady=(10, 10))
+        # --- Product Info Panel (Now in the right column) ---
+        self.info_frame = tk.Frame(right_col, bg=self.SOFT, highlightbackground=self.BORDER, highlightthickness=1)
+        self.info_frame.pack(fill="both", expand=True, pady=(6, 0))
         
         self.info_label = tk.Label(
             self.info_frame, 
             text="Select a model to see product details here.", 
             bg=self.SOFT, fg=self.MUTED, font=("Arial", 10, "italic"),
-            anchor="w", justify="left"
+            anchor="nw", justify="left", wraplength=400
         )
-        self.info_label.pack(fill="x", padx=15, pady=15)
+        self.info_label.pack(fill="both", expand=True, padx=15, pady=15)
 
         self.cart_frame = tk.Frame(card, bg=self.CARD)
         self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
