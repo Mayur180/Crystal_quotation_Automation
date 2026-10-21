@@ -15,7 +15,7 @@ NAV_ITEMS = [
 
 class Sidebar(tk.Frame):
     def __init__(self, parent, *, logo_text="CRYSTAL", active_key="dashboard",
-                 on_navigate, on_quit):
+                 on_navigate, on_quit, is_admin=False):
         super().__init__(parent, bg=T.SURFACE, width=T.SIDEBAR_WIDTH)
         self.pack_propagate(False)
         self._collapsed = False
