@@ -1784,7 +1784,7 @@ class QuotationForm(tk.Toplevel):
         # 1. Calculate Cart Total
         items_total = sum(float(item.get("total", 0)) for item in getattr(self, "items", []))
         
-        # 2. Get Packing and GST from the inputs
+        # 2. Get Packing, Transport, BuyBack, and GST from the inputs
         try:
             packing_val = float(self.packing_value.get() or "0")
             if self.packing_mode.get() == "Percentage (%)":
@@ -1793,6 +1793,16 @@ class QuotationForm(tk.Toplevel):
                 packing_amt = packing_val
         except Exception:
             packing_amt = 0.0
+            
+        try:
+            transport = float(getattr(self, "transport_var", tk.StringVar(value="0")).get() or "0")
+        except Exception:
+            transport = 0.0
+            
+        buyback = 0.0 # Default, can be expanded later if needed
+        if getattr(self, "buyback_enabled", tk.BooleanVar(value=False)).get():
+            # If they check the box, maybe apply a fixed discount or ask for input. For now, we'll just show it as 0.
+            buyback = 0.0
             
         try:
             gst_rate = float(self.gst_rate.get() or "0")
@@ -1844,11 +1854,20 @@ class QuotationForm(tk.Toplevel):
         elif mode == "Amount (₹)":
             packing_amt = pack_val
             
-        taxable = items_total + packing_amt + transport
+                taxable = items_total + packing_amt + transport - buyback
         gst_amt = taxable * (gst_rate / 100.0)
-        cgst = gst_amt / 2.0
-        sgst = gst_amt / 2.0
         
+        is_igst = getattr(self, "gst_type", tk.StringVar(value="CGST + SGST")).get() == "IGST"
+        
+        if is_igst:
+            cgst = 0.0
+            sgst = 0.0
+            igst = gst_amt
+        else:
+            cgst = gst_amt / 2.0
+            sgst = gst_amt / 2.0
+            igst = 0.0
+            
         grand = taxable + gst_amt
 
 
