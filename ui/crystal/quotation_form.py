@@ -1364,8 +1364,8 @@ class QuotationForm(tk.Toplevel):
         top.pack(fill="x", pady=(0, 20))
 
         tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
-        self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox")
-        self.category_combo.pack(fill="x", pady=(6, 16))
+        self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox", width=50)
+        self.category_combo.pack(anchor="w", pady=(6, 16))
         self.category_combo.bind("<<ComboboxSelected>>", self._category_changed)
 
         tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
@@ -1379,7 +1379,7 @@ class QuotationForm(tk.Toplevel):
         
         # HSN Code
         tk.Label(row, text="HSN/SAC:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
-        self.hsn_var = tk.StringVar(value="85059000")
+        self.hsn_var = tk.StringVar()
         tk.Entry(row, textvariable=self.hsn_var, width=12, font=("Arial", 10)).pack(side="left", padx=(0, 20))
 
         # Price
@@ -1453,7 +1453,7 @@ class QuotationForm(tk.Toplevel):
             disc = subtotal
             
         total = subtotal - disc
-        self.items.append({"model": model, "hsn": getattr(self, "hsn_var", tk.StringVar(value="85059000")).get(), "price": price, "qty": qty, "discount": disc, "total": total})
+        self.items.append({"model": model, "hsn": (getattr(self, "hsn_var", tk.StringVar()).get().strip() or "85059000"), "price": price, "qty": qty, "discount": disc, "total": total})
         self._refresh_cart_table()
         self.model.set("")
         self.machine_price.set("")
