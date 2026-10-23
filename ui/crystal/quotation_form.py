@@ -1850,7 +1850,7 @@ class QuotationForm(tk.Toplevel):
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
 
-        # 3. Calculate GST (Fixed Math)
+        # 3. Calculate GST (Perfect Dynamic Math)
         try:
             pack_val = float(self.packing_value.get() or 0)
         except ValueError:
@@ -1859,20 +1859,18 @@ class QuotationForm(tk.Toplevel):
         packing_amt = 0.0
         mode = self.packing_mode.get()
         
-        # Strict check to ensure "No Packing" zeroes it out
-        if mode == "No Packing":
-            packing_amt = 0.0
-        elif mode == "Percentage (%)":
+        if mode == "Percentage (%)":
             packing_amt = items_total * (pack_val / 100.0)
         elif mode == "Amount (₹)":
             packing_amt = pack_val
 
-        # Define missing variables
+        # Get Transport
         try:
             transport = float(self.transport_var.get() or "0") if hasattr(self, "transport_var") else 0.0
         except Exception:
             transport = 0.0
             
+        # Get GST Rate
         try:
             gst_rate = float(self.gst_rate.get() or "18")
         except Exception:
@@ -1881,6 +1879,7 @@ class QuotationForm(tk.Toplevel):
         taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         
+        # Check IGST vs CGST/SGST
         is_igst = getattr(self, "gst_type", tk.StringVar(value="CGST + SGST")).get() == "IGST"
         
         if is_igst:
@@ -1894,9 +1893,7 @@ class QuotationForm(tk.Toplevel):
             
         grand = taxable + gst_amt
 
-
-
-        # 4. Display Rows
+        # 4. Build Display Rows
         fmt = lambda v: f"₹{v:,.2f}"
         
         rows = []
@@ -1906,7 +1903,6 @@ class QuotationForm(tk.Toplevel):
         rows.append(("Transportation", fmt(transport)))
         rows.append(("Taxable Value", fmt(taxable)))
         
-        # Add the correct tax rows based on selection
         if is_igst:
             rows.append((f"IGST ({gst_rate:g}%)", fmt(igst)))
         else:
