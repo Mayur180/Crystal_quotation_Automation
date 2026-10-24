@@ -1776,6 +1776,17 @@ class QuotationForm(tk.Toplevel):
     # STEP 4 — PRICING
     # ========================================================
 
+
+    def _refresh_pricing(self):
+        """Safely clear and rebuild the pricing screen to recalculate."""
+        try:
+            # Clear the current content area
+            self._clear_content()
+            # Rebuild the pricing screen
+            self._render_pricing()
+        except Exception as e:
+            print(f"Refresh error: {e}")
+
     def _render_pricing(self):
         self._clear_content()
         card = self._create_card(self.content_area)
@@ -1849,6 +1860,14 @@ class QuotationForm(tk.Toplevel):
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
+        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self._refresh_pricing())
+        
+        # Bind Transport box to refresh as well
+        if hasattr(self, "transport_var"):
+            # Find the transport entry widget and bind it
+            for child in extra_ctrl_frame.winfo_children():
+                if isinstance(child, tk.Entry) and getattr(child, "cget", lambda x: "")("textvariable") == str(self.transport_var):
+                    child.bind("<KeyRelease>", lambda e: self._refresh_pricing())
 
         # 3. Calculate GST (Perfect Dynamic Math)
         try:
