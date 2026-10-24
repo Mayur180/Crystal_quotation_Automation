@@ -1778,14 +1778,19 @@ class QuotationForm(tk.Toplevel):
 
 
     def _refresh_pricing(self):
-        """Safely clear and rebuild the pricing screen to recalculate."""
+        """Safely rebuild the pricing screen after a short delay to prevent UI freeze."""
         try:
-            # Clear the current content area
-            self._clear_content()
-            # Rebuild the pricing screen
-            self._render_pricing()
+            # We use 'after' to let the dropdown close before we destroy the screen
+            self.after(100, self._do_refresh_pricing)
         except Exception as e:
             print(f"Refresh error: {e}")
+            
+    def _do_refresh_pricing(self):
+        try:
+            self._clear_content()
+            self._render_pricing()
+        except Exception as e:
+            print(f"Rebuild error: {e}")
 
     def _render_pricing(self):
         self._clear_content()
