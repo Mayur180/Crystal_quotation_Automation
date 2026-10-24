@@ -1777,14 +1777,6 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
 
-    def _refresh_pricing(self):
-        """Safely rebuild the pricing screen after a short delay to prevent UI freeze."""
-        try:
-            # We use 'after' to let the dropdown close before we destroy the screen
-            self.after(100, self._do_refresh_pricing)
-        except Exception as e:
-            print(f"Refresh error: {e}")
-            
     def _do_refresh_pricing(self):
         try:
             self._clear_content()
@@ -1865,7 +1857,7 @@ class QuotationForm(tk.Toplevel):
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
-        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self._refresh_pricing())
+        # Removed live refresh to prevent UI freeze. User clicks 'Continue' to update.
         
         # Bind Transport box to refresh as well
         if hasattr(self, "transport_var"):
@@ -1888,13 +1880,11 @@ class QuotationForm(tk.Toplevel):
         elif mode == "Amount (₹)":
             packing_amt = pack_val
 
-        # Get Transport
         try:
             transport = float(self.transport_var.get() or "0") if hasattr(self, "transport_var") else 0.0
         except Exception:
             transport = 0.0
             
-        # Get GST Rate
         try:
             gst_rate = float(self.gst_rate.get() or "18")
         except Exception:
@@ -1903,8 +1893,9 @@ class QuotationForm(tk.Toplevel):
         taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         
-        # Check IGST vs CGST/SGST
-        is_igst = getattr(self, "gst_type", tk.StringVar(value="CGST + SGST")).get() == "IGST"
+        # The critical check: read the dropdown value
+        current_gst_type = self.gst_type.get() if hasattr(self, "gst_type") else "CGST + SGST"
+        is_igst = (current_gst_type == "IGST")
         
         if is_igst:
             cgst = 0.0
