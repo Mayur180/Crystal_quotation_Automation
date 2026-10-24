@@ -1801,38 +1801,8 @@ class QuotationForm(tk.Toplevel):
 
         # 1. Calculate Cart Total
         items_total = sum(float(item.get("total", 0)) for item in getattr(self, "items", []))
-        
-        # 2. Get Packing, Transport, BuyBack, and GST from the inputs
-        try:
-            packing_val = float(self.packing_value.get() or "0")
-            if self.packing_mode.get() == "Percentage (%)":
-                packing_amt = items_total * (packing_val / 100.0)
-            else:
-                packing_amt = packing_val
-        except Exception:
-            packing_amt = 0.0
-            
-        try:
-            transport = float(getattr(self, "transport_var", tk.StringVar(value="0")).get() or "0")
-        except Exception:
-            transport = 0.0
-            
-        buyback = 0.0 # Default, can be expanded later if needed
-        if getattr(self, "buyback_enabled", tk.BooleanVar(value=False)).get():
-            # If they check the box, maybe apply a fixed discount or ask for input. For now, we'll just show it as 0.
-            buyback = 0.0
-            
-        try:
-            gst_rate = float(self.gst_rate.get() or "0")
-        except Exception:
-            gst_rate = 0.0
-            
-        try:
-            transport = float(self.transportation.get() or "0")
-        except Exception:
-            transport = 0.0
 
-        # --- Single Packing UI ---
+        # --- Packing UI ---
         packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
         packing_ctrl_frame.pack(fill="x", pady=(10, 10))
         
@@ -1847,14 +1817,12 @@ class QuotationForm(tk.Toplevel):
         )
         packing_mode_box.pack(side="left", padx=(0, 15))
         
-        
         tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         
         packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
         packing_val_entry.pack(side="left")
-        # -------------------------
 
-        # --- Transport, BuyBack, and GST Controls ---
+        # --- Transport & GST Controls ---
         extra_ctrl_frame = tk.Frame(card, bg=self.CARD)
         extra_ctrl_frame.pack(fill="x", pady=(0, 15))
         
@@ -1862,13 +1830,12 @@ class QuotationForm(tk.Toplevel):
         self.transport_var = tk.StringVar(value="0")
         tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10).pack(side="left", padx=(0, 20))
         
-
         tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
         
-        # Add the Recalculate button
+        # Recalculate Button
         tk.Button(
             extra_ctrl_frame, 
             text="🔄 Recalculate", 
@@ -1877,32 +1844,19 @@ class QuotationForm(tk.Toplevel):
             relief="flat", 
             command=self._reload_pricing_screen
         ).pack(side="left", padx=(15, 0))
-        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self.after(100, self._reload_pricing_screen))
-        # Removed live refresh to prevent UI freeze. User clicks 'Continue' to update.
-        
-        # Bind Transport box to refresh as well
-        if hasattr(self, "transport_var"):
-            # Find the transport entry widget and bind it
-            for child in extra_ctrl_frame.winfo_children():
-                if isinstance(child, tk.Entry) and getattr(child, "cget", lambda x: "")("textvariable") == str(self.transport_var):
-                    child.bind("<KeyRelease>", lambda e: self._refresh_pricing())
 
-        # 3. Calculate GST (Bulletproof Recalculation)
+        # --- Math Calculation ---
         try:
-            pack_val = float(self.packing_value.get() or 0)
-        except ValueError:
-            pack_val = 0.0
+            pack_val = float(self.packing_value.get() or "0")
+            if self.packing_mode.get() == "Percentage (%)":
+                packing_amt = items_total * (pack_val / 100.0)
+            else:
+                packing_amt = pack_val
+        except Exception:
+            packing_amt = 0.0
             
-        packing_amt = 0.0
-        mode = self.packing_mode.get()
-        
-        if mode == "Percentage (%)":
-            packing_amt = items_total * (pack_val / 100.0)
-        elif mode == "Amount (₹)":
-            packing_amt = pack_val
-
         try:
-            transport = float(self.transport_var.get() or "0") if hasattr(self, "transport_var") else 0.0
+            transport = float(self.transport_var.get() or "0")
         except Exception:
             transport = 0.0
             
@@ -1914,10 +1868,10 @@ class QuotationForm(tk.Toplevel):
         taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         
-        # Forcefully read the CURRENT dropdown value
-        current_gst_type = self.gst_type.get() if hasattr(self, "gst_type") else "CGST + SGST"
+        # THE CRITICAL CHECK
+        current_gst = self.gst_type.get() if hasattr(self, "gst_type") else "CGST + SGST"
         
-        if current_gst_type == "IGST":
+        if current_gst == "IGST":
             cgst = 0.0
             sgst = 0.0
             igst = gst_amt
@@ -1928,7 +1882,7 @@ class QuotationForm(tk.Toplevel):
             
         grand = taxable + gst_amt
 
-        # 4. Build Display Rows
+        # --- Build Rows ---
         fmt = lambda v: f"₹{v:,.2f}"
         
         rows = []
@@ -1938,7 +1892,7 @@ class QuotationForm(tk.Toplevel):
         rows.append(("Transportation", fmt(transport)))
         rows.append(("Taxable Value", fmt(taxable)))
         
-        if current_gst_type == "IGST":
+        if current_gst == "IGST":
             rows.append((f"IGST ({gst_rate:g}%)", fmt(igst)))
         else:
             rows.append((f"CGST ({gst_rate/2:g}%)", fmt(cgst)))
@@ -1946,7 +1900,7 @@ class QuotationForm(tk.Toplevel):
             
         rows.append(("GRAND TOTAL", fmt(grand)))
 
-        # --- Professional Pricing Table ---
+        # --- Draw Table ---
         table_frame = tk.Frame(card, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
         table_frame.pack(fill="x", pady=(10, 20), padx=20)
 
@@ -1959,17 +1913,14 @@ class QuotationForm(tk.Toplevel):
             
             pad_y = 12 if is_grand_total else 8
             
-            # Label
             lbl_font = ("Arial", 11, "bold") if is_grand_total else ("Arial", 10)
             lbl_fg = self.TEXT if is_grand_total else self.MUTED
             tk.Label(row, text=label, bg=row_bg, fg=lbl_fg, font=lbl_font).pack(side="left", padx=15, pady=pad_y)
             
-            # Value
             val_font = ("Arial", 12, "bold") if is_grand_total else ("Arial", 10, "bold")
             val_fg = self.RED if is_grand_total else self.TEXT
             tk.Label(row, text=value, bg=row_bg, fg=val_fg, font=val_font).pack(side="right", padx=15, pady=pad_y)
             
-            # Add subtle separator lines (except for the last row)
             if not is_grand_total:
                 tk.Frame(table_frame, bg=self.BORDER, height=1).pack(fill="x", padx=10)
 
