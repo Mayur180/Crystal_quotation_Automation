@@ -3120,57 +3120,89 @@ class QuotationForm(tk.Toplevel):
         import tkinter as tk
         from tkinter import messagebox
         import os
-        import tempfile
+        import subprocess
+        import platform
         
-        # 1. Generate a temporary PDF to show in preview
         try:
-            # We call the generator but set generate_pdf=True and save to a temp location
-            # We will use the same data but intercept the output file
-            temp_dir = tempfile.gettempdir()
-            temp_pdf_path = os.path.join(temp_dir, "crystal_preview.pdf")
-            
-            # Call the generator (this creates the PDF)
-            # Note: The generator might save directly to the default output folder.
-            # For preview, we just need to trigger it. We will let it save normally.
-            # But to show it in the preview, we need the path. 
-            # Let's assume the generator returns a path or we can find the latest PDF.
-            
-            # Since we don't know the exact return, let's just call it.
-            # This will also create the Word file, which is fine for preview.
-            result = self._do_generate_final(data)
-            
-            # Now try to open the PDF using the system default viewer
-            # This is the most reliable way to show the full page
-            import subprocess
-            import platform
-            
-            # Find the latest PDF in the output folder (assuming the generator saved it there)
-            from app.services.paths import get_data_dir
-            output_dir = get_data_dir() / "output"
-            
-            if output_dir.exists():
-                pdfs = sorted(output_dir.glob("*.pdf"), key=os.path.getmtime, reverse=True)
-                if pdfs:
-                    latest_pdf = pdfs[0]
-                    if platform.system() == 'Windows':
-                        os.startfile(latest_pdf)
-                    elif platform.system() == 'Darwin':  # macOS
-                        subprocess.call(['open', latest_pdf])
-                    else:  # Linux
-                        subprocess.call(['xdg-open', latest_pdf])
-                    
-                    messagebox.showinfo("Preview", f"Opening PDF: {latest_pdf.name}", parent=self)
-                    return
-                else:
-                    messagebox.showwarning("Preview", "No PDF found in output folder.", parent=self)
-                    return
-            else:
-                messagebox.showwarning("Preview", "Output folder not found.", parent=self)
+            # 1. Generate the PDF first
+            # We call the do_generate_final which actually creates the files
+            success = self._do_generate_final(data)
+            if not success:
+                messagebox.showerror("Preview", "Failed to generate the PDF. Check the terminal for errors.", parent=self)
                 return
+            
+            # 2. Find the latest PDF in the project root or data folder
+            # We check several possible locations
+            search_paths = [
+                os.path.join(os.getcwd(), "output"),
+                os.path.join(os.getcwd(), "dist", "CRYSTALQuotation", "output"),
+                os.path.join(os.getcwd(), "data", "Crystal", "output"),
+                os.getcwd(),
+            ]
+            
+            latest_pdf = None
+            latest_mtime = 0
+            
+            for folder in search_paths:
+                if os.path.exists(folder):
+                    for f in os.listdir(folder):
+                        if f.endswith(".pdf"):
+                            full_path = os.path.join(folder, f)
+                            mtime = os.path.getmtime(full_path)
+                            if mtime > latest_mtime:
+                                latest_mtime = mtime
+                                latest_pdf = full_path
+            
+            if latest_pdf:
+                # 3. Open it with the system viewer
+                if platform.system() == 'Windows':
+                    os.startfile(latest_pdf)
+                elif platform.system() == 'Darwin':
+                    subprocess.call(['open', latest_pdf])
+                else:
+                    subprocess.call(['xdg-open', latest_pdf])
+                
+                messagebox.showinfo("Preview", f"Opening: {os.path.basename(latest_pdf)}", parent=self)
+            else:
+                messagebox.showwarning("Preview", "PDF generated but could not be found. Check the output folder.", parent=self)
                 
         except Exception as e:
-            messagebox.showerror("Preview Error", f"Could not generate preview: {e}", parent=self)
+            messagebox.showerror("Preview Error", f"Error: {e}", parent=self)
 
+    def _do_generate_final(self, data):
+        """Actually generate the PDF and Word files and return True on success."""
+        try:
+            result = generate_quotation(**{
+                "customer_name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "contact_person": data.get("contact_person", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "country": data.get("country", ""),
+                "gstin": data.get("gstin", ""),
+                "model": data.get("model", ""),
+                "machine_price": data.get("machine_price", 0),
+                "machine_qty": data.get("machine_qty", 1),
+                "accessories": data.get("accessories", []),
+                "transportation": data.get("transportation", 0),
+                "packing_mode": data.get("packing_mode", "Percentage (%)"),
+                "packing_value": data.get("packing_value", 0),
+                "packing_percent": data.get("packing_percent", 3.5),
+                "cgst_percent": data.get("cgst_percent", 9),
+                "sgst_percent": data.get("sgst_percent", 9),
+                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
+                "gst_type": data.get("gst_type", "CGST + SGST"),
+                "gst_rate": data.get("gst_rate", 18),
+                "selected_terms": data.get("selected_terms", []),
+            })
+            return True if result else False
+        except Exception as e:
+            print(f"Generation Error: {e}")
+            return False
     def _do_generate_final(self, data):
         """Actually generate the PDF and Word files."""
         try:
