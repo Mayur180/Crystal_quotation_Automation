@@ -3125,33 +3125,30 @@ class QuotationForm(tk.Toplevel):
         
         try:
             # 1. Generate the PDF first
-            # We call the do_generate_final which actually creates the files
             success = self._do_generate_final(data)
             if not success:
                 messagebox.showerror("Preview", "Failed to generate the PDF. Check the terminal for errors.", parent=self)
                 return
             
-            # 2. Find the latest PDF in the project root or data folder
-            # We check several possible locations
-            search_paths = [
-                os.path.join(os.getcwd(), "output"),
-                os.path.join(os.getcwd(), "dist", "CRYSTALQuotation", "output"),
-                os.path.join(os.getcwd(), "data", "Crystal", "output"),
-                os.getcwd(),
-            ]
+            # 2. Find the latest PDF in the Downloads folder
+            # The generator saves to: C:\Users\ADMIN\Downloads\CrystalQuotation\<date>\pdf\
+            home = os.path.expanduser("~")
+            downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
             
             latest_pdf = None
             latest_mtime = 0
             
-            for folder in search_paths:
-                if os.path.exists(folder):
-                    for f in os.listdir(folder):
-                        if f.endswith(".pdf"):
-                            full_path = os.path.join(folder, f)
-                            mtime = os.path.getmtime(full_path)
-                            if mtime > latest_mtime:
-                                latest_mtime = mtime
-                                latest_pdf = full_path
+            if os.path.exists(downloads_folder):
+                # Walk through the date folders (e.g., 24-10-2026)
+                for root, dirs, files in os.walk(downloads_folder):
+                    if "pdf" in root:
+                        for f in files:
+                            if f.endswith(".pdf"):
+                                full_path = os.path.join(root, f)
+                                mtime = os.path.getmtime(full_path)
+                                if mtime > latest_mtime:
+                                    latest_mtime = mtime
+                                    latest_pdf = full_path
             
             if latest_pdf:
                 # 3. Open it with the system viewer
@@ -3164,11 +3161,45 @@ class QuotationForm(tk.Toplevel):
                 
                 messagebox.showinfo("Preview", f"Opening: {os.path.basename(latest_pdf)}", parent=self)
             else:
-                messagebox.showwarning("Preview", "PDF generated but could not be found. Check the output folder.", parent=self)
+                messagebox.showwarning("Preview", "PDF generated but could not be found. Check the Downloads folder.", parent=self)
                 
         except Exception as e:
             messagebox.showerror("Preview Error", f"Error: {e}", parent=self)
 
+    def _do_generate_final(self, data):
+        """Actually generate the PDF and Word files and return True on success."""
+        try:
+            generate_quotation(**{
+                "customer_name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "contact_person": data.get("contact_person", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "country": data.get("country", ""),
+                "gstin": data.get("gstin", ""),
+                "model": data.get("model", ""),
+                "machine_price": data.get("machine_price", 0),
+                "machine_qty": data.get("machine_qty", 1),
+                "accessories": data.get("accessories", []),
+                "transportation": data.get("transportation", 0),
+                "packing_mode": data.get("packing_mode", "Percentage (%)"),
+                "packing_value": data.get("packing_value", 0),
+                "packing_percent": data.get("packing_percent", 3.5),
+                "cgst_percent": data.get("cgst_percent", 9),
+                "sgst_percent": data.get("sgst_percent", 9),
+                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
+                "gst_type": data.get("gst_type", "CGST + SGST"),
+                "gst_rate": data.get("gst_rate", 18),
+                "selected_terms": data.get("selected_terms", []),
+            })
+            return True
+        except Exception as e:
+            print(f"Generation Error: {e}")
+            return False
     def _do_generate_final(self, data):
         """Actually generate the PDF and Word files and return True on success."""
         try:
@@ -3199,7 +3230,7 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
             })
-            return True if result else False
+            return True
         except Exception as e:
             print(f"Generation Error: {e}")
             return False
@@ -3237,138 +3268,16 @@ class QuotationForm(tk.Toplevel):
             messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
 
     def _generate_quotation(self):
-
-        # Ask about catalog update BEFORE validation
-        if not self._maybe_update_catalog():
-            return
-
-        if not self._validate_customer():
-
-            self._load_step(1)
-
-            return
-
-        if not self._validate_product():
-
-            self._load_step(2)
-
-            return
-
-        if not self._validate_pricing():
-
-            self._load_step(4)
-
-            return
-
-        data = self.get_form_data()
-
-        # ---- auto-save new customers before generating ----
-        self._auto_save_customer(data)
-
-        if generate_quotation is None:
-
-            messagebox.showerror(
-                "Generator unavailable",
-                (
-                    "The quotation generator could not be imported.\n\n"
-                    "Check:\n"
-                    "app/generators/quotation_generator.py"
-                ),
-                parent=self
-            )
-
-            return
-
+        """Generate the quotation from the Terms step."""
+        # We just call the preview, which handles generation and opening the PDF.
         try:
-
+            data = self.get_form_data()
+            self._auto_save_customer(data)
             self._show_preview(data)
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
 
-
-            output_path = None
-
-            if isinstance(
-                result,
-                str
-            ):
-
-                output_path = result
-
-            elif isinstance(
-                result,
-                dict
-            ):
-
-                output_path = (
-
-                    result.get("word_path")
-
-                    or result.get("docx_path")
-
-                    or result.get("output_path")
-
-                    or result.get("path")
-                )
-
-            self.completed_steps.add(
-                5
-            )
-
-            self._update_stepper()
-
-            if output_path:
-
-                pdf_path = None
-                if isinstance(result, dict):
-                    pdf_path = (
-                        result.get("pdf_path")
-                        or result.get("pdf")
-                    )
-
-                import sys as _sys
-                print(f"[DIALOG] output_path={output_path!r}", file=_sys.stderr)
-                print(f"[DIALOG] pdf_path={pdf_path!r}", file=_sys.stderr)
-                print(f"[DIALOG] result type={type(result).__name__}", file=_sys.stderr)
-                message = (
-                    "Quotation generated successfully.\n\n"
-                    f"Word file:\n{output_path}"
-                )
-                if pdf_path:
-                    message += f"\n\nPDF file:\n{pdf_path}"
-
-                messagebox.showinfo(
-                    "Quotation Generated",
-                    message,
-                    parent=self
-                )
-
-            else:
-
-                messagebox.showinfo(
-                    "Quotation Generated",
-                    "Quotation generation completed successfully.",
-                    parent=self
-                )
-
-            self.status_text.set(
-                "Quotation generated successfully."
-            )
-            # ---- Phase 3: close after successful generation ----
-            self._close_and_return_to_dashboard()
-            return
-
-
-
-        except Exception as exc:
-
-            messagebox.showerror(
-                "Quotation Generation Error",
-                (
-                    "The quotation could not be generated.\n\n"
-                    f"{type(exc).__name__}: {exc}"
-                ),
-                parent=self
-            )
-            
     def _open_customer_lookup(self):
         """Open a small picker; on selection, fill customer fields."""
         try:
