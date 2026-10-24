@@ -1709,10 +1709,20 @@ def _crystal_page(
         return p
 
     # ═══════════════════════════════════════════════════════════
-    # 1. HEADER — logo on top, Armatech block below (stacked)
+    # 1. HEADER — Side-by-side using a 2-column table
     # ═══════════════════════════════════════════════════════════
 
-    # ── Logo (top-left) ──
+    header_tbl = doc.add_table(rows=1, cols=2)
+    header_tbl.autofit = False
+    
+    # Set column widths (Left: 40mm for logo, Right: 130mm for text)
+    header_tbl.columns[0].width = Mm(40)
+    header_tbl.columns[1].width = Mm(130)
+    
+    left_cell = header_tbl.cell(0, 0)
+    right_cell = header_tbl.cell(0, 1)
+    
+    # ── Left Cell: Logo ──
     logo_path = None
     try:
         from quotation_generator_crystal import find_logo
@@ -1720,30 +1730,45 @@ def _crystal_page(
     except Exception:
         pass
 
+    left_cell.text = ""
+    p_logo = left_cell.paragraphs[0]
+    p_logo.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p_logo.paragraph_format.space_after = Pt(0)
+    p_logo.paragraph_format.space_before = Pt(0)
+    
     if logo_path:
         try:
-            p = doc.add_paragraph()
-            p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-            p.paragraph_format.space_after = Pt(2)
-            p.paragraph_format.space_before = Pt(0)
-            run = p.add_run()
+            run = p_logo.add_run()
             run.add_picture(str(logo_path), width=Mm(38))
         except Exception:
-            para("CRYSTAL", size=20, bold=True, color=ACCENT,
-                 align=WD_ALIGN_PARAGRAPH.LEFT, space_after=2)
+            r = p_logo.add_run("CRYSTAL")
+            r.font.size = Pt(20); r.font.bold = True; r.font.color.rgb = ACCENT
     else:
-        para("CRYSTAL", size=20, bold=True, color=ACCENT,
-             align=WD_ALIGN_PARAGRAPH.LEFT, space_after=2)
+        r = p_logo.add_run("CRYSTAL")
+        r.font.size = Pt(20); r.font.bold = True; r.font.color.rgb = ACCENT
 
-    # ── Armatech block below logo (LEFT aligned) ──
-    para("ARMATECH ASSOCIATES", size=14, bold=True, color=ACCENT,
-         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
-    para("A Name With Magnetic Fame", size=9, color=TEXT,
-         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
-    para("W-174A, 'S' BLOCK, BHOSARI", size=9, color=TEXT,
-         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=1)
-    para("Mob No.: 7020991684 | Email: armatech@gmail.com",
-         size=9, color=TEXT, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=4)
+    # ── Right Cell: Armatech Info ──
+    right_cell.text = ""
+    
+    def add_right_text(text, *, size=9, bold=False, color=TEXT, space_after=1):
+        p = right_cell.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        p.paragraph_format.space_after = Pt(space_after)
+        p.paragraph_format.space_before = Pt(0)
+        r = p.add_run(text)
+        r.font.size = Pt(size)
+        r.font.bold = bold
+        r.font.color.rgb = color
+        r.font.name = FONT
+
+    # Remove the default empty first paragraph
+    p_first = right_cell.paragraphs[0]
+    p_first._element.getparent().remove(p_first._element)
+    
+    add_right_text("ARMATECH ASSOCIATES", size=14, bold=True, color=ACCENT, space_after=1)
+    add_right_text("A Name With Magnetic Fame", size=9, color=TEXT, space_after=1)
+    add_right_text("W-174A, 'S' BLOCK, BHOSARI", size=9, color=TEXT, space_after=1)
+    add_right_text("Mob No.: 7020991684 | Email: armatech@gmail.com", size=9, color=TEXT, space_after=4)
 
     # ── QUOTATION centered bar ──
     q_bar = new_table(1, 1)
