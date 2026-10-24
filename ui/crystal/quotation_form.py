@@ -1784,6 +1784,16 @@ class QuotationForm(tk.Toplevel):
         except Exception as e:
             print(f"Rebuild error: {e}")
 
+
+    def _reload_pricing_screen(self):
+        """Safely reload the pricing screen after the dropdown closes."""
+        try:
+            # Clear the screen and redraw it
+            self._clear_content()
+            self._render_pricing()
+        except Exception as e:
+            print(f"Reload error: {e}")
+
     def _render_pricing(self):
         self._clear_content()
         card = self._create_card(self.content_area)
@@ -1857,6 +1867,7 @@ class QuotationForm(tk.Toplevel):
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
+        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self.after(50, self._reload_pricing_screen))
         # Removed live refresh to prevent UI freeze. User clicks 'Continue' to update.
         
         # Bind Transport box to refresh as well
