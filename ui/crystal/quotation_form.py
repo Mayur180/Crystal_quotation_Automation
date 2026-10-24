@@ -3125,10 +3125,9 @@ class QuotationForm(tk.Toplevel):
         
         try:
             # 1. Generate the PDF first
-            success = self._do_generate_final(data)
-            if not success:
-                messagebox.showerror("Preview", "Failed to generate the PDF. Check the terminal for errors.", parent=self)
-                return
+            # Generate the PDF. We don't rely on a return value; 
+            # if no exception is thrown, it succeeded.
+            self._do_generate_final(data)
             
             # 2. Find the latest PDF in the Downloads folder
             # The generator saves to: C:\Users\ADMIN\Downloads\CrystalQuotation\<date>\pdf\
