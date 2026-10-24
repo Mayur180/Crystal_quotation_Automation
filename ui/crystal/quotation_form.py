@@ -1363,15 +1363,16 @@ class QuotationForm(tk.Toplevel):
 
         # Create a 2-column layout
         main_layout = tk.Frame(card, bg=self.CARD)
-        main_layout.pack(fill="both", expand=True, pady=(10, 20))
+        main_layout.pack(fill="x", expand=False, pady=(10, 20))
         
         # Left Column (Inputs)
         left_col = tk.Frame(main_layout, bg=self.CARD)
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 20))
+        left_col.pack(side="left", fill="x", expand=True, padx=(0, 20))
         
         # Right Column (Product Info)
-        right_col = tk.Frame(main_layout, bg=self.CARD)
-        right_col.pack(side="right", fill="both", expand=True, padx=(20, 0))
+        right_col = tk.Frame(main_layout, bg=self.CARD, height=220)
+        right_col.pack(side="right", fill="y", expand=False, padx=(20, 0))
+        right_col.pack_propagate(False)
 
         top = tk.Frame(left_col, bg=self.CARD)
         top.pack(fill="x")
@@ -1428,7 +1429,7 @@ class QuotationForm(tk.Toplevel):
         self.info_label.pack(fill="both", expand=True, padx=15, pady=15)
 
         self.cart_frame = tk.Frame(card, bg=self.CARD)
-        self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
+        self.cart_frame.pack(fill="x", expand=False, pady=(10, 0))
         
         cols = ("model", "hsn", "qty", "price", "discount", "total")
         self.cart_tree = ttk.Treeview(self.cart_frame, columns=cols, show="headings", height=6)
