@@ -1877,7 +1877,7 @@ class QuotationForm(tk.Toplevel):
             relief="flat", 
             command=self._reload_pricing_screen
         ).pack(side="left", padx=(15, 0))
-        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self.after(50, self._reload_pricing_screen))
+        gst_type_box.bind("<<ComboboxSelected>>", lambda e: self.after(100, self._reload_pricing_screen))
         # Removed live refresh to prevent UI freeze. User clicks 'Continue' to update.
         
         # Bind Transport box to refresh as well
