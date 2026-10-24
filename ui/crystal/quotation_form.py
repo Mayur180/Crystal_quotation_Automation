@@ -1829,7 +1829,9 @@ class QuotationForm(tk.Toplevel):
         extra_ctrl_frame.pack(fill="x", pady=(0, 15))
         
         tk.Label(extra_ctrl_frame, text="Transport (₹):", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        self.transport_var = tk.StringVar(value="0")
+        if not hasattr(self, "transport_var"):
+            self.transport_var = tk.StringVar(value="0")
+            
         transport_entry = tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10)
         transport_entry.pack(side="left", padx=(0, 20))
         
