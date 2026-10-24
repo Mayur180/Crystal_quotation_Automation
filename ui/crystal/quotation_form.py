@@ -3116,55 +3116,111 @@ class QuotationForm(tk.Toplevel):
 
 
     def _show_preview(self, data):
-        """Show the actual generated PDF in a preview window."""
+        """Show the summary Preview window before generating the final PDF."""
         import tkinter as tk
         from tkinter import messagebox
+        
+        preview_win = tk.Toplevel(self)
+        preview_win.title("Quotation Preview")
+        preview_win.geometry("600x450")
+        preview_win.configure(bg="#F4F6F8")
+        
+        # Header
+        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=20)
+        
+        # Summary Info
+        info_frame = tk.Frame(preview_win, bg="white", highlightbackground="#D5DBE1", highlightthickness=1)
+        info_frame.pack(fill="x", padx=20, pady=10)
+        
+        tk.Label(info_frame, text=f"Customer: {data.get('customer_name', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
+        tk.Label(info_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
+        tk.Label(info_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
+        tk.Label(info_frame, text=f"Qty: {data.get('machine_qty', 1)}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
+        
+        # Buttons
+        btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        btn_frame.pack(pady=20)
+        
+        def generate_and_open():
+            preview_win.destroy()
+            # Generate the PDF and open it
+            success = self._do_generate_final(data)
+            if success:
+                self._open_latest_pdf()
+            else:
+                messagebox.showerror("Error", "Failed to generate the PDF. Check the terminal.", parent=self)
+            
+        tk.Button(btn_frame, text="✅ Generate & Open PDF", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=generate_and_open).pack(side="left", padx=10, ipadx=10, ipady=5)
+        tk.Button(btn_frame, text="Cancel", bg="#ccc", fg="#333", font=("Arial", 10), relief="flat", command=preview_win.destroy).pack(side="left", padx=10, ipadx=10, ipady=5)
+
+    def _open_latest_pdf(self):
+        """Find the latest PDF in Downloads and open it."""
         import os
         import subprocess
         import platform
+        from tkinter import messagebox
         
-        try:
-            # 1. Generate the PDF first
-            # Generate the PDF. We don't rely on a return value; 
-            # if no exception is thrown, it succeeded.
-            self._do_generate_final(data)
-            
-            # 2. Find the latest PDF in the Downloads folder
-            # The generator saves to: C:\Users\ADMIN\Downloads\CrystalQuotation\<date>\pdf\
-            home = os.path.expanduser("~")
-            downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
-            
-            latest_pdf = None
-            latest_mtime = 0
-            
-            if os.path.exists(downloads_folder):
-                # Walk through the date folders (e.g., 24-10-2026)
-                for root, dirs, files in os.walk(downloads_folder):
-                    if "pdf" in root:
-                        for f in files:
-                            if f.endswith(".pdf"):
-                                full_path = os.path.join(root, f)
-                                mtime = os.path.getmtime(full_path)
-                                if mtime > latest_mtime:
-                                    latest_mtime = mtime
-                                    latest_pdf = full_path
-            
-            if latest_pdf:
-                # 3. Open it with the system viewer
-                if platform.system() == 'Windows':
-                    os.startfile(latest_pdf)
-                elif platform.system() == 'Darwin':
-                    subprocess.call(['open', latest_pdf])
-                else:
-                    subprocess.call(['xdg-open', latest_pdf])
-                
-                messagebox.showinfo("Preview", f"Opening: {os.path.basename(latest_pdf)}", parent=self)
+        home = os.path.expanduser("~")
+        downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
+        
+        latest_pdf = None
+        latest_mtime = 0
+        
+        if os.path.exists(downloads_folder):
+            for root, dirs, files in os.walk(downloads_folder):
+                if "pdf" in root:
+                    for f in files:
+                        if f.endswith(".pdf"):
+                            full_path = os.path.join(root, f)
+                            mtime = os.path.getmtime(full_path)
+                            if mtime > latest_mtime:
+                                latest_mtime = mtime
+                                latest_pdf = full_path
+        
+        if latest_pdf:
+            if platform.system() == 'Windows':
+                os.startfile(latest_pdf)
+            elif platform.system() == 'Darwin':
+                subprocess.call(['open', latest_pdf])
             else:
-                messagebox.showwarning("Preview", "PDF generated but could not be found. Check the Downloads folder.", parent=self)
-                
-        except Exception as e:
-            messagebox.showerror("Preview Error", f"Error: {e}", parent=self)
+                subprocess.call(['xdg-open', latest_pdf])
+        else:
+            messagebox.showwarning("Preview", "PDF generated but could not be found in Downloads.", parent=self)
 
+    def _do_generate_final(self, data):
+        """Actually generate the PDF and Word files."""
+        try:
+            generate_quotation(**{
+                "customer_name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "contact_person": data.get("contact_person", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "country": data.get("country", ""),
+                "gstin": data.get("gstin", ""),
+                "model": data.get("model", ""),
+                "machine_price": data.get("machine_price", 0),
+                "machine_qty": data.get("machine_qty", 1),
+                "accessories": data.get("accessories", []),
+                "transportation": data.get("transportation", 0),
+                "packing_mode": data.get("packing_mode", "Percentage (%)"),
+                "packing_value": data.get("packing_value", 0),
+                "packing_percent": data.get("packing_percent", 3.5),
+                "cgst_percent": data.get("cgst_percent", 9),
+                "sgst_percent": data.get("sgst_percent", 9),
+                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
+                "gst_type": data.get("gst_type", "CGST + SGST"),
+                "gst_rate": data.get("gst_rate", 18),
+                "selected_terms": data.get("selected_terms", []),
+            })
+            return True
+        except Exception as e:
+            print(f"Generation Error: {e}")
+            return False
     def _do_generate_final(self, data):
         """Actually generate the PDF and Word files and return True on success."""
         try:
