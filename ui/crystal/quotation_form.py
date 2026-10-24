@@ -1866,7 +1866,7 @@ class QuotationForm(tk.Toplevel):
                 if isinstance(child, tk.Entry) and getattr(child, "cget", lambda x: "")("textvariable") == str(self.transport_var):
                     child.bind("<KeyRelease>", lambda e: self._refresh_pricing())
 
-        # 3. Calculate GST (Perfect Dynamic Math)
+        # 3. Calculate GST (Bulletproof Recalculation)
         try:
             pack_val = float(self.packing_value.get() or 0)
         except ValueError:
@@ -1893,11 +1893,10 @@ class QuotationForm(tk.Toplevel):
         taxable = items_total + packing_amt + transport
         gst_amt = taxable * (gst_rate / 100.0)
         
-        # The critical check: read the dropdown value
+        # Forcefully read the CURRENT dropdown value
         current_gst_type = self.gst_type.get() if hasattr(self, "gst_type") else "CGST + SGST"
-        is_igst = (current_gst_type == "IGST")
         
-        if is_igst:
+        if current_gst_type == "IGST":
             cgst = 0.0
             sgst = 0.0
             igst = gst_amt
@@ -1918,7 +1917,7 @@ class QuotationForm(tk.Toplevel):
         rows.append(("Transportation", fmt(transport)))
         rows.append(("Taxable Value", fmt(taxable)))
         
-        if is_igst:
+        if current_gst_type == "IGST":
             rows.append((f"IGST ({gst_rate:g}%)", fmt(igst)))
         else:
             rows.append((f"CGST ({gst_rate/2:g}%)", fmt(cgst)))
