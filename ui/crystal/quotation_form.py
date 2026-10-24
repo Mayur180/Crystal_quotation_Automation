@@ -1867,6 +1867,16 @@ class QuotationForm(tk.Toplevel):
         self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
+        
+        # Add the Recalculate button
+        tk.Button(
+            extra_ctrl_frame, 
+            text="🔄 Recalculate", 
+            bg=self.RED, fg="white", 
+            font=("Arial", 8, "bold"), 
+            relief="flat", 
+            command=self._reload_pricing_screen
+        ).pack(side="left", padx=(15, 0))
         gst_type_box.bind("<<ComboboxSelected>>", lambda e: self.after(50, self._reload_pricing_screen))
         # Removed live refresh to prevent UI freeze. User clicks 'Continue' to update.
         
