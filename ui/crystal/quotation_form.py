@@ -3116,34 +3116,79 @@ class QuotationForm(tk.Toplevel):
 
 
     def _show_preview(self, data):
-        """Show the summary Preview window before generating the final PDF."""
+        """Show a detailed summary Preview window before generating the final PDF."""
         import tkinter as tk
         from tkinter import messagebox
         
         preview_win = tk.Toplevel(self)
         preview_win.title("Quotation Preview")
-        preview_win.geometry("600x450")
+        preview_win.geometry("750x650")
         preview_win.configure(bg="#F4F6F8")
         
         # Header
-        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=20)
+        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=15)
         
-        # Summary Info
-        info_frame = tk.Frame(preview_win, bg="white", highlightbackground="#D5DBE1", highlightthickness=1)
-        info_frame.pack(fill="x", padx=20, pady=10)
+        # Main content frame (Scrollable if needed, but let's just make it fit)
+        main_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        main_frame.pack(fill="both", expand=True, padx=20, pady=5)
+
+        # --- Customer Info ---
+        cust_frame = tk.LabelFrame(main_frame, text="Customer Details", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
+        cust_frame.pack(fill="x", pady=5)
+        tk.Label(cust_frame, text=f"Name: {data.get('customer_name', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        tk.Label(cust_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+
+        # --- Product Info ---
+        prod_frame = tk.LabelFrame(main_frame, text="Product Details", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
+        prod_frame.pack(fill="x", pady=5)
+        tk.Label(prod_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        tk.Label(prod_frame, text=f"HSN Code: {data.get('hsn', '85059000')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        tk.Label(prod_frame, text=f"Quantity: {data.get('machine_qty', 1)}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+
+        # --- Pricing Breakdown ---
+        price_frame = tk.LabelFrame(main_frame, text="Pricing Breakdown", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
+        price_frame.pack(fill="x", pady=5)
         
-        tk.Label(info_frame, text=f"Customer: {data.get('customer_name', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
-        tk.Label(info_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
-        tk.Label(info_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
-        tk.Label(info_frame, text=f"Qty: {data.get('machine_qty', 1)}", bg="white", anchor="w", font=("Arial", 10)).pack(fill="x", padx=10, pady=5)
+        # Recalculate for preview
+        items_total = float(data.get("machine_price", 0)) * float(data.get("machine_qty", 1))
         
-        # Buttons
+        # Packing
+        try:
+            pack_val = float(data.get("packing_value", 0))
+            if data.get("packing_mode") == "Percentage (%)":
+                packing_amt = items_total * (pack_val / 100.0)
+            else:
+                packing_amt = pack_val
+        except:
+            packing_amt = 0.0
+
+        transport = float(data.get("transportation", 0))
+        taxable = items_total + packing_amt + transport
+        
+        gst_rate = float(data.get("gst_rate", 18))
+        gst_amt = taxable * (gst_rate / 100.0)
+        grand = taxable + gst_amt
+
+        tk.Label(price_frame, text=f"Machine Total: ₹{items_total:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        if packing_amt > 0:
+            tk.Label(price_frame, text=f"Packing: ₹{packing_amt:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        tk.Label(price_frame, text=f"Transportation: ₹{transport:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        tk.Label(price_frame, text=f"Taxable Value: ₹{taxable:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        
+        if data.get("gst_type") == "IGST":
+            tk.Label(price_frame, text=f"IGST ({gst_rate}%): ₹{gst_amt:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+        else:
+            tk.Label(price_frame, text=f"CGST ({gst_rate/2}%): ₹{gst_amt/2:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+            tk.Label(price_frame, text=f"SGST ({gst_rate/2}%): ₹{gst_amt/2:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
+
+        tk.Label(price_frame, text=f"GRAND TOTAL: ₹{grand:,.2f}", bg="white", fg="#C40000", font=("Arial", 11, "bold"), anchor="w").pack(fill="x", padx=10, pady=5)
+
+        # --- Buttons ---
         btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
         btn_frame.pack(pady=20)
         
         def generate_and_open():
             preview_win.destroy()
-            # Generate the PDF and open it
             success = self._do_generate_final(data)
             if success:
                 self._open_latest_pdf()
