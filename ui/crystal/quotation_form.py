@@ -3094,6 +3094,76 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             pass
 
+
+    def _show_preview(self, data):
+        """Show a preview window before generating the final PDF."""
+        import tkinter as tk
+        from tkinter import messagebox
+        
+        preview_win = tk.Toplevel(self)
+        preview_win.title("Quotation Preview")
+        preview_win.geometry("600x400")
+        preview_win.configure(bg="#F4F6F8")
+        
+        # Header
+        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=20)
+        
+        # Summary Info
+        info_frame = tk.Frame(preview_win, bg="white", highlightbackground="#D5DBE1", highlightthickness=1)
+        info_frame.pack(fill="x", padx=20, pady=10)
+        
+        tk.Label(info_frame, text=f"Customer: {data.get('customer_name', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
+        tk.Label(info_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
+        tk.Label(info_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
+        
+        # Buttons
+        btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        btn_frame.pack(pady=20)
+        
+        def generate_final():
+            preview_win.destroy()
+            self._do_generate_final(data)
+            
+        tk.Button(btn_frame, text="✅ Generate PDF & Word", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=generate_final).pack(side="left", padx=10, ipadx=10, ipady=5)
+        tk.Button(btn_frame, text="Cancel", bg="#ccc", fg="#333", font=("Arial", 10), relief="flat", command=preview_win.destroy).pack(side="left", padx=10, ipadx=10, ipady=5)
+
+    def _do_generate_final(self, data):
+        """Actually generate the PDF and Word files."""
+        try:
+            result = generate_quotation(**{
+                "customer_name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "contact_person": data.get("contact_person", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "country": data.get("country", ""),
+                "gstin": data.get("gstin", ""),
+                "model": data.get("model", ""),
+                "machine_price": data.get("machine_price", 0),
+                "machine_qty": data.get("machine_qty", 1),
+                "accessories": data.get("accessories", []),
+                "transportation": data.get("transportation", 0),
+                "packing_mode": data.get("packing_mode", "Percentage (%)"),
+                "packing_value": data.get("packing_value", 0),
+                "packing_percent": data.get("packing_percent", 3.5),
+                "cgst_percent": data.get("cgst_percent", 9),
+                "sgst_percent": data.get("sgst_percent", 9),
+                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
+                "gst_type": data.get("gst_type", "CGST + SGST"),
+                "gst_rate": data.get("gst_rate", 18),
+                "selected_terms": data.get("selected_terms", []),
+            })
+            if result:
+                messagebox.showinfo("Success", "Quotation generated successfully!", parent=self)
+            else:
+                messagebox.showerror("Error", "Failed to generate quotation.", parent=self)
+        except Exception as e:
+            messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
+
     def _generate_quotation(self):
 
         # Ask about catalog update BEFORE validation
@@ -3139,33 +3209,8 @@ class QuotationForm(tk.Toplevel):
 
         try:
 
-            result = generate_quotation(**{
-                "customer_name": data.get("customer_name", ""),
-                "company": data.get("company", ""),
-                "address": data.get("address", ""),
-                "phone": data.get("phone", ""),
-                "email": data.get("email", ""),
-                "contact_person": data.get("contact_person", ""),
-                "city": data.get("city", ""),
-                "state": data.get("state", ""),
-                "pincode": data.get("pincode", ""),
-                "country": data.get("country", "India"),
-                "gstin": data.get("gstin", ""),
-                "model": data.get("model", ""),
-                "machine_price": data.get("machine_price", 0),
-                "machine_qty": data.get("machine_qty", 1),
-                "accessories": data.get("accessories", []),
-                "transportation": data.get("transportation", 0),
-                "packing_percent": data.get("packing_percent", 3.5),
-                "packing_mode": data.get("packing_mode", "Percentage (%)"),
-                "packing_value": data.get("packing_value", ""),
-                "cgst_percent": data.get("cgst_percent", 9),
-                "sgst_percent": data.get("sgst_percent", 9),
-                "gst_rate": data.get("gst_rate", 18),
-                "gst_type": data.get("gst_type", "CGST + SGST"),
-                "selected_terms": data.get("terms", []),
-                "items": data.get("items", []),
-            })
+            self._show_preview(data)
+
 
             output_path = None
 
