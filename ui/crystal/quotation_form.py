@@ -1830,7 +1830,12 @@ class QuotationForm(tk.Toplevel):
         
         tk.Label(extra_ctrl_frame, text="Transport (₹):", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         self.transport_var = tk.StringVar(value="0")
-        tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10).pack(side="left", padx=(0, 20))
+        transport_entry = tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10)
+        transport_entry.pack(side="left", padx=(0, 20))
+        
+        # Bind the Transport entry to trigger a reload when the user presses Enter or clicks away
+        transport_entry.bind("<Return>", lambda e: self._reload_pricing_screen())
+        transport_entry.bind("<FocusOut>", lambda e: self._reload_pricing_screen())
         
         tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
         if not hasattr(self, "gst_type"):
