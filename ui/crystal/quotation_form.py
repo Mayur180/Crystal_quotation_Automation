@@ -3177,10 +3177,6 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
             })
-            if result:
-                messagebox.showinfo("Success", "Quotation generated successfully!", parent=self)
-            else:
-                messagebox.showerror("Error", "Failed to generate quotation.", parent=self)
         except Exception as e:
             messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
 
