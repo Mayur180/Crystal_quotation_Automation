@@ -496,7 +496,8 @@ class QuotationForm(tk.Toplevel):
 
         # Manual GST selection.
         # The user explicitly chooses the tax treatment for each quotation.
-        self.gst_type = tk.StringVar(value="CGST + SGST")
+        if not hasattr(self, "gst_type"):
+            self.gst_type = tk.StringVar(value="CGST + SGST")
         self.gst_rate = tk.StringVar(value="18")
 
         # Compatibility variables retained for the existing generator.
@@ -1831,7 +1832,8 @@ class QuotationForm(tk.Toplevel):
         tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10).pack(side="left", padx=(0, 20))
         
         tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
-        self.gst_type = tk.StringVar(value="CGST + SGST")
+        if not hasattr(self, "gst_type"):
+            self.gst_type = tk.StringVar(value="CGST + SGST")
         gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
         gst_type_box.pack(side="left")
         
