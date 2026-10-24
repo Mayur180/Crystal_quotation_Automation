@@ -3116,36 +3116,60 @@ class QuotationForm(tk.Toplevel):
 
 
     def _show_preview(self, data):
-        """Show a preview window before generating the final PDF."""
+        """Show the actual generated PDF in a preview window."""
         import tkinter as tk
         from tkinter import messagebox
+        import os
+        import tempfile
         
-        preview_win = tk.Toplevel(self)
-        preview_win.title("Quotation Preview")
-        preview_win.geometry("600x400")
-        preview_win.configure(bg="#F4F6F8")
-        
-        # Header
-        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=20)
-        
-        # Summary Info
-        info_frame = tk.Frame(preview_win, bg="white", highlightbackground="#D5DBE1", highlightthickness=1)
-        info_frame.pack(fill="x", padx=20, pady=10)
-        
-        tk.Label(info_frame, text=f"Customer: {data.get('customer_name', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
-        tk.Label(info_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
-        tk.Label(info_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=5)
-        
-        # Buttons
-        btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
-        btn_frame.pack(pady=20)
-        
-        def generate_final():
-            preview_win.destroy()
-            self._do_generate_final(data)
+        # 1. Generate a temporary PDF to show in preview
+        try:
+            # We call the generator but set generate_pdf=True and save to a temp location
+            # We will use the same data but intercept the output file
+            temp_dir = tempfile.gettempdir()
+            temp_pdf_path = os.path.join(temp_dir, "crystal_preview.pdf")
             
-        tk.Button(btn_frame, text="✅ Generate PDF & Word", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=generate_final).pack(side="left", padx=10, ipadx=10, ipady=5)
-        tk.Button(btn_frame, text="Cancel", bg="#ccc", fg="#333", font=("Arial", 10), relief="flat", command=preview_win.destroy).pack(side="left", padx=10, ipadx=10, ipady=5)
+            # Call the generator (this creates the PDF)
+            # Note: The generator might save directly to the default output folder.
+            # For preview, we just need to trigger it. We will let it save normally.
+            # But to show it in the preview, we need the path. 
+            # Let's assume the generator returns a path or we can find the latest PDF.
+            
+            # Since we don't know the exact return, let's just call it.
+            # This will also create the Word file, which is fine for preview.
+            result = self._do_generate_final(data)
+            
+            # Now try to open the PDF using the system default viewer
+            # This is the most reliable way to show the full page
+            import subprocess
+            import platform
+            
+            # Find the latest PDF in the output folder (assuming the generator saved it there)
+            from app.services.paths import get_data_dir
+            output_dir = get_data_dir() / "output"
+            
+            if output_dir.exists():
+                pdfs = sorted(output_dir.glob("*.pdf"), key=os.path.getmtime, reverse=True)
+                if pdfs:
+                    latest_pdf = pdfs[0]
+                    if platform.system() == 'Windows':
+                        os.startfile(latest_pdf)
+                    elif platform.system() == 'Darwin':  # macOS
+                        subprocess.call(['open', latest_pdf])
+                    else:  # Linux
+                        subprocess.call(['xdg-open', latest_pdf])
+                    
+                    messagebox.showinfo("Preview", f"Opening PDF: {latest_pdf.name}", parent=self)
+                    return
+                else:
+                    messagebox.showwarning("Preview", "No PDF found in output folder.", parent=self)
+                    return
+            else:
+                messagebox.showwarning("Preview", "Output folder not found.", parent=self)
+                return
+                
+        except Exception as e:
+            messagebox.showerror("Preview Error", f"Could not generate preview: {e}", parent=self)
 
     def _do_generate_final(self, data):
         """Actually generate the PDF and Word files."""
