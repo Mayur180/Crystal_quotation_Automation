@@ -2096,6 +2096,8 @@ def generate_quotation(
     packing_value=None,
     cgst_percent=9,
     sgst_percent=9,
+    igst_percent=None,
+    gst_type="CGST + SGST",
 
     quotation_date=None,
 
@@ -2362,6 +2364,7 @@ def generate_quotation(
         packing_value=packing_value,
         cgst_percent=cgst_percent,
         sgst_percent=sgst_percent,
+        igst_percent=igst_percent,
         gst_type=gst_type,
         gst_rate=gst_rate,
         igst_percent=igst_percent,

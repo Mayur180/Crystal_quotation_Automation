@@ -3454,10 +3454,12 @@ class QuotationForm(tk.Toplevel):
         # preview can display IGST / No GST correctly.
         preview_cgst = data["cgst_percent"]
         preview_sgst = data["sgst_percent"]
-
+        preview_igst = None
+        
         if data["gst_type"] == "IGST":
             preview_cgst = 0.0
             preview_sgst = 0.0
+            preview_igst = data.get("gst_rate", 18.0)  # Default to 18% if not set
 
         elif data["gst_type"] == "No GST":
             preview_cgst = 0.0
@@ -3473,6 +3475,8 @@ class QuotationForm(tk.Toplevel):
             packing_value=data["packing_value"],
             cgst_percent=preview_cgst,
             sgst_percent=preview_sgst,
+            igst_percent=preview_igst,
+            gst_type=data.get("gst_type", "CGST + SGST"),
         )
 
         if data["gst_type"] == "IGST":
