@@ -1788,10 +1788,22 @@ class QuotationForm(tk.Toplevel):
 
 
     def _reload_pricing_screen(self):
-        """Safely reload the pricing screen after the dropdown closes."""
+        """Safely reload the pricing screen while preserving transport input."""
         try:
-            # Clear the screen and redraw it
+            # 1. Save the current transport value
+            if hasattr(self, "transport_var"):
+                saved_transport = self.transport_var.get()
+            else:
+                saved_transport = "0"
+                
+            # 2. Clear the screen
             self._clear_content()
+            
+            # 3. Restore the saved value BEFORE redrawing
+            if hasattr(self, "transport_var"):
+                self.transport_var.set(saved_transport)
+                
+            # 4. Redraw
             self._render_pricing()
         except Exception as e:
             print(f"Reload error: {e}")
