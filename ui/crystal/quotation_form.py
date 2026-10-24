@@ -1363,15 +1363,16 @@ class QuotationForm(tk.Toplevel):
 
         # Create a 2-column layout
         main_layout = tk.Frame(card, bg=self.CARD)
-        main_layout.pack(fill="both", expand=True, pady=(0, 20))
+        main_layout.pack(fill="x", expand=False, pady=(0, 20))
         
         # Left Column (Inputs)
         left_col = tk.Frame(main_layout, bg=self.CARD)
-        left_col.pack(side="left", fill="both", expand=True, padx=(0, 20))
+        left_col.pack(side="left", fill="x", expand=True, padx=(0, 20))
         
         # Right Column (Product Info)
-        right_col = tk.Frame(main_layout, bg=self.CARD)
-        right_col.pack(side="right", fill="both", expand=True)
+        right_col = tk.Frame(main_layout, bg=self.CARD, height=250)
+        right_col.pack(side="right", fill="y", expand=False)
+        right_col.pack_propagate(False)
 
         top = tk.Frame(left_col, bg=self.CARD)
         top.pack(fill="x")
@@ -1417,7 +1418,7 @@ class QuotationForm(tk.Toplevel):
 
         # --- Product Info Panel (Now in the right column) ---
         self.info_frame = tk.Frame(right_col, bg=self.SOFT, highlightbackground=self.BORDER, highlightthickness=1)
-        self.info_frame.pack(fill="both", expand=True, pady=(6, 0))
+        self.info_frame.pack(fill="both", expand=True, pady=(6, 0), padx=(0, 0))
         
         self.info_label = tk.Label(
             self.info_frame, 
