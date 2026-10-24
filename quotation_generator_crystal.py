@@ -2367,7 +2367,6 @@ def generate_quotation(
         igst_percent=igst_percent,
         gst_type=gst_type,
         gst_rate=gst_rate,
-        igst_percent=igst_percent,
     )
 
     # ========================================================
