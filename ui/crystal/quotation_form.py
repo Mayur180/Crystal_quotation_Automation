@@ -3116,89 +3116,115 @@ class QuotationForm(tk.Toplevel):
 
 
     def _show_preview(self, data):
-        """Show a detailed summary Preview window before generating the final PDF."""
+        """Show the actual generated PDF page in a preview window."""
         import tkinter as tk
         from tkinter import messagebox
+        import os
+        import threading
+        from PIL import Image, ImageTk
         
         preview_win = tk.Toplevel(self)
         preview_win.title("Quotation Preview")
-        preview_win.geometry("750x650")
+        preview_win.geometry("800x900")
         preview_win.configure(bg="#F4F6F8")
         
         # Header
-        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=15)
+        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=10)
         
-        # Main content frame (Scrollable if needed, but let's just make it fit)
-        main_frame = tk.Frame(preview_win, bg="#F4F6F8")
-        main_frame.pack(fill="both", expand=True, padx=20, pady=5)
-
-        # --- Customer Info ---
-        cust_frame = tk.LabelFrame(main_frame, text="Customer Details", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
-        cust_frame.pack(fill="x", pady=5)
-        tk.Label(cust_frame, text=f"Name: {data.get('customer_name', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        tk.Label(cust_frame, text=f"Company: {data.get('company', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-
-        # --- Product Info ---
-        prod_frame = tk.LabelFrame(main_frame, text="Product Details", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
-        prod_frame.pack(fill="x", pady=5)
-        tk.Label(prod_frame, text=f"Model: {data.get('model', '')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        tk.Label(prod_frame, text=f"HSN Code: {data.get('hsn', '85059000')}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        tk.Label(prod_frame, text=f"Quantity: {data.get('machine_qty', 1)}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-
-        # --- Pricing Breakdown ---
-        price_frame = tk.LabelFrame(main_frame, text="Pricing Breakdown", bg="white", fg="#2C3E50", font=("Arial", 10, "bold"))
-        price_frame.pack(fill="x", pady=5)
+        # Frame to hold the image
+        image_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        image_frame.pack(fill="both", expand=True, padx=20, pady=10)
         
-        # Recalculate for preview
-        items_total = float(data.get("machine_price", 0)) * float(data.get("machine_qty", 1))
+        # Label to show status
+        status_label = tk.Label(image_frame, text="Generating PDF...", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 12))
+        status_label.pack(expand=True)
         
-        # Packing
-        try:
-            pack_val = float(data.get("packing_value", 0))
-            if data.get("packing_mode") == "Percentage (%)":
-                packing_amt = items_total * (pack_val / 100.0)
-            else:
-                packing_amt = pack_val
-        except:
-            packing_amt = 0.0
-
-        transport = float(data.get("transportation", 0))
-        taxable = items_total + packing_amt + transport
-        
-        gst_rate = float(data.get("gst_rate", 18))
-        gst_amt = taxable * (gst_rate / 100.0)
-        grand = taxable + gst_amt
-
-        tk.Label(price_frame, text=f"Machine Total: ₹{items_total:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        if packing_amt > 0:
-            tk.Label(price_frame, text=f"Packing: ₹{packing_amt:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        tk.Label(price_frame, text=f"Transportation: ₹{transport:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        tk.Label(price_frame, text=f"Taxable Value: ₹{taxable:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        
-        if data.get("gst_type") == "IGST":
-            tk.Label(price_frame, text=f"IGST ({gst_rate}%): ₹{gst_amt:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-        else:
-            tk.Label(price_frame, text=f"CGST ({gst_rate/2}%): ₹{gst_amt/2:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-            tk.Label(price_frame, text=f"SGST ({gst_rate/2}%): ₹{gst_amt/2:,.2f}", bg="white", anchor="w").pack(fill="x", padx=10, pady=2)
-
-        tk.Label(price_frame, text=f"GRAND TOTAL: ₹{grand:,.2f}", bg="white", fg="#C40000", font=("Arial", 11, "bold"), anchor="w").pack(fill="x", padx=10, pady=5)
-
-        # --- Buttons ---
+        # Bottom Buttons
         btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
-        btn_frame.pack(pady=20)
+        btn_frame.pack(pady=15)
         
-        def generate_and_open():
+        def close_preview():
             preview_win.destroy()
-            success = self._do_generate_final(data)
-            if success:
-                self._open_latest_pdf()
-            else:
-                messagebox.showerror("Error", "Failed to generate the PDF. Check the terminal.", parent=self)
             
-        tk.Button(btn_frame, text="✅ Generate & Open PDF", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=generate_and_open).pack(side="left", padx=10, ipadx=10, ipady=5)
-        tk.Button(btn_frame, text="Cancel", bg="#ccc", fg="#333", font=("Arial", 10), relief="flat", command=preview_win.destroy).pack(side="left", padx=10, ipadx=10, ipady=5)
+        tk.Button(btn_frame, text="Close", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=close_preview, padx=20, pady=5).pack()
 
-    def _open_latest_pdf(self):
+        # Background thread to generate PDF and render image
+        def generate_and_render():
+            try:
+                # 1. Generate the PDF
+                success = self._do_generate_final(data)
+                if not success:
+                    preview_win.after(0, lambda: status_label.config(text="Failed to generate PDF. Check terminal."))
+                    return
+                
+                # 2. Find the latest PDF
+                home = os.path.expanduser("~")
+                downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
+                latest_pdf = None
+                latest_mtime = 0
+                
+                if os.path.exists(downloads_folder):
+                    for root, dirs, files in os.walk(downloads_folder):
+                        if "pdf" in root:
+                            for f in files:
+                                if f.endswith(".pdf"):
+                                    full_path = os.path.join(root, f)
+                                    mtime = os.path.getmtime(full_path)
+                                    if mtime > latest_mtime:
+                                        latest_mtime = mtime
+                                        latest_pdf = full_path
+                
+                if not latest_pdf:
+                    preview_win.after(0, lambda: status_label.config(text="PDF not found in Downloads."))
+                    return
+                
+                # 3. Render the first page as image using fitz (PyMuPDF)
+                import fitz
+                doc = fitz.open(latest_pdf)
+                page = doc[0]
+                # Render at 2x zoom for better quality
+                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                doc.close()
+                
+                # 4. Display the image
+                def show_image():
+                    # Resize image to fit the window width
+                    win_width = preview_win.winfo_width() - 40
+                    if win_width < 100:
+                        win_width = 760
+                    
+                    # Scale image
+                    ratio = win_width / img.width
+                    new_height = int(img.height * ratio)
+                    resized_img = img.resize((win_width, new_height), Image.LANCZOS)
+                    
+                    photo = ImageTk.PhotoImage(resized_img)
+                    
+                    # Clear loading label
+                    status_label.pack_forget()
+                    
+                    # Create a canvas with scrollbar for the image
+                    canvas = tk.Canvas(image_frame, bg="#F4F6F8", highlightthickness=0)
+                    scrollbar = tk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
+                    canvas.configure(yscrollcommand=scrollbar.set)
+                    
+                    scrollbar.pack(side="right", fill="y")
+                    canvas.pack(side="left", fill="both", expand=True)
+                    
+                    canvas.create_image(0, 0, anchor="nw", image=photo)
+                    canvas.image = photo  # Keep reference
+                    canvas.configure(scrollregion=canvas.bbox("all"))
+                
+                preview_win.after(0, show_image)
+                
+            except Exception as e:
+                err_msg = str(e)
+                preview_win.after(0, lambda: status_label.config(text=f"Error: {err_msg}"))
+        
+        threading.Thread(target=generate_and_render, daemon=True).start()
+
+    def _open_latest_pdf(self):    def _open_latest_pdf(self):
         """Find the latest PDF in Downloads and open it."""
         import os
         import subprocess
