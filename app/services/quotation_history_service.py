@@ -368,14 +368,35 @@ if __name__ == "__main__":
 
     print("=" * 60)
 
-def get_conversion_stats():
-    """Return conversion metrics for the current module.
+def get_conversion_stats(module=None):
+    """Return conversion metrics for the specified module (or active module).
+    
+    Args:
+        module: "Crystal", "VMM", or None (uses active module)
     
     Returns:
         dict with keys: total, accepted, rejected, pending, conversion_rate
     """
     try:
-        quotations = load_quotations() or []
+        if module:
+            # Explicitly read from the specified module's folder
+            base = _LEGACY_DATA_DIR.parent
+            module_dir = base / module
+            if not module_dir.exists():
+                module_dir = _LEGACY_DATA_DIR
+            q_file = module_dir / "quotations.json"
+            if q_file.exists():
+                data = json.loads(q_file.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    quotations = data
+                elif isinstance(data, dict):
+                    quotations = data.get("quotations", [])
+                else:
+                    quotations = []
+            else:
+                quotations = []
+        else:
+            quotations = load_quotations() or []
     except Exception:
         quotations = []
     
