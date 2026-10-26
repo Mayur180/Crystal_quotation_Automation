@@ -52,16 +52,28 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
 
-def _set_table_cell_padding(table, top=0, bottom=0, left=0, right=0):
+def _set_table_cell_padding(table, top=100, bottom=100, left=140, right=140):
     """Set cell margins/padding for all cells in a table (values in twips: 1/20th of a point)."""
     tblPr = table._tbl.tblPr
+    # Remove any existing tblCellMar
+    existing = tblPr.find(qn('w:tblCellMar'))
+    if existing is not None:
+        tblPr.remove(existing)
+    
     tblCellMar = OxmlElement('w:tblCellMar')
     for side, val in [('top', top), ('left', left), ('bottom', bottom), ('right', right)]:
         el = OxmlElement(f'w:{side}')
         el.set(qn('w:w'), str(val))
         el.set(qn('w:type'), 'dxa')
         tblCellMar.append(el)
-    tblPr.append(tblCellMar)
+    
+    # Insert in the correct order (after tblW and tblLayout, but before tblLook)
+    # The correct order in tblPr is: tblStyle, tblpPr, tblOverlap, bidiVisual, tblStyleRowBandSize, tblStyleColBandSize, tblW, jc, tblCellSpacing, tblInd, tblBorders, shd, tblLayout, tblCellMar, tblLook
+    tblLook = tblPr.find(qn('w:tblLook'))
+    if tblLook is not None:
+        tblPr.insert(list(tblPr).index(tblLook), tblCellMar)
+    else:
+        tblPr.append(tblCellMar)
 
 from docx.shared import (
     Mm,
