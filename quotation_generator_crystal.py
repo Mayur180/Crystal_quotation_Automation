@@ -1975,6 +1975,9 @@ def _crystal_page(
                 WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT
             )
             set_cell(tbl.cell(idx, i), v, size=8, align=align)
+            
+    # Apply padding to the Product Details table
+    _set_table_cell_padding(tbl, top=60, bottom=60, left=100, right=100)
 
     # ═══════════════════════════════════════════════════════════
     # 5. TOTALS BLOCK — right-aligned
@@ -2080,6 +2083,9 @@ def _crystal_page(
         value = term.get("value") or ""
         set_cell(inner.cell(i, 0), title, bold=True, size=8, bg=BG_HDR)
         set_cell(inner.cell(i, 1), value, size=8)
+        
+    # Apply padding to the terms table
+    _set_table_cell_padding(inner, top=60, bottom=60, left=100, right=100)
     
     # Add cell padding to the inner terms table
     _set_table_cell_padding(inner, top=40, bottom=40, left=80, right=80)
