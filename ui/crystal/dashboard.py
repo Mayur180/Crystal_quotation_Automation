@@ -105,6 +105,17 @@ class Dashboard(tk.Tk):
 
         right = tk.Frame(bar, bg=T.SURFACE)
         right.pack(side="right", fill="y", padx=(0, 20))
+        
+        # Refresh Button
+        tk.Button(
+            right, 
+            text="🔄 Refresh", 
+            bg=T.BG, fg=T.TEXT, 
+            font=("Arial", 9, "bold"), 
+            relief="flat", 
+            cursor="hand2",
+            command=self._refresh_dashboard
+        ).pack(side="right", padx=(0, 10), pady=15)
 
         W.IconButton(right, "🔔", lambda: None).pack(side="right", pady=12)
 
@@ -390,6 +401,11 @@ class Dashboard(tk.Tk):
         tk.Frame(footer, bg=T.BORDER, height=1).pack(fill="x")
         tk.Label(footer, text=f"Grand Total: ₹{float(quotation.get('grand_total', 0)):,.2f}", bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
         tk.Button(footer, text="Close", bg=T.BG, fg=T.TEXT, relief="flat", command=popup.destroy).pack(side="left", padx=20, pady=15)
+
+
+    def _refresh_dashboard(self):
+        """Reload the dashboard data without closing the app."""
+        self._build_body()
 
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
