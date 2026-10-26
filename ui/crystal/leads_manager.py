@@ -138,67 +138,108 @@ class LeadsManager(tk.Toplevel):
         LeadDialog(self, on_save=self._refresh)
 
 class LeadDialog(tk.Toplevel):
-    def __init__(self, parent, on_save):
+    def __init__(self, parent, on_save=None):
         super().__init__(parent)
         self.title("Log New Lead")
-        self.geometry("420x620")
-        self.configure(bg=T.SURFACE)
+        self.geometry("600x700")
+        self.configure(bg="#F4F6F8")
+        self.resizable(False, False)
+        self.transient(parent)
         self.grab_set()
         self._on_save = on_save
         
-        wrap = tk.Frame(self, bg=T.SURFACE); wrap.pack(fill="both", expand=True, padx=20, pady=20)
-        
-        # Variables
-        self.var_cust = tk.StringVar() # Customer Name
-        self.var_comp = tk.StringVar() # Company Name
-        self.var_phone = tk.StringVar()
-        self.var_email = tk.StringVar()
-        self.var_qty = tk.StringVar(value="1")
-        self.var_src = tk.StringVar(value="WhatsApp")
-        
-        def _lbl(text):
-            tk.Label(wrap, text=text, bg=T.SURFACE, fg=T.TEXT, font=("Arial", 9, "bold")).pack(anchor="w", pady=(8, 2))
+        # Center the window on screen
+        self.update_idletasks()
+        x = (self.winfo_screenwidth() // 2) - (600 // 2)
+        y = (self.winfo_screenheight() // 2) - (700 // 2)
+        self.geometry(f"+{x}+{y}")
+
+        self._build()
+
+    def _build(self):
+        # Header
+        header = tk.Frame(self, bg="#FFFFFF", height=70)
+        header.pack(fill="x")
+        header.pack_propagate(False)
+        tk.Label(header, text="Log New Lead", bg="#FFFFFF", fg="#2C3E50", font=("Arial", 18, "bold")).pack(side="left", padx=24, pady=20)
+        tk.Frame(self, bg="#E0E0E0", height=1).pack(fill="x")
+
+        # Main content area
+        content = tk.Frame(self, bg="#F4F6F8")
+        content.pack(fill="both", expand=True, padx=30, pady=20)
+        content.grid_columnconfigure(1, weight=1)
+
+        # Helper function to create a field row
+        def add_field(row_idx, label_text, var, widget_type="entry", values=None):
+            tk.Label(content, text=label_text, bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10, "bold"), anchor="w").grid(row=row_idx, column=0, sticky="w", padx=(0, 15), pady=(10, 2))
             
-        _lbl("Customer Name")
-        tk.Entry(wrap, textvariable=self.var_cust).pack(fill="x", ipady=4)
+            if widget_type == "entry":
+                widget = tk.Entry(content, textvariable=var, font=("Arial", 11), relief="solid", bd=1)
+            elif widget_type == "combobox":
+                widget = ttk.Combobox(content, textvariable=var, values=values, state="readonly", font=("Arial", 11))
+            
+            widget.grid(row=row_idx, column=1, sticky="ew", pady=(10, 2))
+            return widget
+
+        # Variables
+        self._customer_var = tk.StringVar()
+        self._company_var = tk.StringVar()
+        self._phone_var = tk.StringVar()
+        self._email_var = tk.StringVar()
+        self._qty_var = tk.StringVar(value="1")
+        self._source_var = tk.StringVar(value="Other")
+        self._notes_var = tk.StringVar()
+
+        # Fields
+        add_field(0, "Customer Name *", self._customer_var)
+        add_field(1, "Company Name", self._company_var)
+        add_field(2, "Phone", self._phone_var)
+        add_field(3, "Email", self._email_var)
+        add_field(4, "Quantity", self._qty_var)
+        add_field(5, "Source", self._source_var, widget_type="combobox", values=["Gmail", "WhatsApp", "Call", "Website", "Other"])
+
+        # Notes (larger text area)
+        tk.Label(content, text="Notes (What did they ask for?)", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10, "bold"), anchor="w").grid(row=6, column=0, sticky="nw", padx=(0, 15), pady=(10, 2))
+        notes_frame = tk.Frame(content, bg="#F4F6F8")
+        notes_frame.grid(row=6, column=1, sticky="ew", pady=(10, 2))
         
-        _lbl("Company Name")
-        tk.Entry(wrap, textvariable=self.var_comp).pack(fill="x", ipady=4)
+        self._notes_text = tk.Text(notes_frame, height=5, font=("Arial", 11), relief="solid", bd=1)
+        self._notes_text.pack(fill="x")
         
-        _lbl("Phone")
-        tk.Entry(wrap, textvariable=self.var_phone).pack(fill="x", ipady=4)
-        
-        _lbl("Email")
-        tk.Entry(wrap, textvariable=self.var_email).pack(fill="x", ipady=4)
-        
-        _lbl("Quantity")
-        tk.Entry(wrap, textvariable=self.var_qty).pack(fill="x", ipady=4)
-        
-        _lbl("Source")
-        ttk.Combobox(wrap, textvariable=self.var_src, values=["WhatsApp", "Gmail", "Call", "Other"], state="readonly").pack(fill="x")
-        
-        _lbl("Notes (What did they ask for?)")
-        self.txt_notes = tk.Text(wrap, height=4, font=("Arial", 10))
-        self.txt_notes.pack(fill="x")
-        
-        tk.Button(wrap, text="Save Lead", bg=T.ACCENT, fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._save).pack(fill="x", pady=25)
+        # Notes scrollbar
+        notes_scroll = ttk.Scrollbar(notes_frame, orient="vertical", command=self._notes_text.yview)
+        self._notes_text.configure(yscrollcommand=notes_scroll.set)
+        notes_scroll.pack(side="right", fill="y")
+
+        # Bottom Action Bar
+        btn_bar = tk.Frame(self, bg="#FFFFFF", height=60)
+        btn_bar.pack(fill="x", side="bottom")
+        btn_bar.pack_propagate(False)
+        tk.Frame(self, bg="#E0E0E0", height=1).pack(fill="x", side="bottom")
+
+        tk.Button(btn_bar, text="Save Lead", bg="#C40000", fg="white", font=("Arial", 11, "bold"), relief="flat", cursor="hand2", padx=20, pady=5, command=self._save).pack(side="right", padx=24, pady=10)
+        tk.Button(btn_bar, text="Cancel", bg="#E0E0E0", fg="#333", font=("Arial", 11), relief="flat", cursor="hand2", padx=20, pady=5, command=self.destroy).pack(side="right", padx=(0, 10), pady=10)
 
     def _save(self):
-        cust = self.var_cust.get().strip()
-        if not cust:
-            messagebox.showerror("Error", "Customer Name is required", parent=self)
+        from tkinter import messagebox
+        customer = self._customer_var.get().strip()
+        if not customer:
+            messagebox.showwarning("Required", "Please enter a customer name.", parent=self)
             return
-        
-        notes = self.txt_notes.get("1.0", "end").strip()
-        
-        LS.add_lead(
-            customer=cust, 
-            company=self.var_comp.get().strip(),
-            phone=self.var_phone.get().strip(), 
-            email=self.var_email.get().strip(), 
-            qty=self.var_qty.get().strip(), 
-            source=self.var_src.get(), 
-            notes=notes
-        )
-        self._on_save()
-        self.destroy()
+
+        from app.services import lead_service as LS
+        try:
+            LS.add_lead(
+                customer=customer,
+                company=self._company_var.get().strip(),
+                phone=self._phone_var.get().strip(),
+                email=self._email_var.get().strip(),
+                qty=self._qty_var.get().strip() or "1",
+                source=self._source_var.get(),
+                notes=self._notes_text.get("1.0", "end").strip()
+            )
+            if self._on_save:
+                self._on_save()
+            self.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not save lead: {e}", parent=self)
