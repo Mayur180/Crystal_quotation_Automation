@@ -405,6 +405,10 @@ class Dashboard(tk.Tk):
 
     def _refresh_dashboard(self):
         """Reload the dashboard data without closing the app."""
+        # Clear existing widgets in the body
+        for widget in self._body.winfo_children():
+            widget.destroy()
+        # Rebuild
         self._build_body()
 
     def _on_nav(self, key):
