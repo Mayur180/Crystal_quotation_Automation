@@ -1932,7 +1932,7 @@ def _crystal_page(
         if item_model and item_model not in body:
             full_desc = f"{body}\nModel: {item_model}"
 
-        hsn = str(item_prod.get("hsn") or "85059000")
+        hsn = str(item.get("hsn") or item_prod.get("hsn") or "85059000")
         tax_pct = item_prod.get("tax_percent", 18.0)
         try:
             tax_str = f"{float(tax_pct):.2f}"
