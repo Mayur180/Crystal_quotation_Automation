@@ -122,10 +122,25 @@ def _phase_dashboard(session):
 
     logged_out = {"value": False}
 
-    # Force the active module to Crystal so everyone gets the new dashboard
+    # Determine the correct module based on the user's assigned modules
+    user_modules = getattr(session, "modules", []) or []
+    
+    # If the user has both modules, use the active module (last used), default to VMM if not set
+    # If the user has only one, force that one.
+    if "VMM" in user_modules and "Crystal" in user_modules:
+        active = get_active_module()
+        if active not in ("VMM", "Crystal"):
+            active = "VMM"
+    elif "Crystal" in user_modules:
+        active = "Crystal"
+    elif "VMM" in user_modules:
+        active = "VMM"
+    else:
+        active = "VMM"  # fallback
+        
     try:
         from app.services.paths import set_active_module
-        set_active_module("Crystal")
+        set_active_module(active)
     except Exception:
         pass
 
