@@ -2610,6 +2610,7 @@ def generate_quotation(
         "contact_person":   (kwargs.get("contact_person") or ""),
 
         "totals": totals,
+        "items": kwargs.get("items", []),
     }
 
     if _save_quotation_history is not None:
