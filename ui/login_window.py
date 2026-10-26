@@ -114,6 +114,22 @@ class LoginWindow:
         self.error_label.pack(pady=(10, 0))
 
         # ---- Login button ----
+        # ---- Remember Me checkbox ----
+        self.remember_var = tk.BooleanVar(value=False)
+        remember_frame = tk.Frame(card, bg=CARD_COLOR)
+        remember_frame.pack(fill="x", padx=50, pady=(5, 0))
+        
+        tk.Checkbutton(
+            remember_frame,
+            text="Remember me on this PC",
+            variable=self.remember_var,
+            bg=CARD_COLOR, fg=TEXT_COLOR,
+            activebackground=CARD_COLOR,
+            selectcolor="white",
+            font=("Segoe UI", 9),
+            anchor="w",
+        ).pack(side="left")
+
         self.login_btn = tk.Button(
             card, text="LOGIN",
             font=("Segoe UI", 12, "bold"),
@@ -160,6 +176,33 @@ class LoginWindow:
         # Success — hand off to callback
         self._cleanup_bindings()
         self.frame.destroy()
+        # Save session if "Remember Me" is checked
+        if self.remember_var.get():
+            try:
+                import json
+                from app.services.paths import get_data_root
+                session_file = get_data_root() / "session.json"
+                session_data = {
+                    "user_id": session.user_id,
+                    "username": session.username,
+                    "full_name": session.full_name,
+                    "modules": session.modules,
+                }
+                with open(session_file, 'w', encoding='utf-8') as f:
+                    json.dump(session_data, f, indent=2)
+                print(f"[session] Saved session for {session.username}")
+            except Exception as e:
+                print(f"[session] Could not save session: {e}")
+        else:
+            # Clear any existing session if "Remember Me" is unchecked
+            try:
+                from app.services.paths import get_data_root
+                session_file = get_data_root() / "session.json"
+                if session_file.exists():
+                    session_file.unlink()
+            except Exception:
+                pass
+
         self.on_success(session)
 
     def _on_cancel_click(self):
