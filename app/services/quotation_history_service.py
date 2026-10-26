@@ -368,17 +368,32 @@ if __name__ == "__main__":
 
     print("=" * 60)
 
-def get_conversion_stats(module=None):
+def get_conversion_stats(module=None, data_dir=None):
     """Return conversion metrics for the specified module (or active module).
     
     Args:
         module: "Crystal", "VMM", or None (uses active module)
+        data_dir: Optional Path to read quotations.json from directly (for testing)
     
     Returns:
         dict with keys: total, accepted, rejected, pending, conversion_rate
     """
     try:
-        if module:
+        if data_dir is not None:
+            # Direct path (used for testing)
+            from pathlib import Path
+            q_file = Path(data_dir) / "quotations.json"
+            if q_file.exists():
+                data = json.loads(q_file.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    quotations = data
+                elif isinstance(data, dict):
+                    quotations = data.get("quotations", [])
+                else:
+                    quotations = []
+            else:
+                quotations = []
+        elif module:
             # Explicitly read from the specified module's folder
             base = _LEGACY_DATA_DIR.parent
             module_dir = base / module
@@ -399,12 +414,12 @@ def get_conversion_stats(module=None):
             quotations = load_quotations() or []
     except Exception:
         quotations = []
-    
+
     total = len(quotations)
     accepted = 0
     rejected = 0
     pending = 0
-    
+
     for q in quotations:
         status = str(q.get("status", "")).strip().lower()
         if status == "accepted":
@@ -413,9 +428,9 @@ def get_conversion_stats(module=None):
             rejected += 1
         else:
             pending += 1
-    
+
     conversion_rate = (accepted / total * 100) if total > 0 else 0.0
-    
+
     return {
         "total": total,
         "accepted": accepted,
@@ -423,3 +438,4 @@ def get_conversion_stats(module=None):
         "pending": pending,
         "conversion_rate": conversion_rate,
     }
+
