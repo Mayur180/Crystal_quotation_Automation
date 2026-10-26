@@ -6,22 +6,30 @@ def _leads_file():
     return get_data_dir() / "leads.json"
 
 def load_leads():
-    """Load leads from Google Sheet first, then fall back to local JSON."""
-    # 1. Try to fetch from Google Sheet
+    """Load leads from local JSON cache. Only sync from sheet if local is empty."""
+    p = _leads_file()
+    
+    # 1. Try to read from local JSON first
+    if p.exists():
+        try:
+            local_leads = json.loads(p.read_text(encoding="utf-8")).get("leads", [])
+            if local_leads:
+                return local_leads
+        except Exception:
+            pass
+    
+    # 2. If local is empty, fetch from Google Sheet and save locally
     try:
         from app.services.google_sheet_service import fetch_leads_from_sheet
         sheet_leads = fetch_leads_from_sheet()
         if sheet_leads:
+            # Save the fetched leads to local JSON so we have a copy
+            save_leads(sheet_leads)
             return sheet_leads
     except Exception as e:
         print(f"[lead-sync] Could not fetch from sheet: {e}")
     
-    # 2. Fallback to local JSON
-    p = _leads_file()
-    if not p.exists(): return []
-    try:
-        return json.loads(p.read_text(encoding="utf-8")).get("leads", [])
-    except Exception: return []
+    return []
 
 def save_leads(leads):
     p = _leads_file()
