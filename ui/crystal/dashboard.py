@@ -174,11 +174,18 @@ class Dashboard(tk.Tk):
             btn.pack(pady=10, ipadx=10, ipady=5)
         else:
             for r in summary["recent"]:
-                row = tk.Frame(left, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
+                row = tk.Frame(left, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1, cursor="hand2")
                 row.pack(fill="x", pady=2)
-                tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B).pack(side="left", padx=10, pady=6)
-                tk.Label(row, text=r["customer"] or "—", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY).pack(side="left", padx=10)
-                # Amount removed from dashboard for cleaner look
+                
+                lbl_num = tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B)
+                lbl_num.pack(side="left", padx=10, pady=6)
+                
+                lbl_cust = tk.Label(row, text=r["customer"] or "—", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY)
+                lbl_cust.pack(side="left", padx=10)
+                
+                # Make the row clickable
+                for w in (row, lbl_num, lbl_cust):
+                    w.bind("<Button-1>", lambda e, num=r["number"]: self._show_quotation_items(num))
 
         # Right: Quick Actions
         right = tk.Frame(two_col, bg=T.BG)
@@ -287,6 +294,102 @@ class Dashboard(tk.Tk):
             "quotes": q_count,
             "recent": recent,
         }
+
+
+    def _show_quotation_items(self, quotation_number):
+        """Show a popup with the items of the selected quotation."""
+        import tkinter as tk
+        from tkinter import ttk
+        import json
+        from app.services.paths import get_data_dir
+        
+        # Fetch the quotation details
+        try:
+            base_data_dir = get_data_dir()
+            crystal_data_dir = base_data_dir.parent / "Crystal"
+            if not crystal_data_dir.exists():
+                crystal_data_dir = base_data_dir
+                
+            q_file = crystal_data_dir / "quotations.json"
+            if not q_file.exists():
+                return
+                
+            q_data = json.loads(q_file.read_text(encoding="utf-8"))
+            
+            # Handle list or dict format
+            if isinstance(q_data, list):
+                qs = q_data
+            elif isinstance(q_data, dict):
+                qs = q_data.get("quotations", [])
+            else:
+                qs = []
+                
+            quotation = next((q for q in qs if q.get("quotation_number") == quotation_number), None)
+            
+            if not quotation:
+                return
+                
+        except Exception as e:
+            print(f"Error fetching quotation: {e}")
+            return
+
+        # Create popup window
+        popup = tk.Toplevel(self)
+        popup.title(f"Quotation {quotation_number}")
+        popup.geometry("700x400")
+        popup.configure(bg=T.BG)
+        popup.transient(self)
+        popup.grab_set()
+        
+        # Header
+        header = tk.Frame(popup, bg=T.SURFACE)
+        header.pack(fill="x")
+        tk.Label(header, text=f"Quotation: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 14, "bold")).pack(side="left", padx=20, pady=15)
+        tk.Label(header, text=f"Customer: {quotation.get('customer_name', '—')}", bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 10)).pack(side="right", padx=20, pady=15)
+        
+        tk.Frame(popup, bg=T.BORDER, height=1).pack(fill="x")
+        
+        # Items Table
+        table_frame = tk.Frame(popup, bg=T.BG)
+        table_frame.pack(fill="both", expand=True, padx=20, pady=20)
+        
+        cols = ("model", "qty", "price", "total")
+        tree = ttk.Treeview(table_frame, columns=cols, show="headings")
+        tree.heading("model", text="Model")
+        tree.heading("qty", text="Qty")
+        tree.heading("price", text="Price")
+        tree.heading("total", text="Total")
+        
+        tree.column("model", width=250)
+        tree.column("qty", width=60, anchor="center")
+        tree.column("price", width=100, anchor="e")
+        tree.column("total", width=100, anchor="e")
+        
+        vsb = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        
+        # Populate items
+        items = quotation.get("items", [])
+        if not items and quotation.get("model"):
+            items = [{"model": quotation.get("model"), "qty": quotation.get("machine_qty", 1), "price": quotation.get("machine_price", 0), "total": quotation.get("grand_total", 0)}]
+            
+        for item in items:
+            tree.insert("", "end", values=(
+                item.get("model", ""),
+                item.get("qty", ""),
+                f"₹{float(item.get('price', 0)):,.2f}",
+                f"₹{float(item.get('total', 0)):,.2f}"
+            ))
+            
+        # Bottom Info
+        footer = tk.Frame(popup, bg=T.SURFACE)
+        footer.pack(fill="x", side="bottom")
+        tk.Frame(footer, bg=T.BORDER, height=1).pack(fill="x")
+        tk.Label(footer, text=f"Grand Total: ₹{float(quotation.get('grand_total', 0)):,.2f}", bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
+        tk.Button(footer, text="Close", bg=T.BG, fg=T.TEXT, relief="flat", command=popup.destroy).pack(side="left", padx=20, pady=15)
 
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
