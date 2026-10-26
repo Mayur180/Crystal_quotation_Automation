@@ -178,11 +178,7 @@ class Dashboard(tk.Tk):
                 row.pack(fill="x", pady=2)
                 tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B).pack(side="left", padx=10, pady=6)
                 tk.Label(row, text=r["customer"] or "—", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY).pack(side="left", padx=10)
-                try:
-                    amt = f"₹{float(r['total']):,.0f}"
-                except Exception:
-                    amt = "₹0"
-                tk.Label(row, text=amt, bg=T.SURFACE, fg=T.ACCENT, font=T.FONT_BODY_B).pack(side="right", padx=10)
+                # Amount removed from dashboard for cleaner look
 
         # Right: Quick Actions
         right = tk.Frame(two_col, bg=T.BG)
