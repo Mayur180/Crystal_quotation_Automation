@@ -3224,7 +3224,7 @@ class QuotationForm(tk.Toplevel):
         
         threading.Thread(target=generate_and_render, daemon=True).start()
 
-    def _open_latest_pdf(self):    def _open_latest_pdf(self):
+    def _open_latest_pdf(self):
         """Find the latest PDF in Downloads and open it."""
         import os
         import subprocess
