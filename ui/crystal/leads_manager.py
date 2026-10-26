@@ -55,21 +55,51 @@ class LeadsManager(tk.Toplevel):
         tk.Button(btn_wrap, text="Convert to Quotation →", bg=T.ACCENT, fg="white", font=("Arial", 11, "bold"), relief="flat", padx=20, pady=8, command=self._convert).pack(side="right")
 
     def _refresh(self):
+        # Clear table and show loading
         self.tree.delete(*self.tree.get_children())
-        for lead in LS.load_leads():
+        self.tree.insert("", "end", iid="loading", values=("Loading...", "", "", "", "", "", "", ""))
+        
+        import threading
+        
+        def fetch_data():
+            try:
+                leads = LS.load_leads()
+                # Schedule UI update on main thread
+                self.after(0, lambda: self._update_table(leads))
+            except Exception as e:
+                self.after(0, lambda: self._update_table([], str(e)))
+
+        threading.Thread(target=fetch_data, daemon=True).start()
+
+    def _update_table(self, leads, error=None):
+        self.tree.delete(*self.tree.get_children())
+        if error:
+            self.tree.insert("", "end", values=(f"Error: {error}", "", "", "", "", "", "", ""))
+            return
+            
+        for lead in leads:
             lead_id = lead.get("leadid") or lead.get("id") or ""
+            
+            # Handle both "qty" and "quantity" keys
+            qty = lead.get("qty") or lead.get("quantity") or ""
+            
             self.tree.insert("", "end", iid=lead_id, values=(
                 lead.get("date", ""), lead.get("customer", ""), lead.get("phone", ""),
-                lead.get("email", ""), lead.get("qty", ""), lead.get("source", ""),
+                lead.get("email", ""), qty, lead.get("source", ""),
                 lead.get("notes", ""), lead.get("status", "")
             ))
 
     def _mark_sent(self):
         sel = self.tree.selection()
         if not sel: return
-        if LS.mark_lead_sent(sel[0]):
-            self._refresh()
-            messagebox.showinfo("Success", "Lead marked as Sent.", parent=self)
+        try:
+            if LS.mark_lead_sent(sel[0]):
+                self._refresh()
+                messagebox.showinfo("Success", "Lead marked as Sent.", parent=self)
+            else:
+                messagebox.showerror("Error", "Lead not found.", parent=self)
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to mark sent: {e}", parent=self)
 
     def _delete_lead(self):
         sel = self.tree.selection()

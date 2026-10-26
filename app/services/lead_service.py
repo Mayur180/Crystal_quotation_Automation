@@ -57,7 +57,7 @@ def add_lead(customer, company, phone, email, qty, source, notes):
 def mark_lead_sent(lead_id):
     leads = load_leads()
     for lead in leads:
-        if lead["id"] == lead_id:
+        if (lead.get("leadid") or lead.get("id")) == lead_id:
             lead["status"] = "Sent"
             save_leads(leads)
             try:
@@ -69,7 +69,7 @@ def mark_lead_sent(lead_id):
 
 def delete_lead(lead_id):
     leads = load_leads()
-    new_leads = [l for l in leads if l["id"] != lead_id]
+    new_leads = [l for l in leads if (l.get("leadid") or l.get("id")) != lead_id]
     if len(leads) == len(new_leads):
         return False
     save_leads(new_leads)
