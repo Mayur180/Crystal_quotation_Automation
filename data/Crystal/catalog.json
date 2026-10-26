@@ -115,7 +115,7 @@
     {
       "model": "AA-1110 SPL 01",
       "name": "\"CRYSTAL\" COMPARATOR STAND SIZE : 300 mm HEIGHT",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND\nSIZE : 300 mm HEIGHT",
@@ -157,7 +157,7 @@
     {
       "model": "AA-1201 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 100 X 5 X 10 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 100 X 5 X 10 mm",
@@ -171,7 +171,7 @@
     {
       "model": "AA-1201 SPL 125",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK SIZE : 100 X 25 X 10 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK\nSIZE : 100 X 25 X 10 mm",
@@ -185,7 +185,7 @@
     {
       "model": "AA-1201 SPL 515",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 15 X 10 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 15 X 10 mm",
@@ -199,7 +199,7 @@
     {
       "model": "AA-1201 SPL 552",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 50 X 20mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 50 X 20mm",
@@ -241,7 +241,7 @@
     {
       "model": "AA-1201 SPL A N",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 6 X 6 X 70mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 6 X 6 X 70 mm",
@@ -269,7 +269,7 @@
     {
       "model": "AA-1201 SPL P",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 14 X 50 X 100 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 14 X 50 X 100 mm",
@@ -283,7 +283,7 @@
     {
       "model": "AA-1201 SPL T",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 10 X 30 X 100 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 10 X 30 X 100 mm",
@@ -311,7 +311,7 @@
     {
       "model": "AA-1202 SPL",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 100L X 12W X 6Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZES ARE NOMINAL\nCAT.SER. AA-120\nSIZE : 100L X 12W X 6Ht mm",
@@ -325,7 +325,7 @@
     {
       "model": "AA-1202 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK SIZE : 12 X 25 X 100mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK\nSIZE : 12 X 25 X 100mm",
@@ -353,7 +353,7 @@
     {
       "model": "AA-1203 SPL 15",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 100 X 10 X 15 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 100 X 10 X 15 mm",
@@ -381,7 +381,7 @@
     {
       "model": "AA-1204 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE: 100 X 50 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE: 100 X 50 X 25 mm",
@@ -395,7 +395,7 @@
     {
       "model": "AA-1204 SPL 125",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 100 X 25 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 100 X 25 X 20 mm",
@@ -409,7 +409,7 @@
     {
       "model": "AA-1204 SPL 22",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 100 X 25 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 100 X 25 X 25 mm",
@@ -423,7 +423,7 @@
     {
       "model": "AA-1204 SPL 253",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK SIZE : 100 X 25 X 30 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK\nSIZE : 100 X 25 X 30 mm",
@@ -437,7 +437,7 @@
     {
       "model": "AA-1204 SPL B1",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 125 X 30 X 15 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 125 X 30 X 15 mm",
@@ -479,7 +479,7 @@
     {
       "model": "AA-1206 SPL 10",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 7 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 7 mm",
@@ -493,7 +493,7 @@
     {
       "model": "AA-1206 SPL 11",
       "name": "\"CRYSTAL\" SPL TYPR PARALLEL BLOCKS SIZE : 70 X 6 X 6 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPR PARALLEL BLOCKS\nSIZE : 70 X 6 X 6 mm",
@@ -507,7 +507,7 @@
     {
       "model": "AA-1206 SPL 12",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 5 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 5 mm",
@@ -521,7 +521,7 @@
     {
       "model": "AA-1206 SPL 13",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 30 X 17 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 30 X 17 mm",
@@ -535,7 +535,7 @@
     {
       "model": "AA-1206 SPL 7.",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 10mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 10mm",
@@ -549,7 +549,7 @@
     {
       "model": "AA-1206 SPL M1",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 17 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 17 mm",
@@ -563,7 +563,7 @@
     {
       "model": "AA-1206 SPL M14",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 30 X 16 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 30 X 16 mm",
@@ -577,7 +577,7 @@
     {
       "model": "AA-1206 SPL M15",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 30 X 15 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 30 X 15 mm",
@@ -591,7 +591,7 @@
     {
       "model": "AA-1206 SPL M16",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 30 X 14 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 30 X 14 mm",
@@ -605,7 +605,7 @@
     {
       "model": "AA-1206 SPL M17",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 30 X 13 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 30 X 13 mm",
@@ -619,7 +619,7 @@
     {
       "model": "AA-1206 SPL M18",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 12 X 50 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 12 X 50 mm",
@@ -633,7 +633,7 @@
     {
       "model": "AA-1206 SPL M19",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 33 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 33 mm",
@@ -647,7 +647,7 @@
     {
       "model": "AA-1206 SPL M2",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 16 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 16 mm",
@@ -661,7 +661,7 @@
     {
       "model": "AA-1206 SPL M20",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 35 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 35 mm",
@@ -675,7 +675,7 @@
     {
       "model": "AA-1206 SPL M21",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 5 X 36 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 5 X 36 mm",
@@ -689,7 +689,7 @@
     {
       "model": "AA-1206 SPL M22",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 5 X 37 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 5 X 37 mm",
@@ -703,7 +703,7 @@
     {
       "model": "AA-1206 SPL M23",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 5 X 38 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 5 X 38 mm",
@@ -717,7 +717,7 @@
     {
       "model": "AA-1206 SPL M24",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 5 X 39 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 5 X 39 mm",
@@ -731,7 +731,7 @@
     {
       "model": "AA-1206 SPL M25",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 12 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 12 mm",
@@ -745,7 +745,7 @@
     {
       "model": "AA-1206 SPL M26",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 14 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 14 mm",
@@ -759,7 +759,7 @@
     {
       "model": "AA-1206 SPL M27",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 16 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 16 mm",
@@ -773,7 +773,7 @@
     {
       "model": "AA-1206 SPL M28",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 20 mm",
@@ -787,7 +787,7 @@
     {
       "model": "AA-1206 SPL M29",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 24 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 24 mm",
@@ -801,7 +801,7 @@
     {
       "model": "AA-1206 SPL M3",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 15 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 15 mm",
@@ -815,7 +815,7 @@
     {
       "model": "AA-1206 SPL M30",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 28 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 28 mm",
@@ -829,7 +829,7 @@
     {
       "model": "AA-1206 SPL M31",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 30 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 30 mm",
@@ -843,7 +843,7 @@
     {
       "model": "AA-1206 SPL M32",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 8 X 31 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 8 X 31 mm",
@@ -857,7 +857,7 @@
     {
       "model": "AA-1206 SPL M4",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 14 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 14 mm",
@@ -871,7 +871,7 @@
     {
       "model": "AA-1206 SPL M5",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 13 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 13 mm",
@@ -885,7 +885,7 @@
     {
       "model": "AA-1206 SPL M6",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 12 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 12 mm",
@@ -899,7 +899,7 @@
     {
       "model": "AA-1206 SPL M7",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 11 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 11 mm",
@@ -913,7 +913,7 @@
     {
       "model": "AA-1206 SPL M8",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 9 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 9 mm",
@@ -927,7 +927,7 @@
     {
       "model": "AA-1206 SPL M9",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 70 X 6 X 8 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 70 X 6 X 8 mm",
@@ -1236,7 +1236,7 @@
     {
       "model": "AA-1212 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 150 X 10 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 150 X 10 X 20 mm",
@@ -1502,7 +1502,7 @@
     {
       "model": "AA-1214 SPL 152",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 50 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 50 X 20 mm",
@@ -1544,7 +1544,7 @@
     {
       "model": "AA-1215 SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK SIZE : 150 X 70 X 35 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK\nSIZE : 150 X 70 X 35 mm",
@@ -1572,7 +1572,7 @@
     {
       "model": "AA-1215 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 40 X 19 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 40 X 19 mm",
@@ -1642,7 +1642,7 @@
     {
       "model": "AA-1216 SPL 152",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 150 X 50 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 150 X 50 X 25 mm",
@@ -1852,7 +1852,7 @@
     {
       "model": "AA-1217 SPL 56",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 200 X 12 X 10 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 200 X 12 X 10 mm",
@@ -1866,7 +1866,7 @@
     {
       "model": "AA-1217 SPL P4",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 25 X 25 X 150 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nCAT.SER. AA-121\nSIZE : 25 X 25 X 150 mm",
@@ -1922,7 +1922,7 @@
     {
       "model": "AA-1219 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLCOKS SIZE : 20 X 30 X 150 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLCOKS\nSIZE : 20 X 30 X 150 mm",
@@ -2090,7 +2090,7 @@
     {
       "model": "AA-1223 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 200 X 80 X 80 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 200 X 80 X 80 mm",
@@ -2230,7 +2230,7 @@
     {
       "model": "AA-1224 SPL 1",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 200 X 50 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 200 X 50 X 20 mm",
@@ -2286,7 +2286,7 @@
     {
       "model": "AA-1224 SPL 263",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 200 X 60 X 30mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nFLATNESS & SQUARENESS ACCURACIES ±0.005mm\nSIZE : 200 X 60 X 30mm",
@@ -2384,7 +2384,7 @@
     {
       "model": "AA-1224 SPL B1",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 20 X 20 X 150 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nCAT.SER. AA-122\nSIZE : 20 X 20 X 150 mm",
@@ -2524,7 +2524,7 @@
     {
       "model": "AA-1227 SPARE",
       "name": "EMPTY BOX FOR PARALLEL BLOCKS",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "EMPTY BOX FOR PARALLEL BLOCKS",
@@ -2608,7 +2608,7 @@
     {
       "model": "AA-1229 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 300L X 25W X 22H mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 300L X 25W X 22H mm",
@@ -2622,7 +2622,7 @@
     {
       "model": "AA-1229 SPL 2",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 260 X 25 X 40 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nFLATNESS & SQUARENESS ACCURACIES\n±0.005mm\nSIZE : 260 X 25 X 40 mm",
@@ -2650,7 +2650,7 @@
     {
       "model": "AA-1229 SPL R",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 25 X 45 X 250 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nFLATNESS & SQUARENESS\nACCURANCIES +/-0.005mm\nCAT.SER. AA-122\nSIZE : 25 X 45 X 250mm",
@@ -2720,7 +2720,7 @@
     {
       "model": "AA-1231 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 250 X 30 X 50mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 250 X 30 X 50mm",
@@ -2762,7 +2762,7 @@
     {
       "model": "AA-1233 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 300L X 25W X 23.5H mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 300L X 25W X 23.5H mm",
@@ -2776,7 +2776,7 @@
     {
       "model": "AA-1235 SPL",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 280 X 25 X 40mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nFLATNESS & SQUARENESS ACCURACIES\n±0.005mm\nSIZE : 280 X 25 X 40mm",
@@ -2790,7 +2790,7 @@
     {
       "model": "AA-1235 SPL 335",
       "name": "\"CRYSTAL\" PARALLEL BLOCK SIZE : 335 X 40 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCK\nFLARNESS & SQUARENESS ACCURACIES\n±0.005mm\nSIZE : 335 X 40 X 25 mm",
@@ -2804,7 +2804,7 @@
     {
       "model": "AA-1236 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 300 X 25 X 60 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nCAT.SER. AA-126\nSIZE : 300 X 25 X 60 mm",
@@ -2818,7 +2818,7 @@
     {
       "model": "AA-1236 SPL 1",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 125 X 25 X 50 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 125 X 25 X 50 mm",
@@ -2846,7 +2846,7 @@
     {
       "model": "AA-1239 SPL",
       "name": "\"CRYSTAL\" PARALLEL BLOCK SIZE : 300 X 30 X 60 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCK\nSIZE : 300 X 30 X 60 mm",
@@ -2860,7 +2860,7 @@
     {
       "model": "AA-1240 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 300 X 35 X 70 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 300 X 35 X 70 mm",
@@ -2874,7 +2874,7 @@
     {
       "model": "AA-1240 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 300 X 100 X 50mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE: 300 X 100 X 50 mm",
@@ -2916,7 +2916,7 @@
     {
       "model": "AA-1244 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 350 X 40 X 70 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 350 X 40 X 70 mm",
@@ -2930,7 +2930,7 @@
     {
       "model": "AA-1244 SPL 3518",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 350 X 100 X 80 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nFLATNESS & SQUARENESS ACCURACIES ±0.005mm\nSIZE : 350 X 100 X 80 mm",
@@ -2944,7 +2944,7 @@
     {
       "model": "AA-1252 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 500 X 100 X 50 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 500 X 100 X 50 mm",
@@ -3182,7 +3182,7 @@
     {
       "model": "AA-1443 SPL 01",
       "name": "\"CRYSTAL\" SUPPORT SCREW JACKS",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SUPPORT SCREW JACKS\nWITH RING TYPE LOCKNUT HEIGHT\nEXTENDER WITH LOCATING STEM\nPROVIDED TO MOUNT ON TOP SCREW JACK\nHEIGHT RANGE 160 - 220 mm",
@@ -3266,7 +3266,7 @@
     {
       "model": "AA-15205 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 250 X 150 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nSIZE : 250 X 150 X 40 mm",
@@ -3294,7 +3294,7 @@
     {
       "model": "AA-15206 SPL 25..",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 350L X 220W X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10 + 10 mm\nCAT.SER. AA-152\nSIZE : 350L X 220W X 40 mm",
@@ -3308,7 +3308,7 @@
     {
       "model": "AA-15206 SPL 27",
       "name": "\"CRYSTAL\" SPL PERMANENT MAGNETIC CHUCK SIZE : 500L X 220W X 40Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL PERMANENT MAGNETIC CHUCK\n10+10mm LONGITUDINAL POLE WITH FERRITE MAGNETS,\n2520 GAUSS VALUE\nSIZE : 500L X 220W X 40Ht mm",
@@ -3322,7 +3322,7 @@
     {
       "model": "AA-15206 SPL 312",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MANETIC CHUCK SIZE : 310 X 320 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MANETIC CHUCK\nHAVING POLE PITCH 10+10mm &\nWITH FERRITE MAGNETS, 3000 GAUSS VALUE\nSIZE : 310 X 320 X 40 mm",
@@ -3336,7 +3336,7 @@
     {
       "model": "AA-15206 SPL 32",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300L X 155W X 60Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10MM & WITH\nFERRITE MAGNETS, 2520 GAUSS VALUE\nSIZE : 300L X 155W X 60Ht mm",
@@ -3350,7 +3350,7 @@
     {
       "model": "AA-15206 SPL 532",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 500 X 320 X 40mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10mm\n& WITH FERRITE MAGNETS, 3000 GAUSS VALUE\nSIZE : 500 X 320 X 40mm",
@@ -3364,7 +3364,7 @@
     {
       "model": "AA-15206 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300 X 150 X 55.5mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nSIZE : 300 X 150 X 55.5mm",
@@ -3378,7 +3378,7 @@
     {
       "model": "AA-15206 SPL LG",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300 X 150 X 57 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10mm &\nFERRITE MAGNETS 2520 GAUSS VALUE,\nSIZE : 300 X 150 X 57 mm",
@@ -3448,7 +3448,7 @@
     {
       "model": "AA-15217 SPL 620",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 620 X 263 X 53 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10MM\n6000 GAUSS VALUE,LONGITUDINAL MAGNETS\nSIZE : 620 X 263 X 53 mm",
@@ -3462,7 +3462,7 @@
     {
       "model": "AA-15217 SPL 820",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 1240 X 263 X 53 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10 MM\n6000 GAUSS VALUE, LONGITUDINAL MAGNETS\nSIZE : 1240 X 263 X 53 mm",
@@ -3574,7 +3574,7 @@
     {
       "model": "AA-15306 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 210 X 210 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC\nCHUCK HAVING POLE\nPITCH 10+10mm & WITH\nFERRITE MAGNETS,2520 GAUSS\nSIZE : 210 X 210 X 30 mm",
@@ -3616,7 +3616,7 @@
     {
       "model": "AA-15307 SPL",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 400 X 200 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE GAP 14 mm(CLOSE POLE)\nSIZE : 400 X 200 X 70 mm",
@@ -3714,7 +3714,7 @@
     {
       "model": "AA-15313.",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 600 X 300 X 65 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE GAP 14mm (CLOSE POLE)\nSIZE : 600 X 300 X 65 mm",
@@ -3770,7 +3770,7 @@
     {
       "model": "AA-15415 SPL 25",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE SIZE : 1958 X 220 X 42",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE\nSIZE : 1958 X 220 X 42",
@@ -3784,7 +3784,7 @@
     {
       "model": "AA-15415 SPL 30",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE SIZE : 1958L X 176W X 47Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE\nSIZE : 1958L X 176W X 47Ht mm",
@@ -3798,7 +3798,7 @@
     {
       "model": "AA-1551 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 50 X 100 X 35 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 50 X 100 X 35 mm",
@@ -3812,7 +3812,7 @@
     {
       "model": "AA-1552 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 60 X 75 X 30 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 60 X 75 X 30 mm",
@@ -3826,7 +3826,7 @@
     {
       "model": "AA-1553 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 50 X 75 X 75 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 50 X 75 X 75 mm",
@@ -3840,7 +3840,7 @@
     {
       "model": "AA-1554 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 50 X 100 X 50 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 50 X 100 X 50 mm",
@@ -3854,7 +3854,7 @@
     {
       "model": "AA-1555 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 80 X 120 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 80 X 120 X 25 mm",
@@ -3868,7 +3868,7 @@
     {
       "model": "AA-1555 SPL 49",
       "name": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCKS SIZE : 120L X 80W X 25Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCKS\nSIZE : 120L X 80W X 25Ht mm",
@@ -3882,7 +3882,7 @@
     {
       "model": "AA-1555 SPL 50",
       "name": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCK SIZE : 100L X 50W X 20Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCK\nSIZE : 100L X 50W X 20Ht mm",
@@ -3896,7 +3896,7 @@
     {
       "model": "AA-1555 SPL 51",
       "name": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCK SIZE : 65L X 40W X 20T mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCK\nSIZE : 65L X 40W X 20T mm",
@@ -3910,7 +3910,7 @@
     {
       "model": "AA-1556 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 100 X 60 X 25 AA - 1556 N",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 100 X 60 X 25",
@@ -3924,7 +3924,7 @@
     {
       "model": "AA-1557 N",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 50 X 100 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCK\nSIZE : 50 X 100 X 20 mm",
@@ -3938,7 +3938,7 @@
     {
       "model": "AA-1557 SPL 14562",
       "name": "\"CRYSTAL\" TRANSFER BLOCKS (4+1) SIZE : 145 X 61 X 21 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" TRANSFER BLOCKS (4+1)\nSIZE : 145 X 61 X 21 mm",
@@ -3952,7 +3952,7 @@
     {
       "model": "AA-1562 N",
       "name": "\"CRYSTAL\" 'V' TYPE TRANSFER BLOCKS SIZE : 110 X 45 X 60 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" 'V' TYPE TRANSFER BLOCKS\nSIZE : 110 X 45 X 60 mm",
@@ -4008,7 +4008,7 @@
     {
       "model": "AA-15714 SPL",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 250L X 300W X 70Htmm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 9.9 mm\nSIZE : 250L X 300W X 70Htmm",
@@ -4036,7 +4036,7 @@
     {
       "model": "AA-15715 SPL 1892",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 1080 X 192 X 90mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING SPL TYPE POLE PITCH 11 mm\nSIZE : 1080 X 192 X 90mm",
@@ -4050,7 +4050,7 @@
     {
       "model": "AA-15715 SPL 3145",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300 X 149 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nSIZE : 300 X 149 X 15 mm",
@@ -4064,7 +4064,7 @@
     {
       "model": "AA-15715 SPL 3425",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300 X 425 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nSIZE : 300 X 425 X 15 mm",
@@ -4078,7 +4078,7 @@
     {
       "model": "AA-15715 SPL 4315",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 300 X 430 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nSIZE : 300 X 430 X 15 mm",
@@ -4106,7 +4106,7 @@
     {
       "model": "AA-15716 SPL",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 230 X 160 X 42",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nCAT.SER. AA-157\nSIZE : 230 X 160 X 42 mm",
@@ -4176,7 +4176,7 @@
     {
       "model": "AA-15717 SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 450 X 150 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10 + 10 MM\n& WITH FERRITE MAGNETS,2520 GOSS\nSIZE : 450 X 150 X 40 mm",
@@ -4204,7 +4204,7 @@
     {
       "model": "AA-15717 SPL 3527",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 350 X 250 X 70mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 9.9mm\nSIZE : 350 X 250 X 70mm",
@@ -4218,7 +4218,7 @@
     {
       "model": "AA-15717 SPL L",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 350L X 320W X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10 mm,\nWITH FERRITE MAGNETS 2520 GAUSS VALUE\nSIZE : 350L X 320W X 40 mm",
@@ -4302,7 +4302,7 @@
     {
       "model": "AA-15720 SPL",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 450 X 300 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 9.9 mm\nCAT.SER. AA-157\nSIZE : 450 X 300 X 70 mm",
@@ -4428,7 +4428,7 @@
     {
       "model": "AA-15722 SPL A",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 600 X 100 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 9.9 mm\nSIZE : 600 X 100 X 70 mm",
@@ -4456,7 +4456,7 @@
     {
       "model": "AA-15722.",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : 600 X 190 X 70mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nMAGNETIC POLE PITCH 9.9\nSIZE : 600 X 190 X 70mm",
@@ -4624,7 +4624,7 @@
     {
       "model": "AA-1591 N",
       "name": "\"CRYSTAL\" MAGNETIC UNIVERSAL BLOCK SIZE : 75L X 50W X 60H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC UNIVERSAL BLOCK\nSIZE : 75L X 50W X 60H mm",
@@ -4680,7 +4680,7 @@
     {
       "model": "AA-15911 SPL 55",
       "name": "\"CRYSTAL\" ROUND MAGNETIC CHUCK SIZE : DIS 550 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND MAGNETIC CHUCK\nACCURACY AS PER IS 4816 - 1971\nSIZE : DIS 550 X 70 mm",
@@ -4708,7 +4708,7 @@
     {
       "model": "AA-15916 SPARE",
       "name": "\"CRYSTAL\" ROUND PLATE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND PLATE",
@@ -4722,7 +4722,7 @@
     {
       "model": "AA-15916 SPL",
       "name": "\"CRYSTAL\" ROUND MAGNETIC CHUCK SIZE : DIA 160 X 65mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND MAGNETIC CHUCK\nHAVING RADIAL POLES\nSIZE : DIA 160 X 65mm",
@@ -4736,7 +4736,7 @@
     {
       "model": "AA-15916 SPL 9",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : DIA 125 X 60Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING RADIAL POLES\nCAT.SER. AA-159\nSIZE : DIA 125 X 60Ht mm",
@@ -4764,7 +4764,7 @@
     {
       "model": "AA-15916.",
       "name": "\"CRYSTAL\" ROUND MAGNETIC CHUCK WITH RADIAL POLES SIZE : DIA 150 X 65 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND MAGNETIC CHUCK\nWITH RADIAL POLES\nSIZE : DIA 150 X 65 mm",
@@ -4792,7 +4792,7 @@
     {
       "model": "AA-15917 SPL",
       "name": "\"CRYSTAL\" ROUND PERMANENT MAGNETIC CHUCK SIZE : DIA 250 X 65 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND PERMANENT MAGNETIC CHUCK\nWITH RADIAL POLES\nDRG.NO. 31 1714 48\nSIZE : DIA 250 X 65 mm",
@@ -5058,7 +5058,7 @@
     {
       "model": "AA-1600 SPARE",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF AA-1600 BASE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF AA-1600 BASE",
@@ -5072,7 +5072,7 @@
     {
       "model": "AA-1600 SPARE.",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF AA-1600 BASE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF AA-1600 BASE",
@@ -5086,7 +5086,7 @@
     {
       "model": "AA-1601 SPARE",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1601",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1601",
@@ -5100,7 +5100,7 @@
     {
       "model": "AA-1602 SPARE",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF MAGNETIC BASE",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF MAGNETIC BASE",
@@ -5114,7 +5114,7 @@
     {
       "model": "AA-1602 SPL",
       "name": "\"CRYSTYAL\" SPL TYPE MAGNETIC BASE (WITH 200mm) HEIGHT",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTYAL\" SPL TYPE MAGNETIC BASE\n(WITH 200mm) HEIGHT\nSIZE : 70L X 56W X 70H mm",
@@ -5128,7 +5128,7 @@
     {
       "model": "AA-1604 SPARE",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1604",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1604",
@@ -5142,7 +5142,7 @@
     {
       "model": "AA-1604 SPARE 1",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF 1604",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF 1604",
@@ -5156,7 +5156,7 @@
     {
       "model": "AA-1605 SPARE 1",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF 1605",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF 1605",
@@ -5170,7 +5170,7 @@
     {
       "model": "AA-1607 SPARE",
       "name": "\"CRYSTAL\" ONLY KNOB OF MAGNETIC BASE",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY KNOB OF MAGNETIC BASE",
@@ -5184,7 +5184,7 @@
     {
       "model": "AA-1611 SPARE",
       "name": "\"CRYSTAL\" ROD WITH FINE ADJUSTMENT ASSEMBLY",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROD WITH FINE ADJUSTMENT ASSEMBLY",
@@ -5198,7 +5198,7 @@
     {
       "model": "AA-1613 SPL 3",
       "name": "LEVERE TYPE DIAL GAUGE LEAST COUNT 10 MICRON (MITUTOYO)",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "LEVERE TYPE DIAL GAUGE LEAST\nCOUNT 10 MICRON (MITUTOYO)",
@@ -5212,7 +5212,7 @@
     {
       "model": "AA-1614 SPARE",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF 1614",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF 1614\nSIZE : 60 X 50 X 60 mm",
@@ -5226,7 +5226,7 @@
     {
       "model": "AA-1614 SPARE 1",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1614",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1614",
@@ -5240,7 +5240,7 @@
     {
       "model": "AA-1614 SPL.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC BASE SIZE : 120 X 50 X 55 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC BASE\nSIZE : 120 X 50 X 55 mm",
@@ -5254,7 +5254,7 @@
     {
       "model": "AA-1614 SPR 1",
       "name": "\"CRYSTAL\" SPARE MAGNETIC BASE ONLY SIZE : 60L X 50W X 60H MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPARE MAGNETIC BASE ONLY\nSIZE : 60L X 50W X 60H MM",
@@ -5282,7 +5282,7 @@
     {
       "model": "AA-1616 SP",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ASSEMBLY TOTAL LENGTH IS 500mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ASSEMBLY\nTOTAL LENGTH IS 500mm\nSIZE : 500 MML",
@@ -5296,7 +5296,7 @@
     {
       "model": "AA-1616 SPARE",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1616",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1616\nWITH M8 TAPPING",
@@ -5310,7 +5310,7 @@
     {
       "model": "AA-1616 SPARE 1",
       "name": "\"CRYSTAL\" ONLY BOTTOM",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF MAGNETIC BASE",
@@ -5324,7 +5324,7 @@
     {
       "model": "AA-1616 SPARE,",
       "name": "\"CRYSTAL\" ONLY BASE OF 1616",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BASE OF 1616",
@@ -5366,7 +5366,7 @@
     {
       "model": "AA-1616 SPR",
       "name": "\"CRYSTAL\" ONLY CLAMP OF 1616",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF 1616",
@@ -5394,7 +5394,7 @@
     {
       "model": "AA-1617 SPARE",
       "name": "\"CRYSTAL\" ONLY BOTTOM OF 1617",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY BOTTOM OF 1617",
@@ -5408,7 +5408,7 @@
     {
       "model": "AA-1617 SPARE 1",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1617",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1617",
@@ -5506,7 +5506,7 @@
     {
       "model": "AA-1687 SPL",
       "name": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE SIZE : 100L X 50H X 40T mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE\nWITH ON/OFF KNOB\nRANGE OF 'V' = 40 TO 125 mm\nSIZE : 100L X 50H X 40T mm",
@@ -5520,7 +5520,7 @@
     {
       "model": "AA-1687 SPL 04.",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK ASSY. SIZE : 60 X 50 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK ASSY.\nAS PER YOUR DRG. LC 620102a\nSTOCK NO. LC 620102\nSIZE : 60 X 50 X 25 mm",
@@ -5534,7 +5534,7 @@
     {
       "model": "AA-1687 SPL 06.",
       "name": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE SIZE : 66L X 54H X 35T mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE\nWITH ON/OFF KNOB (LC-620107-3)\nCAT.SER. AA-168\nSIZE : 66L X 54H X 35T mm",
@@ -5548,7 +5548,7 @@
     {
       "model": "AA-1687 SPL 07",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK ASSY. SIZE : 100 X 60 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK ASSY.\nAS PER YOUR DRG. NO. LC 6201050-3,\nSTOCK NO. LC620105\nSIZE : 100 X 60 X 40 mm",
@@ -5562,7 +5562,7 @@
     {
       "model": "AA-1687 SPL 07,",
       "name": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE SIZE : 66L X 50H X 30T mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC TOOL SETTING GAUGE\nWITH ON/OFF KNOB (LM794 9608 - 4)\nSIZE : 66L X 50H X 30T mm",
@@ -6010,7 +6010,7 @@
     {
       "model": "AA-1711 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK CAT. NO. AA - 1711 SPARE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND\n'V' BLOCK",
@@ -6038,7 +6038,7 @@
     {
       "model": "AA-1711 SPL 129",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 40 X 40 X 50 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\n'V' BLOCK\nSIZE : 40 X 40 X 50 mm",
@@ -6136,7 +6136,7 @@
     {
       "model": "AA-1712 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK",
@@ -6150,7 +6150,7 @@
     {
       "model": "AA-1712 SPL 12",
       "name": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK SIZE : 90L X 25W X 34Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK\nAS PER PART NO. 24248236 & 24248235\nSIZE : 90L X 25W X 34Ht mm",
@@ -6164,7 +6164,7 @@
     {
       "model": "AA-1712 SPL 567",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 50 X 60 X 70 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\n'V' BLOCK\nSIZE : 50 X 60 X 70 mm",
@@ -6178,7 +6178,7 @@
     {
       "model": "AA-1712 SPL 625",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 20 X 25 X 60 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\n'V' BLOCK\nSIZE : 20 X 25 X 60 mm",
@@ -6192,7 +6192,7 @@
     {
       "model": "AA-1712 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 35 X 63 X 63 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\n'V' BLOCK\nSIZE : 35 X 63 X 63 mm",
@@ -6248,7 +6248,7 @@
     {
       "model": "AA-1713 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK.",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND\n'V' BLOCK.",
@@ -6262,7 +6262,7 @@
     {
       "model": "AA-1713 SPL 15/03",
       "name": "\"CRYSTAL\" SPL TYPE NON MAGNETIC 'V' BLOCK SIZE : 40L X 28W X 35Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON MAGNETIC 'V' BLOCK\nSIZE : 40L X 28W X 35Ht mm\nAS PER YOUR DWG.\nCAT.SER - AA - 171",
@@ -6276,7 +6276,7 @@
     {
       "model": "AA-1713 SPL 43/16",
       "name": "\"CRYSTAL\" H & G 'V' BLOCK (WITH CLAMP) SIZE : 150L X 100W X 75Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" H & G 'V' BLOCK (WITH CLAMP)\nHARDNESS 55RC +/- 2RC, ACCURACY FOR\nSQUARENESS, FLATNESS & PARALLELISM\nWITHIN +/- 5 MICRON,\nSIZE : 150L X 100W X 75Ht mm",
@@ -6304,7 +6304,7 @@
     {
       "model": "AA-1713 SPL N",
       "name": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK SIZE : 150 X 100 X 75 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK\nSIZE : 150 X 100 X 75 mm",
@@ -6346,7 +6346,7 @@
     {
       "model": "AA-1713 SPR",
       "name": "PAIR BOXES",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "PAIR BOXES",
@@ -6360,7 +6360,7 @@
     {
       "model": "AA-1713 SPR N",
       "name": "SINGLE BOXES.",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "SINGLE BOXES.",
@@ -6402,7 +6402,7 @@
     {
       "model": "AA-1714 SPL 425",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 40 X 25 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\n'V' BLOCK\nSIZE : 40 X 25 X 20 mm",
@@ -6486,7 +6486,7 @@
     {
       "model": "AA-1751 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND TOOL ROOM 'V' BLOCKS",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND\nTOOL ROOM 'V' BLOCKS",
@@ -6500,7 +6500,7 @@
     {
       "model": "AA-1761 SPARE",
       "name": "\"ONLY CLAMP\" OF HARDENED & GROUND 'V' BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"ONLY CLAMP\" OF HARDENED & GROUND 'V' BLOCK",
@@ -6598,7 +6598,7 @@
     {
       "model": "AA-1773 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK CAT NO. AA-1773 SPARE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND\n'V' BLOCK",
@@ -6612,7 +6612,7 @@
     {
       "model": "AA-1773 SPL M",
       "name": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK SIZE : 63 X 56 X 56 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCK\nHARDNESS 58 RC +2 RC\nACCURACY AS PER IS – 2949 - 1974\nGRADE- A HARDENED & GROUND\nSIZE : 63 X 56 X 56 mm",
@@ -6668,7 +6668,7 @@
     {
       "model": "AA-1774 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCKS",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCKS",
@@ -6724,7 +6724,7 @@
     {
       "model": "AA-1775 SPR",
       "name": "\"CRYSTAL\" ONLY SCREW OF HARDENED & GROUND 'V' BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY SCREW OF HARDENED & GROUND 'V' BLOCK",
@@ -6766,7 +6766,7 @@
     {
       "model": "AA-1776 SPL",
       "name": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCKS SIZE : 70 X 140 X 140 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND 'V' BLOCKS\n(WITH CLAMP) HARDNESS 58RC + 2 RC ACCURACY AS PER\nIS - 2949-1974 GRADE - A HARDENED & GROUND\nDIA RANGE : 9-140mm\nSIZE : 70 X 140 X 140 mm",
@@ -6836,7 +6836,7 @@
     {
       "model": "AA-1777 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF H & G 'V' BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF H & G 'V' BLOCK",
@@ -7326,7 +7326,7 @@
     {
       "model": "AA-1796 SPL",
       "name": "\"CRYSTAL\" ELONGATED 'V' BLOCK HAVING 120 DEGREE SIZE : 300 X 100 X 65 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELONGATED 'V' BLOCK\nHAVING 120 DEGREE\nSIZE : 300 X 100 X 65 mm",
@@ -7340,7 +7340,7 @@
     {
       "model": "AA-180 HN SPL 120",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE: 100 X 70 X 95mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nHAVING 120 DEGREE\nSIZE: 100 X 70 X 95mm",
@@ -7410,7 +7410,7 @@
     {
       "model": "AA-1801 H N SPL 120",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 120 DEGREE",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nHAVING INCLUDING 120 DEGREE\nSIZE : 100 X 70 X 95",
@@ -7494,7 +7494,7 @@
     {
       "model": "AA-1801H L",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\" WITH LEAK PROOF",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\"\nWITH LEAK PROOF\nSIZE : 100 X 95 X 70 mm",
@@ -7508,7 +7508,7 @@
     {
       "model": "AA-1801H SPARE",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\" EMPTY BOX",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\"\nEMPTY BOX",
@@ -7522,7 +7522,7 @@
     {
       "model": "AA-1801H SPL 11",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK SIZE : 100L X 80H X 70W mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK\nCAT SER. AA-180\nSIZE : 100L X 80H X 70W mm",
@@ -7578,7 +7578,7 @@
     {
       "model": "AA-1802 H N 1",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 100 X 70 X 95",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nSIZE : 100 X 95 X 70 mm",
@@ -7592,7 +7592,7 @@
     {
       "model": "AA-1802 H N SPL 120",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK HAVING 120 DEGREE.",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK\nHAVING 120 DEGREE.\nSIZE 75L X 56W X 75HTMM",
@@ -7606,7 +7606,7 @@
     {
       "model": "AA-1802 H SPL 60",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 3\" HAVING INCLUDING 60 DEGREE",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 3\"\nHAVING INCLUDING 60 DEGREE\nSIZE : 75 X 75 X 56 mm",
@@ -7648,7 +7648,7 @@
     {
       "model": "AA-1802 SPL 120",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK HAVING 120 DEGREE",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK\nHAVING INCLUDING ANGLE 120 DEGREE\nCAT.SER. AA-180\nSIZE : 75 X 75 X 56 mm",
@@ -7690,7 +7690,7 @@
     {
       "model": "AA-1805 C N",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150L X 75W X 100H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nHAVING CARBIDE STRIPS\nIN BIG 'V'\nSIZE : 150L X 75W X 100H mm",
@@ -7774,7 +7774,7 @@
     {
       "model": "AA-1805 H.,",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150L X 75W X 100H mm (6\")",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK (6\")\nALL SIDE HARDENED\nSIZE : 150L X 75W X 100H mm",
@@ -7788,7 +7788,7 @@
     {
       "model": "AA-1805 HN L",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK LEAK PROOF",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK LEAK PROOF\nSIZE : 150 X 100 X 75 mm",
@@ -7928,7 +7928,7 @@
     {
       "model": "AA-1806 S N SPL 21",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK SIZE : 250L X 150H X 125W mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK\nSIZE : 250L X 150H X 125W mm",
@@ -7942,7 +7942,7 @@
     {
       "model": "AA-1806 S SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK SIZE : 200L X 150H X 125W mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK SIZE : 200L X 150H X 125W mm\nHAVING INCLUDING ANGLE 120 DEGREE\nAS PER DWG.\nSIZE : 200L X 150H X 125W mm",
@@ -7998,7 +7998,7 @@
     {
       "model": "AA-1808 H N",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150 X 100 X 65 mm CAT. NO. AA-1808 H N",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nSIZE : 150 X 100 X 65 mm",
@@ -8012,7 +8012,7 @@
     {
       "model": "AA-1808 H SPL",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150 X 100 X 65 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nSIZE : 150 X 100 X 65 mm",
@@ -8040,7 +8040,7 @@
     {
       "model": "AA-1808 S N",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150 X 100 X 65 mm AA - 1808 S N",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nSIZE : 150 X 100 X 65 mm",
@@ -8110,7 +8110,7 @@
     {
       "model": "AA-1905 SPL",
       "name": "\"CRYSTAL\" SPL MAGNETIC HOLDER SIZE : 100 L X 80 W X 40 Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL MAGNETIC HOLDER\nSIZE : 100 L X 80 W X 40 Ht mm",
@@ -8124,7 +8124,7 @@
     {
       "model": "AA-1905 SPL1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC HOLDER SIZE : 70 X 50 X 40mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC HOLDER\nSIZE : 70 X 50 X 40mm",
@@ -8194,7 +8194,7 @@
     {
       "model": "AA-1921 - S1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 3 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 3 X 10 mm",
@@ -8208,7 +8208,7 @@
     {
       "model": "AA-1921 SP",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 15 X 6 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 15 X 6 mm",
@@ -8222,7 +8222,7 @@
     {
       "model": "AA-1921 SP.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 2 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 2 X 8 mm",
@@ -8236,7 +8236,7 @@
     {
       "model": "AA-1921 SPL-",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 5 mm",
@@ -8250,7 +8250,7 @@
     {
       "model": "AA-1921 SPL - A",
       "name": "\"CRYSTAL\" POT MAGNETS ALU. BODY SIZE : DIA 18 X16 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" POT MAGNETS ALU. BODY\nSIZE : DIA 18 X16 mm",
@@ -8264,7 +8264,7 @@
     {
       "model": "AA-1921 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 20 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 20 X 10 mm",
@@ -8306,7 +8306,7 @@
     {
       "model": "AA-1921 SPL 17",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 10 X 20 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 10 X 20 MM",
@@ -8334,7 +8334,7 @@
     {
       "model": "AA-1921 SPL 6",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 16 X 16 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 16 X 16 mm",
@@ -8362,7 +8362,7 @@
     {
       "model": "AA-1921 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 18 X 12 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nCAT.SER. AA-192\nSIZE : DIA 18 X 12 mm",
@@ -8376,7 +8376,7 @@
     {
       "model": "AA-1921 SPL A1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 3 X 3 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 3 X 3 mm",
@@ -8390,7 +8390,7 @@
     {
       "model": "AA-1921 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 40 X 12 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 40 X 12 mm",
@@ -8404,7 +8404,7 @@
     {
       "model": "AA-1921 SPL E",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 8 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 8 X 8 mm",
@@ -8418,7 +8418,7 @@
     {
       "model": "AA-1921 SPL J",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 10 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 10 X 8 mm",
@@ -8432,7 +8432,7 @@
     {
       "model": "AA-1921 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 8 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 8 X 25 mm",
@@ -8446,7 +8446,7 @@
     {
       "model": "AA-1921 SPL L",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 10 X 6 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 10 X 6 mm",
@@ -8460,7 +8460,7 @@
     {
       "model": "AA-1921 SPL S2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 3 X 5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 3 X 5 mm",
@@ -8474,7 +8474,7 @@
     {
       "model": "AA-1921 SPL V",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 10 X 10 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 10 X 10 MM",
@@ -8488,7 +8488,7 @@
     {
       "model": "AA-1921 SPL,",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 10 X 2 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 10 X 2 mm",
@@ -8502,7 +8502,7 @@
     {
       "model": "AA-1921 SPL.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 6 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nCAT SER. AA-192\nSIZE : DIA 6 X 10 mm",
@@ -8516,7 +8516,7 @@
     {
       "model": "AA-1921 SPL...",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 15 M",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 15 MM",
@@ -8530,7 +8530,7 @@
     {
       "model": "AA-1921 SPL.11",
       "name": "\"CRYSTAL\" POT MAGNETS SIZE : DIA 10 X 26 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" POT MAGNETS\nSIZE : DIA 10 X 26 MM",
@@ -8544,7 +8544,7 @@
     {
       "model": "AA-19211 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 8 X 10 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nCAT SER. AA-192\nSIZE : DIA 8 X 10 MM",
@@ -8558,7 +8558,7 @@
     {
       "model": "AA-19211 SPL V",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 8 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE: DIA 8 X 10 MM",
@@ -8572,7 +8572,7 @@
     {
       "model": "AA-19211-SP.",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNET SIZE : DIA 21 X 12 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNET\nSIZE : DIA 21 X 12 mm",
@@ -8586,7 +8586,7 @@
     {
       "model": "AA-19211SPL C",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 8 X 5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 8 X 5 mm",
@@ -8600,7 +8600,7 @@
     {
       "model": "AA-19212 - S1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 10 mm",
@@ -8614,7 +8614,7 @@
     {
       "model": "AA-19212 SP.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 30 X 8 X 2 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 30 X 8 X 2 mm",
@@ -8628,7 +8628,7 @@
     {
       "model": "AA-19212 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 6 X 10 X 28 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 6 X 10 X 28 mm",
@@ -8642,7 +8642,7 @@
     {
       "model": "AA-19212 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 6 X 20 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 6 X 20 mm",
@@ -8656,7 +8656,7 @@
     {
       "model": "AA-19212 SPL F",
       "name": "\"CRYSTAL\" SPL TYPE FERRITE MAGNETS SIZE : DIA 90",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE FERRITE MAGNETS\nSIZE : DIA 90 mm",
@@ -8670,7 +8670,7 @@
     {
       "model": "AA-19212..S",
       "name": "\"CRYSTAL\" FERRIGHT MAGNETS SIZE : 40 X 25 X 10mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FERRIGHT MAGNETS\nSIZE : 40 X 25 X 10mm",
@@ -8684,7 +8684,7 @@
     {
       "model": "AA-1921-SPL-",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 8 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nCAT.SER. AA-192\nSIZE : DIA 8 X 8 mm",
@@ -8698,7 +8698,7 @@
     {
       "model": "AA-1921-SPL R",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 9 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 9 mm",
@@ -8726,7 +8726,7 @@
     {
       "model": "AA-1922 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 30 X 20 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STRIPS\nSIZE : 30 X 20 X 8 mm",
@@ -8754,7 +8754,7 @@
     {
       "model": "AA-19221 SPL",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 40 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nCAT.SER. AA-192\nSIZE : DIA 40 X 40 mm",
@@ -8768,7 +8768,7 @@
     {
       "model": "AA-19223 SP.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 3 X 20 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 3 X 20 mm",
@@ -8782,7 +8782,7 @@
     {
       "model": "AA-19223 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 25 mm",
@@ -8796,7 +8796,7 @@
     {
       "model": "AA-19229 SPL",
       "name": "\"CRYSTAL\" BUTTON MAGNETS SIZE : DIA 10 X 12 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" BUTTON MAGNETS\nHAVING M4 TAPPING,\nWITH 2 X 2 SLOT,\nSIZE : DIA 10 X 12 mm",
@@ -8824,7 +8824,7 @@
     {
       "model": "AA-1923 - SP",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nCAT.SER.AA-192\nSIZE : DIA 25 X 25 mm",
@@ -8838,7 +8838,7 @@
     {
       "model": "AA-1923 - SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 60 X 12 X 3 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 60 X 12 X 3 mm",
@@ -8852,7 +8852,7 @@
     {
       "model": "AA-1923 SP",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 5 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 5 X 25 mm",
@@ -8866,7 +8866,7 @@
     {
       "model": "AA-1923 SPL 02",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 18OD X 6ID X 12THK mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 18OD X 6ID X 12THK mm",
@@ -8880,7 +8880,7 @@
     {
       "model": "AA-1923 SPL.",
       "name": "\"CRYSTAL\" POT MAGNETS ALU. BODY SIZE : DIA 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" POT MAGNETS ALU. BODY\nSIZE : DIA 25 X 25 mm",
@@ -8908,7 +8908,7 @@
     {
       "model": "AA-1924 SPL",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 30 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 30 X 10 mm",
@@ -8922,7 +8922,7 @@
     {
       "model": "AA-1924 SPL 1",
       "name": "\"CRYSTAL\" FERRITE ROUND MAGNETS SIZE : DIA 45 X 22 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FERRITE ROUND MAGNETS\nSIZE : DIA 45 X 22 X 8 mm\n4 POLE MAG.\nCAT.SER. AA-192",
@@ -8936,7 +8936,7 @@
     {
       "model": "AA-1924 SPL 233",
       "name": "\"CRYSTAL\" MAGNETS SIZE: 200 X 30 X 30",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETS\nSIZE: 200 X 30 X 30",
@@ -8950,7 +8950,7 @@
     {
       "model": "AA-1924 SPL 3",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 4 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 4 MM",
@@ -8964,7 +8964,7 @@
     {
       "model": "AA-1924 SPL 35",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 40 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 40 X 30 mm",
@@ -8978,7 +8978,7 @@
     {
       "model": "AA-1924 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 32 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 32 X 30 mm",
@@ -8992,7 +8992,7 @@
     {
       "model": "AA-1924 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIS SIZE : DIA 30 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIS\nSIZE : DIA 30 X 30 mm",
@@ -9020,7 +9020,7 @@
     {
       "model": "AA-1924 SPL K",
       "name": "\"CRYSTAL\" FERRIGHT MAGNETS SIZE : 40 X 20 X 10mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FERRIGHT MAGNETS\nSIZE : 40 X 20 X 10mm",
@@ -9076,7 +9076,7 @@
     {
       "model": "AA-1924 SPL R",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 28 X 10 X 6 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 28 X 10 X 6 mm",
@@ -9146,7 +9146,7 @@
     {
       "model": "AA-1925 - S",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 12 X 6 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 12 X 6 mm",
@@ -9160,7 +9160,7 @@
     {
       "model": "AA-1925 - SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 16 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 16 X 10 mm",
@@ -9174,7 +9174,7 @@
     {
       "model": "AA-1925 SP.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE: 45 X 20 X 4.5 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE: 45 X 20 X 4.5 MM",
@@ -9188,7 +9188,7 @@
     {
       "model": "AA-1925 SPL",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 12 X 20mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 12 X 20mm",
@@ -9202,7 +9202,7 @@
     {
       "model": "AA-1925 SPL 01",
       "name": "\"CRYSTAL\" PURE MAGNETS SIZE : DIA 10 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PURE MAGNETS\nCAT.SER. AA-192\nSIZE : DIA 10 X 25 mm",
@@ -9216,7 +9216,7 @@
     {
       "model": "AA-1925 SPL 08",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPOT MAGNET SIZE: 75 X 20 X 25 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPOT MAGNET\nDRG NO. AA-1925 SPL 0824V DC.\nSIZE : 75 X 20 X 25 mm",
@@ -9230,7 +9230,7 @@
     {
       "model": "AA-1925 SPL 1.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 13 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 13 X 10 mm",
@@ -9300,7 +9300,7 @@
     {
       "model": "AA-1925 SPL 23",
       "name": "\"CRYSTAL\" BUTTON MAGNETS SIZE : DIA 16 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" BUTTON MAGNETS\nHAVING M4 TAPPING\nSIZE : DIA 16 X 25 mm",
@@ -9314,7 +9314,7 @@
     {
       "model": "AA-1925 SPL 24",
       "name": "CRYSTAL\" BUTTTON MAGNETS SIZE : DIA 40 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" BUTTTON MAGNETS\nHAVING M6 TAPPING\nSIZE : DIA 40 X 40 mm",
@@ -9328,7 +9328,7 @@
     {
       "model": "AA-1925 SPL 4",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 20 X 12 X 5mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 20 X 12 X 5mm",
@@ -9342,7 +9342,7 @@
     {
       "model": "AA-1925 SPL C",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 25 X 3 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 25 X 3 mm",
@@ -9356,7 +9356,7 @@
     {
       "model": "AA-1925 SPL K",
       "name": "\"CRYSTAL\" RARE EARTH MAGNETS SIZE : 40 X 20 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" RARE EARTH MAGNETS\nSIZE : 40 X 20 X 10 mm",
@@ -9370,7 +9370,7 @@
     {
       "model": "AA-1925 SPL L",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 20 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 20 mm",
@@ -9384,7 +9384,7 @@
     {
       "model": "AA-1925 SPL L3",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 20mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 20mm",
@@ -9398,7 +9398,7 @@
     {
       "model": "AA-1925 SPL1.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 13 X 13",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 13 X 13",
@@ -9440,7 +9440,7 @@
     {
       "model": "AA-19251 - SP",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 10 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 10 X 15 mm",
@@ -9454,7 +9454,7 @@
     {
       "model": "AA-19251 SP",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 40 X 12 X 3 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 40 X 12 X 3 mm",
@@ -9468,7 +9468,7 @@
     {
       "model": "AA-19251 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 5 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 5 X 10 MM",
@@ -9482,7 +9482,7 @@
     {
       "model": "AA-19251 SPL 15",
       "name": "\"CRYSTAL\" SPL MAGNETIC STRIPS SIZE : 30 X 20 X 4.5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL MAGNETIC STRIPS\nCAT.SER. AA-192\nSIZE : 30 X 20 X 4.5 mm",
@@ -9496,7 +9496,7 @@
     {
       "model": "AA-19251 SPL 30",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPOT MAGNET SIZE: 100L X 20W X 25H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPOT MAGNET\nAS PER DRG NO. AA-19251 SPL 30. WORKING\nON 24 VDC 0.5 AMP ( CAT SER.NO. AA-192)\nSIZE: 100L X 20W X 25H mm",
@@ -9510,7 +9510,7 @@
     {
       "model": "AA-19251 SPL 32",
       "name": "\"CRYSTAL\" ELECTRO-MAGNETIC ARM SIZE : 82.5 L X 20 W X 75 Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTRO-MAGNETIC ARM\nWORKING ON 24VDC, 0.5 AMP CURRENT,\nSIZE: 82.5 L X 20 W X 75Ht mm",
@@ -9524,7 +9524,7 @@
     {
       "model": "AA-19251 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIS SIZE : DIA 4 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIS\nSIZE : DIA 4 X 8 mm",
@@ -9538,7 +9538,7 @@
     {
       "model": "AA-19251 SPL.",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 25 X 22 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nM8 TAPPING\nSIZE : DIA 25 X 22 mm",
@@ -9552,7 +9552,7 @@
     {
       "model": "AA-19252 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 12 X 3 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 12 X 3 mm",
@@ -9580,7 +9580,7 @@
     {
       "model": "AA-1926 SPL R",
       "name": "\"CRYSTAL\" ROUND MAGNETS SIZE : DIA 20 X 12mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND MAGNETS\nSIZE : DIA 20 X 12mm",
@@ -9608,7 +9608,7 @@
     {
       "model": "AA-1927 SPL 2525",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nHAVING M5 TAPPING\nSIZE : DIA 25 X 25 mm",
@@ -9622,7 +9622,7 @@
     {
       "model": "AA-1927 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE BUTTON MAGNETS SIZE : DIA 20 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE BUTTON MAGNETS\nHAVING M4 TAPPING\nSIZE : DIA 20 X 25 mm",
@@ -9636,7 +9636,7 @@
     {
       "model": "AA-1927 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 30 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nM5 TAPPING\nSIZE : DIA 30 X 25 mm",
@@ -9664,7 +9664,7 @@
     {
       "model": "AA-1928 SPL",
       "name": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINKS SIZE : 80 X 40 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINKS\nSIZE : 80 X 40 X 40 mm",
@@ -9678,7 +9678,7 @@
     {
       "model": "AA-1928 SPL 225",
       "name": "\"CRYSTAL\" MAGNETIC BLOCK SIZE : 20 X 25 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC BLOCK\nSIZE : 20 X 25 X 50 mm",
@@ -9692,7 +9692,7 @@
     {
       "model": "AA-1928 SPL 756",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 75 X 75 X 56 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nSIZE : 75 X 75 X 56 mm",
@@ -9706,7 +9706,7 @@
     {
       "model": "AA-1928 SPL.",
       "name": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINKS SIZE : 50 X 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINKS\nSIZE : 50 X 25 X 25 mm",
@@ -9720,7 +9720,7 @@
     {
       "model": "AA-1928.",
       "name": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINK SIZE : 125 X 50 X 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINK\nSIZE : 125 X 50 X 25 X 25 mm",
@@ -9734,7 +9734,7 @@
     {
       "model": "AA-1931 S",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK SIZE : 25 X 25 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK\nSIZE : 25 X 25 X 25 mm",
@@ -9762,7 +9762,7 @@
     {
       "model": "AA-1932 SPL",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCKS SIZE : 90L X 55W X 55Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCKS\nCAT.SER. AA-193\nSIZE : 90L X 55W X 55Ht mm",
@@ -9776,7 +9776,7 @@
     {
       "model": "AA-1932 SPL 12",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCKS SIZE : 60L X 55W X 55Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCKS\nCAT.SER. AA-193\nSIZE : 60L X 55W X 55Ht mm",
@@ -9790,7 +9790,7 @@
     {
       "model": "AA-1933 H N",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK SIZE : 100 X 70 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK\nSIZE : 100 X 70 X 70 mm",
@@ -9804,7 +9804,7 @@
     {
       "model": "AA-1933 S N",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK SIZE : 100 X 70 X 70mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK\nSIZE : 100 X 70 X 70mm",
@@ -9860,7 +9860,7 @@
     {
       "model": "AA-1934 S N",
       "name": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK SIZE : 150 X 70 X 85 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC RECTANGULAR BLOCK\nSIZE : 150 X 70 X 85 mm",
@@ -9888,7 +9888,7 @@
     {
       "model": "AA-1939 SPL",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK SIZE : 150 X 150 X 150 mm AA - 1939 SPL",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK\nWITH BRASS LINE\nSIZE : 150 X 150 X 150 mm",
@@ -9958,7 +9958,7 @@
     {
       "model": "AA-2217 SPL 04",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC SHEET SEPERATOR (FLOATER) SIZE : 500 X 150 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC SHEET\nSEPERATOR (FLOATER)\nSIZE : 500 X 150 X 70 mm",
@@ -9972,7 +9972,7 @@
     {
       "model": "AA-2217 SPL 46",
       "name": "\"CRYSTAL\" MAGNETIC SHEET SEPARATOR (FLOATER) SIZE : 500L X 80W X 75HT mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC SHEET SEPARATOR\n(FLOATER)\nSIZE : 500L X 80W X 75HT mm",
@@ -9986,7 +9986,7 @@
     {
       "model": "AA-2220 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS SIZE : DIA 5 X 200 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS\nSIZE : DIA 5 X 200 mm",
@@ -10000,7 +10000,7 @@
     {
       "model": "AA-2220 SPL A1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 5.5 X 400 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nCAT.SER. AA-222\nSIZE : DIA 5.5 X 400 mm",
@@ -10014,7 +10014,7 @@
     {
       "model": "AA-2220 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 5 X 150 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 5 X 150 mm",
@@ -10028,7 +10028,7 @@
     {
       "model": "AA-2220 SPL V",
       "name": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK AOG, MOG SIZE : DIA 4.8 X 250 L mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK\nAOG, MOG\nSIZE : DIA 4.8 X 250 L mm",
@@ -10042,7 +10042,7 @@
     {
       "model": "AA-2220 SPL..2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS SIZE : DIA 5 X 500 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS\nWITH HANDLE\nSIZE : DIA 5 X 500 mm",
@@ -10084,7 +10084,7 @@
     {
       "model": "AA-2221 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : 6 X 500 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nCAT.SER. AA-222\nSIZE : 6 X 500 mm",
@@ -10098,7 +10098,7 @@
     {
       "model": "AA-2221 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS SIZE : DIA 6 X 250 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS\nSIZE : DIA 6 X 250 mm",
@@ -10112,7 +10112,7 @@
     {
       "model": "AA-2221 SPL 03",
       "name": "\"CRYSTAL\" MAGNETIC STICK SIZE : DIA 6 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STICK\nHAVING MAGNETIC POWER UP TO 25MM\nCAT SER. AA-222\nSIZE : DIA 6 X 300 mm",
@@ -10126,7 +10126,7 @@
     {
       "model": "AA-2221 SPL 06",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 6 X 225 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 6 X 225 mm",
@@ -10140,7 +10140,7 @@
     {
       "model": "AA-2221 SPL.",
       "name": "\"CRYSTAL\" MAGNETIC STICKS SIZE : DIA 6 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STICKS\nCAT.SER. AA-222\nSIZE : DIA 6 X 300 mm",
@@ -10168,7 +10168,7 @@
     {
       "model": "AA-2222 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : 8 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nCAT SER. AA-222\nSIZE : 8 X 300 mm",
@@ -10182,7 +10182,7 @@
     {
       "model": "AA-2222 SPL 10",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 7.5 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nCAT.SER. AA-222\nSIZE : DIA 7.5 X 300 mm",
@@ -10196,7 +10196,7 @@
     {
       "model": "AA-2222 SPL 9",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 7 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 7 X 300 mm",
@@ -10210,7 +10210,7 @@
     {
       "model": "AA-2222 SPL 99",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 7.9 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nCAT.SER. AA-222\nSIZE : DIA 7.9 X 300 mm",
@@ -10238,7 +10238,7 @@
     {
       "model": "AA-2223 SPL V",
       "name": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK AOG,MOGSIZE : DIA 10 X 650 L mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK\nAOG,MOG\nSIZE : DIA 10 X 650 L mm",
@@ -10252,7 +10252,7 @@
     {
       "model": "AA-2223 SPL.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 10 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 10 X 300 mm",
@@ -10294,7 +10294,7 @@
     {
       "model": "AA-22242 - SPL",
       "name": "\"CRYSTAL\" SPL MAGNET WITH HANDLE FOR OIL/SMALL HOLES SIZE : DIA 6 X 270 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL MAGNET WITH HANDLE\nFOR OIL/SMALL HOLES\nSIZE : DIA 6 X 270 mm",
@@ -10420,7 +10420,7 @@
     {
       "model": "AA-2229 SP",
       "name": "\"CRYSTAL\" MAGNETIC STICK SIZE : DIA 4 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STICK\nSIZE : DIA 4 X 300 mm",
@@ -10434,7 +10434,7 @@
     {
       "model": "AA-2229 SPL",
       "name": "\"CRYSTAL\" MAGNETIC STICK SIZE : DIA 3 X 300mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STICK\nSIZE : DIA 3 X 300mm",
@@ -10448,7 +10448,7 @@
     {
       "model": "AA-2229.SP",
       "name": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK AOG, MOG\"",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ROD FOR BLOCK AOG, MOG\"",
@@ -10462,7 +10462,7 @@
     {
       "model": "AA-2231",
       "name": "\"CRYSTAL\" MAGNETIC SEPERATORS SIZE : DIA 25 X 150 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC SEPERATORS\nSIZE : DIA 25 X 150 mm",
@@ -10476,7 +10476,7 @@
     {
       "model": "AA-2231 SPL 56",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROD SIZE : DIA 25 X 255L mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROD\nWITH 9500 +/- 500 GAUSS\nMATERIAL : S.S - 304,\nTAPPING AT ONE END\nSIZE : DIA 25 X 255L mm",
@@ -10490,7 +10490,7 @@
     {
       "model": "AA-2231 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROD SIZE : DIA 25 X 180 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROD\nSIZE : DIA 25 X 180 mm",
@@ -10504,7 +10504,7 @@
     {
       "model": "AA-2233",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC SEPERATOR SIZE : DIA 100 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC SEPERATOR\nSIZE : DIA 100 X 300 mm",
@@ -10546,7 +10546,7 @@
     {
       "model": "AA-2515 SPL B",
       "name": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER SIZE : 450 X 200 X 300mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER\nHAVING WINDOW SIZE : 150 X 100 mm\nSIZE : 450 X 200 X 300mm",
@@ -10560,7 +10560,7 @@
     {
       "model": "AA-2515 SPL K",
       "name": "\"CRYSTAL\" PLATE TYPE DEMAGNETIZER SIZE : 300 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PLATE TYPE DEMAGNETIZER\nCAT.SER. AA-251\nSIZE : 300 X 300 mm",
@@ -10574,7 +10574,7 @@
     {
       "model": "AA-2515 SPL L",
       "name": "\"CRYSTAL\" PLATE TYPE CONTINOUS TYPE DEMAGNETISER SIZE : 350 X 350mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PLATE TYPE CONTINUOUS DEMAGNETISER\nWITHOUT FOOT SWITHC\nSIZE : 350 X 350mm",
@@ -10588,7 +10588,7 @@
     {
       "model": "AA-2516 SPL 192",
       "name": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER SIZE : 190 X 120 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER\nWITH RECTANGULAR TYPE WORKING ON\n415V, 9AMP\nWINDOW : 190 X 120 mm",
@@ -10602,7 +10602,7 @@
     {
       "model": "AA-2516 SPL L1",
       "name": "\"CRYSTAL\" WINDOE TYPE DEMAGNETIZER SIZE : 550 X 250 X 310 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" WINDOE TYPE DEMAGNETIZER\nHAVING WINDOW SIZE 300 X 150mm\nWORKING ON 415V & 18 Amp CURRENT\nSIZE : 550 X 250 X 310 mm",
@@ -10616,7 +10616,7 @@
     {
       "model": "AA-2516 SPL S",
       "name": "\"CRYSTAL\" STAND FABRICATION SIZE : 1200 X 550 X 800 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" STAND FABRICATION\nSIZE : 1200 X 550 X 800 mm",
@@ -10630,7 +10630,7 @@
     {
       "model": "AA-2517 SPL 80",
       "name": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER SIZE : 150 X 250 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" WINDOW TYPE DEMAGNETIZER SIZE : 150 X 250 mm\nHAVING WINDOW SIZE 150 X 250 WORKING\nON 415 VAC & 12 A CURRENT\nCAT. SER. AA-251\nSIZE : 150HT X 250 L mm",
@@ -10938,7 +10938,7 @@
     {
       "model": "AA-2751 SPL",
       "name": "\"CRYSTAL\" SPL TYPE ANGLE BLOCK SIZE : 160 X 160 X 16 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ANGLE BLOCK\nSIZE : 160 X 160 X 16 mm",
@@ -11078,7 +11078,7 @@
     {
       "model": "AA-2809 SP",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND KNIFE EDGE STRAIGHT EDGE SIZE : 1000 X 60 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND\nKNIFE EDGE STRAIGHT EDGE\nSIZE : 1000 X 60 X 20 mm",
@@ -11092,7 +11092,7 @@
     {
       "model": "AA-2809 SPL",
       "name": "\"CRYSTAL\" HARDENED & GROUND KNIEF EDGE STRAIGHT EDGE SIZE : 750 X 60 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND KNIEF EDGE\nSTRAIGHT EDGE\nSIZE : 750 X 60 X 20 mm",
@@ -11106,7 +11106,7 @@
     {
       "model": "AA-302",
       "name": "\"CRYSTAL\" DC POWER SUPPLY UNIT WITH CONTROL POWER UNIT",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" DC POWER SUPPLY UNIT WITH\nMAG/DEMAG. SWITCH & VARIABLE\nCONTROL POWER UNIT\nOUTPUT 110 VDC CURRENT 3.5 AMP",
@@ -11120,7 +11120,7 @@
     {
       "model": "AA-303",
       "name": "\"CRYSTAL\" DC POWER SUPPLY UNIT",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" DC POWER SUPPLY UNIT\nWITH MAG / DEMAG SWITCH &\nVARRIABLE CONTROL UNIT.\nO/P VOLTAGE 110 DC O/P CURRENT 2 AMP.",
@@ -11134,7 +11134,7 @@
     {
       "model": "AA-303 C",
       "name": "\"CRYSTAL\" MALE & FEMAIL 3 PIN CONNECTOR FOR EMC CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMAIL 3 PIN CONNECTOR\nFOR EMC CHUCK",
@@ -11148,7 +11148,7 @@
     {
       "model": "AA-303 SPARE",
       "name": "\"CRYSTAL\" REMOTE SPARE PART CABLE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" REMOTE SPARE PART CABLE",
@@ -11162,7 +11162,7 @@
     {
       "model": "AA-303 SPL ,",
       "name": "\"CRYSTAL\" MILITARY CONNECTOR 20 AMP, 2 PIN MALE FEMALE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MILITARY CONNECTOR 20 AMP,\n2 PIN MALE FEMALE",
@@ -11176,7 +11176,7 @@
     {
       "model": "AA-303.",
       "name": "\"CRYSTAL\" DC POWER SUPPLY UNIT WITH MAG/DEMAG. SWITCH",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" DC POWER SUPPLY UNIT WITH MAG/DEMAG. SWITCH\nCONTROL UNIT,OUTPUT 24VDC\nCURRENT 2AMP WITH BATTERY BACKUP OF 15 MINUTS\nAFTER CUT-OFF OF ELECTRICITY",
@@ -11302,7 +11302,7 @@
     {
       "model": "AA-30308 SPL 741",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 700 X 400 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC\nCHUCK POLE : GAP 15, PITCH 40\nSIZE : 700 X 400 X 100 mm",
@@ -11316,7 +11316,7 @@
     {
       "model": "AA-30308 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPERMANENT CHUCK SIZE : 780 X 420 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERMANENT MAGNETIC CHUCK\nWITH CONTROL POWER UNIT\nSIZE : 780 X 420 X 90 mm",
@@ -11456,7 +11456,7 @@
     {
       "model": "AA-30311 SPL 58",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 1000L X 500W X 110H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nPOLE GAP : 15mm,\nPOLE PITCH : 40mm\nSIZE : 1000L X 500W X 110H mm",
@@ -11582,7 +11582,7 @@
     {
       "model": "AA-304 A",
       "name": "\"CRYSTAL\" MAGNETIC INNER ROTOR",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC INNER ROTOR\nWITH 3000 GAUSS POWER\nAS PER DRAWING",
@@ -11694,7 +11694,7 @@
     {
       "model": "AA-30407 SPL 639",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 600 X 300 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC CHUCK\n(LONGITUDINAL POLE)\nSIZE : 600 X 300 X 90 mm",
@@ -11820,7 +11820,7 @@
     {
       "model": "AA-305 S",
       "name": "\"CRYSTAL\" PENDENT FOR EMC CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PENDENT FOR EMC CHUCK",
@@ -11848,7 +11848,7 @@
     {
       "model": "AA-30501 SPL",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 450 X 150 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC CHUCK\n(TRANSVERSE POLE)\nSIZE : 450 X 150 X 90 mm",
@@ -11918,7 +11918,7 @@
     {
       "model": "AA-30501 SPL J",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 450 X 200 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC CHUCK\nTRANSVERSE POLE PITCH 4+1\nSIZE : 450 X 200 X 100 mm",
@@ -11932,7 +11932,7 @@
     {
       "model": "AA-30501 SPL K",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 450L X 150W X 85Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL\nELECTROMAGNETIC CHUCK\nFINE PITCH RECTABGULAR MAGNETIC CHUCK (TRANSVERSE POLE)\nPOLE PITCH 4+1\nSIZE : 450L X 150W X 85Ht mm",
@@ -11946,7 +11946,7 @@
     {
       "model": "AA-30501.",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 400 X 150 X 100",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL\nELECTROMAGNETIC CHUCK\nHAVING POLE PITCH 4+1 (TRANSVERSE POLE)\nSIZE : 400 X 150 X 100",
@@ -11974,7 +11974,7 @@
     {
       "model": "AA-30502 SPL",
       "name": "\"CRYSTAL\" HERAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 450 X 200 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HERAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC CHUCK\n(TRANSERVE POLE) POLE PITCH 4+1 110 VOLT DC\nSIZE : 450 X 200 X 90 mm",
@@ -12002,7 +12002,7 @@
     {
       "model": "AA-30502 SPL 13",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 500L X 325W X 100Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC CHUCK\n(TRANSVERSE POLE),POLE PITCH 4+1\nSIZE : 500L X 325W X 100Ht mm",
@@ -12114,7 +12114,7 @@
     {
       "model": "AA-30503.",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK WITH CONTROL POWER UNIT SIZE : 600 X 200 X 100",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL\nELECTROMAGNETIC CHUCK (4+1)\nWITH CONTROL POWER UNIT\nSIZE : 600 X 200 X 100",
@@ -12170,7 +12170,7 @@
     {
       "model": "AA-30507 SPL",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 600 X 350 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK\nFINE PITCH RECTANGULAR MAGNETIC\nCHUCK (TRANSVERSE POLE)\nPOLE PITCH 4+1\nSIZE : 600 X 350 X 100 mm",
@@ -12758,7 +12758,7 @@
     {
       "model": "AA-3112 SPARE",
       "name": "\"CRYSTAL\" SAFETY LOCK ASSEMBLY FOR PERMANENT MAGNETIC LIFTER",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SAFETY LOCK ASSEMBLY FOR\nPERMANENT MAGNETIC LIFTER",
@@ -12786,7 +12786,7 @@
     {
       "model": "AA-3112 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC LIFTER SIZE : 350L X 150W X 80H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC LIFTER\nHAVING LIFTING CAPACITY 150 KG\nSIZE : 350L X 150W X 80H mm",
@@ -12800,7 +12800,7 @@
     {
       "model": "AA-3112 SPL 02",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC LIFTER SIZE : 174 X 70 X 160 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC LIFTER\nRECOMMENDED CAPACITY : 200 KG,\nTESTED CAPACITY : 600 KG,\nSIZE : 174 X 70 X 160 mm",
@@ -12814,7 +12814,7 @@
     {
       "model": "AA-3112 SPL 425",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC LIFTER SIZE : 410 X 180 X 225 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC LIFTER\nRECOMMENDED CAPACITY : 500KG,\nSIZE : 410 X 180 X 225 mm",
@@ -12828,7 +12828,7 @@
     {
       "model": "AA-3112 SPL A",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC ROUND LIFTER SIZE : DIA 200 X 80 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC ROUND LIFTER\nCAPACITY : 100 KG,\nSIZE : DIA 200 X 80 mm",
@@ -12898,7 +12898,7 @@
     {
       "model": "AA-3115 SPARE",
       "name": "\"CRYSTAL\" ONLY KNOB OF PERMANENT MAGNETIC LIFTER",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY KNOB OF PERMANENT MAGNETIC LIFTER",
@@ -12954,7 +12954,7 @@
     {
       "model": "AA-3117 SPL",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC LIFTER SIZE : 592L X 250W X 390Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC LIFTER\nRECOMMENDED CAPACITY : 3000KG,\nTESTED CAPACITY : 9000KG,\nCAT.SER AA-311\nSIZE : 592L X 250W X 390Ht mm",
@@ -13052,7 +13052,7 @@
     {
       "model": "AA-3121 SPL E",
       "name": "\"CRYSTAL\" ELECTROMAGNETIC ARM SIZE : 100 X 50 X 35 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROMAGNETIC ARM\nWORKS ON 24 VDC, 1 Amp,\nLIFTING CAPACITY :20 KG,\nSIZE : 100 X 50 X 35 mm",
@@ -13066,7 +13066,7 @@
     {
       "model": "AA-3121 SPL E 953",
       "name": "\"CRYSTAL\" ELECTROMAGNETIC ARM SIZE : 90 X 50 X 35 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROMAGNETIC ARM\nWORKS ON 24 VDC, 1 AMP,\nLIFTING CAPACITY : 20 KGS\nSIZE : 90 X 50 X 35 mm",
@@ -13080,7 +13080,7 @@
     {
       "model": "AA-3121 SPL E10",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC ARM SIZE : 40 X 50 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC ARM\nWORKING ON 0.5 AMP CURRENT & 24 VDC,\nSIZE : 40 X 50 X 40 mm",
@@ -13094,7 +13094,7 @@
     {
       "model": "AA-3121 SPL KP",
       "name": "\"CRYSTAL\" ELECTROMAGNETIC ARM SIZE : 75 X 30 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROMAGNETIC ARM\nSIZE : 75 X 30 X 40 mm",
@@ -13150,7 +13150,7 @@
     {
       "model": "AA-3122 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER SIZE : DIA 190 X 170 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER\nWITH LIFTING HANDLE WORKING ON 24V, 2 AMP.\nLIFTING CAPACITY : 300KGS\nSIZE : DIA 190 X 170 mm",
@@ -13164,7 +13164,7 @@
     {
       "model": "AA-3122 SPL S4",
       "name": "\"CRYSTAL\" ELECTROPOT MAGNET SIZE : DIA 48 X 45 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPOT MAGNET SIZE : DIA 48 X 45 mm\nWORKS ON 24 V DC, 0.5 AMP",
@@ -13192,7 +13192,7 @@
     {
       "model": "AA-3123 SPL",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER SIZE : DIA 300 X 115 HT mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER\nCAT SER. AA-312\nSIZE : DIA 300 X 115 HT mm",
@@ -13206,7 +13206,7 @@
     {
       "model": "AA-3124 SPL P",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 140L X 100W X 80HT MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nCAT SER. AA-312\nSIZE : 140L X 100W X 80HT MM",
@@ -13220,7 +13220,7 @@
     {
       "model": "AA-3152 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 3 X 8.5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 3 X 8.5 mm",
@@ -13318,7 +13318,7 @@
     {
       "model": "AA-3163 SPL 5168",
       "name": "\"CRYSTAL\" MAGNETIC STRIPS SIZE : 510 X 16 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STRIPS\nSIZE : 510 X 16 X 8 mm",
@@ -13374,7 +13374,7 @@
     {
       "model": "AA-3315 SPARE",
       "name": "\"ONLY KNOB\" OF PERMANENT MAGNETIC LIFTER",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"ONLY KNOB\" OF PERMANENT MAGNETIC LIFTER",
@@ -13388,7 +13388,7 @@
     {
       "model": "AA-3710",
       "name": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK SIZE : 100L X 60W X 97H mm.",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK\nSIZE : 100L X 60W X 97H mm.",
@@ -13416,7 +13416,7 @@
     {
       "model": "AA-3711 N",
       "name": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK SIZE : 150 X 100 X 60 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK\nCAT.SER. AA-371\nSIZE : 150 X 100 X 60 mm",
@@ -13444,7 +13444,7 @@
     {
       "model": "AA-3711 SPL A1",
       "name": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK SIZE : 100L X 60W X 97H mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK\nLOAD CARRYING CAPACITY : 900 KG,\nRESTING DIAMETER RANGE : 10 TO 55 mm\nSIZE : 100L X 60W X 97H mm",
@@ -13458,7 +13458,7 @@
     {
       "model": "AA-3711 SPL A2",
       "name": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK SIZE : 100L X 60W X 115HT mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK\nLOAD CARRYING CAPACITY : 900KG\nRESTING DIAMETER RANGE : 12 - 30 mm\nCAT SER. AA-371\nSIZE : 100L X 60W X 115HT mm",
@@ -13486,7 +13486,7 @@
     {
       "model": "AA-3712 N",
       "name": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK SIZE : 230 X 100 X 150 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROLLER BEARING 'V' BLOCK\nSIZE : 230 X 100 X 150 mm",
@@ -13500,7 +13500,7 @@
     {
       "model": "AA-40203 SPL 27",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 420 X 320 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70mm QUAD POLE\nSIZE : 420 X 320 X 90 mm",
@@ -13542,7 +13542,7 @@
     {
       "model": "AA-4512",
       "name": "\"CRYSTAL\" MAGNETIC SWEEPER SIZE : 450 X 150 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC SWEEPER\nSIZE : 450 X 150 mm",
@@ -13556,7 +13556,7 @@
     {
       "model": "AA-4800",
       "name": "\"CRYSTAL\" HARDENED & GROUND PRECISION GRINDING VICE SIZE : 85 X 30 X 40mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND\nPRECISION GRINDING VICE\nSIZE : 85 X 30 X 40mm",
@@ -13570,7 +13570,7 @@
     {
       "model": "AA-4801 SPARE",
       "name": "\"CRYSTAL\" 'T' NUT FOR HARDENED & GROUND PRECISION GRINDING VICE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" 'T' NUT FOR HARDENED & GROUND\nPRECISION GRINDING VICE",
@@ -13584,7 +13584,7 @@
     {
       "model": "AA-4801 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PRECISION GRINDING VICE SIZE :30 X 40 X 85 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PRECISION\nGRINDING VICE\nSIZE :30 X 40 X 85 mm",
@@ -13598,7 +13598,7 @@
     {
       "model": "AA-4801 SPL S",
       "name": "\"CRYSTAL\" SPL TYPE PRECISION GRINDING VICE SIZE : 95L X 30W X 40H mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PRECISION\nGRINDING VICE\nSIZE : 95L X 30W X 40H mm",
@@ -13612,7 +13612,7 @@
     {
       "model": "AA-4801 SPR",
       "name": "\"WASHER\" OF GRINDING VICE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"WASHER\" OF GRINDING VICE",
@@ -13626,7 +13626,7 @@
     {
       "model": "AA-4802 SPARE",
       "name": "\"CRYSTAL\" 'T' NUT FOR PRECISION GRINDING VICE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" 'T' NUT FOR PRECISION GRINDING VICE",
@@ -13640,7 +13640,7 @@
     {
       "model": "AA-4803 SPARE",
       "name": "\"CRYSTAL\" T NUT OF H & G PRECISION GRINDING VICE AA - 4803 SPARE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" T NUT OF H & G\nPRECISION GRINDING VICE",
@@ -13654,7 +13654,7 @@
     {
       "model": "AA-4803 SPARE,",
       "name": "\"KNOB CHARGES\" FOR PRECISION GRINDING VICE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"KNOB CHARGES\" FOR PRECISION GRINDING VICE",
@@ -13668,7 +13668,7 @@
     {
       "model": "AA-4804 SPARE",
       "name": "\"CRYSTAL\" 'T' NUT FOR PRECISION GRINDING VICE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" 'T' NUT FOR PRECISION GRINDING VICE",
@@ -13696,7 +13696,7 @@
     {
       "model": "AA-4814 SPL",
       "name": "\"CRYSTAL\" HARDENED & GROUND PRECISION GRINDING VICE SIZE : 260L X 96W X 96Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND PRECISION\nGRINDING VICE WITH SCREW\nOPENING OF JAW - 0-150mm\nSIZE : 260L X 96W X 96Ht mm",
@@ -13710,7 +13710,7 @@
     {
       "model": "AA-501",
       "name": "\"CRYSTAL\" CAPACITOR DISCHARGE TYPE WITH CONTROL POWER UNIT",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" CAPACITOR DISCHARGE TYPE\nCONTROL POWER UNIT SUITABLE\nFOR ELECTRO-PERMANENT MAGNETIC CHUCK",
@@ -13724,7 +13724,7 @@
     {
       "model": "AA-501 SPL 03",
       "name": "\"CRYSTAL\" MALE FEMALE 3 PIN CONNECTOR OF EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE FEMALE 3 PIN CONNECTOR OF EPM CHUCK",
@@ -13738,7 +13738,7 @@
     {
       "model": "AA-50101 SPL 01",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPERM MAGNETIC CHUCK SIZE : 600L X 300W X 65H mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPERM MAGNETIC CHUCK\nFOR YOUR JOB\nSIZE : 600L X 300W X 65H mm",
@@ -13752,7 +13752,7 @@
     {
       "model": "AA-50101 SPL 98",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 410L X 300W X 90Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nCAT.SER. AA-501\nSIZE : 410L X 300W X 90Ht mm",
@@ -13766,7 +13766,7 @@
     {
       "model": "AA-50101 SPL C",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 200 X 200 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nPOLE PITCH 25mm, POLE GAP 4mm\nSIZE : 200 X 200 X 90 mm",
@@ -13780,7 +13780,7 @@
     {
       "model": "AA-50104 SPL K18",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPERM MAGNETIC CHUCK SIZE : 830 X 400 X 105 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPERM MAGNETIC CHUCK\nALONG WITH POWER PACK\nSIZE : 830 X 400 X 105 mm",
@@ -13794,7 +13794,7 @@
     {
       "model": "AA-502",
       "name": "\"CRYSTAL\" CAPACITOR DISCHARGE TYPE CONTROL POWER UNIT",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" 4 CAPACITOR DISCHARGE TYPE\nCONTROL POWER UNIT\nFOR EPM CHUCK",
@@ -13808,7 +13808,7 @@
     {
       "model": "AA-502 A",
       "name": "\"CRYSTAL\" RAISER BLOCK FOR MAGNETIC CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" RAISER BLOCK FOR MAGNETIC CHUCK",
@@ -13822,7 +13822,7 @@
     {
       "model": "AA-502 K",
       "name": "\"CRYSTAL\" MALE FEMALE 3 PIN CONNECTOR WITH CABLE",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE FEMALE 3 PIN CONNECTOR\nWITH CABLE",
@@ -13836,7 +13836,7 @@
     {
       "model": "AA-502 SPARE",
       "name": "\"CRYSTAL\" RISER BLOCK",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" RISER BLOCK",
@@ -13850,7 +13850,7 @@
     {
       "model": "AA-502 SPL 02",
       "name": "\"CRYSTAL\" MALE & FEMALE TYPE 2 PIN CONNECTOR FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMALE TYPE 2 PIN\nCONNECTOR FOR EPM CHUCK",
@@ -13864,7 +13864,7 @@
     {
       "model": "AA-502 SPL 03",
       "name": "\"CRYSTAL\" MALE & FEMALE TYPE 3 PIN CONNECTOR FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMALE TYPE 3 PIN CONNECTOR\nFOR EPM CHUCK",
@@ -13878,7 +13878,7 @@
     {
       "model": "AA-502 SPL 04",
       "name": "\"CRYSTAL\" MALE & FEMALE TYPE 4 PIN CONNECTOR OF EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMALE TYPE 4 PIN CONNECTOR\nOF EPM CHUCK",
@@ -13892,7 +13892,7 @@
     {
       "model": "AA-502 SPL A1",
       "name": "\"CRYSTAL\" PENDENT FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PENDENT FOR EPM CHUCK",
@@ -13906,7 +13906,7 @@
     {
       "model": "AA-502.",
       "name": "\"CRYSTAL\" ONLINE CONTROL POWER UNIT FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLINE CONTROL POWER UNIT\nFOR EPM CHUCK",
@@ -13934,7 +13934,7 @@
     {
       "model": "AA-50201 SPL 01",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 515L X 245W X 90Htmm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70mm QUAD POLE\nSIZE : 515L X 245W X 90Htmm",
@@ -13948,7 +13948,7 @@
     {
       "model": "AA-50201 SPL 2345",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 405 X 255 X 75mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nQUAD POLE (50 X 50mm)\nSIZE : 405 X 255 X 75mm",
@@ -13962,7 +13962,7 @@
     {
       "model": "AA-50201 SPL 325",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 300 X 175 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nHAVING POLE PITCH 50X50 SQUAD.\nSIZE : 300 X 175 X 70 mm",
@@ -13976,7 +13976,7 @@
     {
       "model": "AA-50201 SPL A",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE: 610L X 330W X 90HT MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 50 X 50 MM\nQUAD POLE WITH CONTROL POWER UNIT\nSIZE : 610L X 330W X 90HT mm",
@@ -13990,7 +13990,7 @@
     {
       "model": "AA-50201 SPL A1",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK WITH CONTROLLER SIZE : 500 X 500 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nWITH CONTROLLER\nCAT.SER. AA-502\nSIZE : 500 X 500 X 90 mm",
@@ -14004,7 +14004,7 @@
     {
       "model": "AA-50201 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPERM MAGNETIC CHUCK SIZE : 200 X 75 X 80 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPERM\nMAGNETIC CHUCK\nSIZE : 200 X 75 X 80 mm",
@@ -14032,7 +14032,7 @@
     {
       "model": "AA-50203",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 1010L X 330W X 90Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70 mm QUAD POLE(30 POLES)\nSIZE : 1010L X 330W X 90Ht mm",
@@ -14060,7 +14060,7 @@
     {
       "model": "AA-50203 SPL A",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 970L X 340W X 90HT mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 50 X 50 MM\nQUAD POLE WITH CONTROL POWER UNIT\nSIZE : 970L X 340W X 90HT mm",
@@ -14074,7 +14074,7 @@
     {
       "model": "AA-50205",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 600 X 400 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70 mm QUAD POLE(24 POLES)\nCATALOG SERIES. AA-502\nSIZE : 600 X 400 X 90 mm",
@@ -14088,7 +14088,7 @@
     {
       "model": "AA-50205 SPL D",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 600 X 600 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY\nCHUCK FOR MILLING HAVING\n70 X 70 mm QUAD POLE, (36 POLES)\nWITH CONTROL POWER UNIT.\nSIZE : 600 X 600 X 90 mm",
@@ -14102,7 +14102,7 @@
     {
       "model": "AA-50205 SPL K",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 410 X 410 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70 mm QUAD POLE(16 POLES)\nSIZE : 410 X 410 X 90 mm",
@@ -14116,7 +14116,7 @@
     {
       "model": "AA-50205,",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 600L X 420W X 90Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70mm\nQUAD POLE\nSIZE : 600L X 420W X 90Ht mm",
@@ -14130,7 +14130,7 @@
     {
       "model": "AA-50205.",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 600 X 400 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING WITH CONTROL POWER UNIT\nSIZE : 600 X 400 X 90 mm",
@@ -14144,7 +14144,7 @@
     {
       "model": "AA-50206",
       "name": "\"CRYSTAL\" ELETROPERM MAGNETIC CHUCK SIZE : 780 X 420 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELETROPERM MAGNETIC CHUCK\nHEAVY DUTY CHUCK FOR MILLING\n70 X 70 mm QUAD POLE(32 POLES)\nSIZE : 780 X 420 X 90 mm",
@@ -14158,7 +14158,7 @@
     {
       "model": "AA-50207 SPL 05",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 1000 X 600 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY\nDUTY CHUCK FOR MILLING\nHAVING 70 X 70mm QUAD POLE(60 POLES)\nSIZE : 1000 X 600 X 90 mm",
@@ -14172,7 +14172,7 @@
     {
       "model": "AA-50208 SPL 137",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 1300 X 650 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 70 X 70 mm QUAD POLE(78 POLES)\nSIZE : 1300 X 650 X 90 mm",
@@ -14186,7 +14186,7 @@
     {
       "model": "AA-50208 SPL 69",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 1220L X 320W X 60Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 75 X 75mm QUAD POLE WITH\nFULL STEEL TOP PLATE NO EPOXY ON TOP SURFACE,\nCAT SER. AA-502\nSIZE : 1220L X 320W X 60Ht mm",
@@ -14200,7 +14200,7 @@
     {
       "model": "AA-50208 SPL A",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 1440L X 640W X 90HT MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nFOR MILLING HAVING 50 X 50 MM\nQUAD POLE WITH CONTROL POWER UNIT\nSIZE : 1440L X 640W X 90HT mm",
@@ -14354,7 +14354,7 @@
     {
       "model": "AA-602",
       "name": "\"CRYSTAL\" ONLINE CONTROLLER FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLINE CONTROLLER FOR EPM CHUCK",
@@ -14368,7 +14368,7 @@
     {
       "model": "AA-60201 SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROPERMENT MAGNETIC CHUCK SIZE : 400 X 240 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROPERMENT MAGNETIC CHUCK\nHAVING POLE SIZE : 50 X 50 mm\nCAT.SER. AA-602\nSIZE : 400 X 240 X 70 mm",
@@ -14382,7 +14382,7 @@
     {
       "model": "AA-60203 SPL 1",
       "name": "\"CRYSTAL\" ELECTROPERMANENT MAGNETIC ARM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERMANENT MAGNETIC ARM\nCAPACITY - 300KG, CHANNEL WITH PLATE & CHAINS FOR\nINSTALLTION ARM (L11.6M X 100 X 100 X 6MM - 2NOS)\nCONTROLLER WITH WITE PEDANT FOR ACTIVATE & DEACTIVATE\nARMS SIMULATNEOUSLY INCLUDING TRANSPORTATION & INSTALATION\nSIZE : 340 X 150 X 76 mm",
@@ -14480,7 +14480,7 @@
     {
       "model": "AA-6032 SPL",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC SINE TABLE SIZE : 250 X 125 X 125",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT\nMAGNETIC SINE TABLE\nSIZE : 250 X 125 X 125",
@@ -14788,7 +14788,7 @@
     {
       "model": "AA-6051",
       "name": "\"CRYSTAL\" COMPARATOR STAND",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND",
@@ -14802,7 +14802,7 @@
     {
       "model": "AA-6051 K",
       "name": "\"CRYSTAL\" DIAL COMPARATOR STAND HEIGHT 150mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" DIAL COMPARATOR STAND\nHEIGHT 150mm",
@@ -14816,7 +14816,7 @@
     {
       "model": "AA-6051 P",
       "name": "\"CRYSTAL\" COMPARATOR STAND SIZE : 200 X 300 X 50TH mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND\nSIZE : 200 X 300 X 50TH mm",
@@ -14830,7 +14830,7 @@
     {
       "model": "AA-6051 SPL 11",
       "name": "\"CRYSTAL\" COMPARATOR STAND CS - 2 SIZE : 100 X 100 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND CS - 2 SIZE : 100 X 100 mm\nBASE SURFACE : 100 X 100mm,\nMAX GAUGING HEIGHT:150mm,FINE ADJUSTMENT : 2mm,\nDIAL STEM CLAMPING DIAMETER: 8H7",
@@ -14844,7 +14844,7 @@
     {
       "model": "AA-6051.",
       "name": "\"CRYSTAL\" COMPARETOR STAND SIZE : 300 X 300 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARETOR STAND\nGRANITE BASE, GAUGING HEIGHT - 200\nSIZE : 300 X 300 mm",
@@ -14858,7 +14858,7 @@
     {
       "model": "AA-6051.,",
       "name": "\"CRYSTAL\" COMPARATOR STAND CS-2 SIZE : 95 X 90 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND CS-2\nSIZE : 95 X 90 mm",
@@ -14872,7 +14872,7 @@
     {
       "model": "AA-6051..",
       "name": ":CRYSTAL\" COMPARATOR STAND SIZE : 95 X 95 X 150",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": ":CRYSTAL\" COMPARATOR STAND\nSIZE : 95 X 95 X 150 mm",
@@ -14886,7 +14886,7 @@
     {
       "model": "AA-6052",
       "name": "\"CRYSTAL\" COMPARATOR STAND GRANITE BASE SURFACE 250 X 150mm MAX.GAUGING HEIGHT: 350mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" COMPARATOR STAND GRANITE\nBASE SURFACE 250 X 150mm\nMAX.GAUGING HEIGHT: 350mm\nSIZE : 250 X 150 mm",
@@ -14900,7 +14900,7 @@
     {
       "model": "AA-6141",
       "name": "\"CRYSTAL\" SINE VICE ANGULAR TYPE SIZE : 150L X 48W X 88Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SINE VICE ANGULAR TYPE\nOPENING OF JAW - 0-75mm\nC.D. OF PINS- 125mm\nSIZE : 150L X 48W X 88Ht mm",
@@ -14914,7 +14914,7 @@
     {
       "model": "AA-6142",
       "name": "\"CRYSTAL\" SINE VICE SIZE : 180L X 63W X 98H mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SINE VICE\nSIZE : 180L X 63W X 98H mm",
@@ -14928,7 +14928,7 @@
     {
       "model": "AA-6142.",
       "name": "\"CRYSTAL\" SINE VICE SIZE : 175L X 63W X 93Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SINE VICE\nSIZE : 175L X 63W X 93Ht mm",
@@ -14942,7 +14942,7 @@
     {
       "model": "AA-6144",
       "name": "\"CRYSTAL\" SINE VICE ANGULAR TYPE SIZE : 235 X 96 X 130 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SINE VICE ANGULAR TYPE\nOPENING OF JAW - 0-125 mm\nC.D. OF PINS 200mm,\nSIZE : 235 X 96 X 130 mm",
@@ -14956,7 +14956,7 @@
     {
       "model": "AA-701",
       "name": "\"CRYSTAL\" MAGNETIC COMPONENTS SIZE : DIA 40 X ID 20 X 5 THmm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC COMPONENTS\nSIZE : DIA 40 X ID 20 X 5 THK mm",
@@ -14970,7 +14970,7 @@
     {
       "model": "AA-701 SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 10 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nHAVING ACCURACY FOR CYLINDRICITY IS\nWITHIN ± 0.005mm\nSIZE : DIA 10 X 50 mm",
@@ -14984,7 +14984,7 @@
     {
       "model": "AA-701 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 12 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nHAVING ACCURACY FOR CYLINDRICITY IS\nWITHIN ± 0.005mm\nSIZE : DIA 12 X 50 mm",
@@ -14998,7 +14998,7 @@
     {
       "model": "AA-701 SPL 3",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 16 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nHAVING ACCURACY FOR CYLINDRICITY IS\nWITHIN ± 0.005mm\nSIZE : DIA 16 X 50 mm",
@@ -15012,7 +15012,7 @@
     {
       "model": "AA-701 SPL 4",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 20 X 50mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nHAVING ACCURACY FOR CYLINDRICITY IS\nWITHIN ± 0.005mm\nSIZE : DIA 20 X 50mm",
@@ -15026,7 +15026,7 @@
     {
       "model": "AA-701 SPL 5",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 25 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nHAVING ACCURACY FOR CYLINDRICITY IS\nWITHIN ± 0.005mm\nSIZE : DIA 25 X 50 mm",
@@ -15040,7 +15040,7 @@
     {
       "model": "AA-70102 SPL",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS SIZE : DIA 5 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS\nSIZE : DIA 5 X 50 mm",
@@ -15054,7 +15054,7 @@
     {
       "model": "AA-70105",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS SIZE : DIA 8 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS\nSIZE : DIA 8 X 50 mm",
@@ -15068,7 +15068,7 @@
     {
       "model": "AA-70105.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS SIZE : DIA 8.5 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PINS\nSIZE : DIA 8.5 X 50 mm",
@@ -15082,7 +15082,7 @@
     {
       "model": "AA-7021 SP",
       "name": "\"CRYSTAL\" SPL TOGGLE TYPE POT MAGNETS",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TOGGLE TYPE POT MAGNETS\nCAT.SER. AA-702",
@@ -15096,7 +15096,7 @@
     {
       "model": "AA-703",
       "name": "\"CRYSTAL\" Z - AXIS ZERO SETTER",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" Z - AXIS ZERO SETTER",
@@ -15110,7 +15110,7 @@
     {
       "model": "AA-70301 SPL",
       "name": "\"CRYSTAL\" SLIP GAUGE BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SLIP GAUGE BLOCK\nWITH 112 PCS",
@@ -15264,7 +15264,7 @@
     {
       "model": "AA-1219 N",
       "name": "\"CRYSTAL\" PARALLEL BLOCKS SIZE : 200 X 20 X 30 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PARALLEL BLOCKS\nSIZE : 200 X 20 X 30 mm",
@@ -15404,7 +15404,7 @@
     {
       "model": "AA 15912",
       "name": "\"CRYSTAL\" SURFACE GRINDING MACHINE HAVING TABLE SIZE",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "SURFACE GRINDING MACHINE\nHAVING TABLE SIZE\nSIZE : 600 X 200",
@@ -15474,7 +15474,7 @@
     {
       "model": "AA-1714 SPL",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 25 X 25 X 25 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK\nSIZE : 25 X 25 X 25 mm",
@@ -15586,7 +15586,7 @@
     {
       "model": "AA-2220 SPL..1",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS SIZE : DIA 5 X 300 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICKS\nSIZE : DIA 5 X 300 mm",
@@ -15852,7 +15852,7 @@
     {
       "model": "AA-701 SPL 21",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA13 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA13 X 50 mm",
@@ -15866,7 +15866,7 @@
     {
       "model": "AA-701 SPL 22",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA14 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA14 X 50 mm",
@@ -15880,7 +15880,7 @@
     {
       "model": "AA-701 SPL 23",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA17 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA17 X 50 mm",
@@ -15894,7 +15894,7 @@
     {
       "model": "AA-701 SPL 24",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA18 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA18 X 50 mm",
@@ -15908,7 +15908,7 @@
     {
       "model": "AA-701 SPL 25",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA19 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA19 X 50 mm",
@@ -15922,7 +15922,7 @@
     {
       "model": "AA-701 SPL 26",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA21 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA21 X 50 mm",
@@ -15936,7 +15936,7 @@
     {
       "model": "AA-701 SPL 27",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA22 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA22 X 50 mm",
@@ -15950,7 +15950,7 @@
     {
       "model": "AA-701 SPL 28",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA23 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA23 X 50 mm",
@@ -15964,7 +15964,7 @@
     {
       "model": "AA-701 SPL 29",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA24 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA24 X 50 mm",
@@ -16258,7 +16258,7 @@
     {
       "model": "AA-1201 SPL6",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE : 50 X 50 X 25mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE : 50 X 50 X 25mm\nCAT SR. ;- AA-120",
@@ -16314,7 +16314,7 @@
     {
       "model": "AA-1204 SPL 10",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK SIZE : 100 X 35 X 20 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCK\nSIZE : 100 X 35 X 20 mm\nCAT SR. :- AA-120",
@@ -16454,7 +16454,7 @@
     {
       "model": "AA-1204 SPL 16",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE: 100 X 60 X 30 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE: 100 X 60 X 30 mm\nCAT SR.:- AA-120",
@@ -16468,7 +16468,7 @@
     {
       "model": "AA-1204 SPL 17",
       "name": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS SIZE: 100 X 75 X 45 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PARALLEL BLOCKS\nSIZE: 100 X 75 X 45 mm\nCAT SR. :- AA-120",
@@ -20668,7 +20668,7 @@
     {
       "model": "AA-15206 SPL 13",
       "name": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK SIZE : 1250 X 320 X 50mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE PERMANENT MAGNETIC CHUCK\nHAVING POLE PITCH 10+10 MM WITH LONGITUDINAL POLE,\nWITH FERRITE MAGNETS 2500-2700 GAUSS\nSIZE : 1250 X 320 X 50mm\nCAT SR. :- AA-152",
@@ -21242,7 +21242,7 @@
     {
       "model": "AA-15415 SPL 31",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE SIZE : 1550L X 176W X 47Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE\nSIZE : 1550L X 176W X 47Ht mm\nCAT SR. :- AA-154",
@@ -21256,7 +21256,7 @@
     {
       "model": "AA-15415 SPL 32",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE SIZE : 1550L X 435W X 42Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PLATE\nSIZE : 1550L X 435W X 42Ht mm\nCAT SR. :- AA-154",
@@ -21970,7 +21970,7 @@
     {
       "model": "AA-1556 SPL N 1",
       "name": "\"CRYSTAL\" TRANSFER BLOCK SIZE : 95 X 95 X 26 AA - 1556 SPL N 1",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE TRANSFER BLOCK\nSIZE : 95 X 95 X 26 MM\nCAT SR. :- AA - 155",
@@ -23062,7 +23062,7 @@
     {
       "model": "AA-15911 SPL 6",
       "name": "\"CRYSTAL\" ROUND MAGNETIC CHUCK SIZE : DIS 600 X 70 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND MAGNETIC CHUCK\nHAVING POLE 16 MM AND 19 MM POLE GAP\nSIZE : DIS 600 X 70 mm",
@@ -23090,7 +23090,7 @@
     {
       "model": "AA-15916 SPL 10",
       "name": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK SIZE : DIA 130 X 65Ht mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" PERMANENT MAGNETIC CHUCK\nHAVING RADIAL POLE\nSIZE : DIA 130 X 65Ht mm",
@@ -24504,7 +24504,7 @@
     {
       "model": "AA-1615 SPARE",
       "name": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1615",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY TOP ASSEMBLY OF 1615",
@@ -24518,7 +24518,7 @@
     {
       "model": "AA-1616 SPARE.",
       "name": "\"CRYSTAL\" ONLY KNOB",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY KNOB",
@@ -24994,7 +24994,7 @@
     {
       "model": "AA-1712 SPR N",
       "name": "SINGLE BOXES",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "SINGLE BOXES",
@@ -25204,7 +25204,7 @@
     {
       "model": "AA-1714 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF H&G V BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF H&G V BLOCK\nCAT SR. :-AA-171",
@@ -25288,7 +25288,7 @@
     {
       "model": "AA-1715 SPARE",
       "name": "PAIR BOXES.",
-      "category": "",
+      "category": "ACCESSORIES",
       "sub_category": "",
       "manufacturer": "",
       "description": "PAIR BOXES.",
@@ -25302,7 +25302,7 @@
     {
       "model": "AA-1715 SPAREC",
       "name": "\"CRYSTAL\" H&G V BLOCK ONLY CLAMP",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" H&G V BLOCK ONLY CLAMP\nCAT SR. :- AA-171",
@@ -25778,7 +25778,7 @@
     {
       "model": "AA-1772 SPARE",
       "name": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ONLY CLAMP OF HARDENED & GROUND 'V' BLOCK",
@@ -26324,7 +26324,7 @@
     {
       "model": "AA-1780 SPL 1",
       "name": "\"CRYSTAL\" HARDENED & GROUND SPL TYPE 'V' BLOCK SIZE : 130X90X80 MM",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND SPL TYPE 'V' BLOCK\nSIZE : 130X90X80 MM\nCAT SR. :- AA-177",
@@ -26338,7 +26338,7 @@
     {
       "model": "AA-1780 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK SIZE : 160 X 100 X 100 mm AA-1780 SPL 2",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE HARDENED & GROUND 'V' BLOCK\nHAVING PRALLELISM AND PERPENDICULARITY WITHIN +/-0.005\nSIZE : 160 X 100 X 100 mm\nCAT SR.:- AA-178",
@@ -26828,7 +26828,7 @@
     {
       "model": "AA-1801 H SPL 108",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\"( 108 DEGREE) SIZE :- 100X70X95 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 4\"(108 DEGREE)\nSIZE :- 100X70X95 MM\nCAT SR. :- AA-180",
@@ -26898,7 +26898,7 @@
     {
       "model": "AA-1802 H SPL 108",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK 3\" HAVING 108 DEGREE.",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC 'V' BLOCK 3\" HAVING 108 DEGREE\nSIZE :- 75X56X75 MM\nCAT SR. :- AA-180",
@@ -27150,7 +27150,7 @@
     {
       "model": "AA-1805H SPARE",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 6\" EMPTY BOX",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 6\" EMPTY BOX",
@@ -27178,7 +27178,7 @@
     {
       "model": "AA-1806 H SPARE",
       "name": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 8\" EMPTY BOX",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC 'V' BLOCK 8\" EMPTY BOX",
@@ -27444,7 +27444,7 @@
     {
       "model": "AA-1921 SPL 15",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 10 X 15 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nHAVING M5 TAPPING\nSIZE : DIA 10 X 15 MM",
@@ -27458,7 +27458,7 @@
     {
       "model": "AA-1921 SPL 16",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 10 X 16 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nSIZE : DIA 10 X 16 MM\nHAVING M4 TAPPING",
@@ -27514,7 +27514,7 @@
     {
       "model": "AA-1921 SPL 4",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 4 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 4 mm",
@@ -27528,7 +27528,7 @@
     {
       "model": "AA-1921 SPL 416",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 16 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 4 X 16 mm\nCAT SR. :- AA-192",
@@ -27780,7 +27780,7 @@
     {
       "model": "AA-1921 SPL L",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STRIP SIZE : 25X20X15 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STRIP\nSIZE : 25X20X15 MM",
@@ -27892,7 +27892,7 @@
     {
       "model": "AA-1921 SPL SS",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 10 X 7 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 10 X 7 mm",
@@ -28046,7 +28046,7 @@
     {
       "model": "AA-19212 SPLE",
       "name": "\"CRYSTAL\" SPL TYPE FERRITE MAGNETS SIZE :52ODX25IDX11THMM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE FERRITE MAGNETS\nSIZE :52ODX25IDX11THMM",
@@ -28060,7 +28060,7 @@
     {
       "model": "AA-19212.SPL B",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 6 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : DIA 6 X 15 mm",
@@ -28088,7 +28088,7 @@
     {
       "model": "AA-19212-S2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 8 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : DIA 4 X 8 mm",
@@ -28186,7 +28186,7 @@
     {
       "model": "AA-19229SPL 1",
       "name": "\"CRYSTAL\" BUTTON MAGNETS SIZE : DIA 15 X 20 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" BUTTON MAGNETS\nSIZE : DIA 15 X 20 mm",
@@ -28270,7 +28270,7 @@
     {
       "model": "AA-1924 SPL 2",
       "name": "\"CRYSTAL\" FERRITE MAGNETS SIZE 100 X 75 X 12.5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FERRITE MAGNETS\nSIZE 100 X 75 X 12.5 mm",
@@ -28284,7 +28284,7 @@
     {
       "model": "AA-1924 SPL 3",
       "name": "\"CRYSTAL\" FERRITE MAGNETS SIZE 40 X 75 X 12.5 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FERRITE MAGNETS\nSIZE 40 X 75 X 12.5 mm",
@@ -28368,7 +28368,7 @@
     {
       "model": "AA-1924 SPL 5",
       "name": "\"CRYSTAL\" SPL TYPE POT MAGNETS SIZE : DIA 30 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE POT MAGNETS\nHAVING M8 TAPPING\nSIZE : DIA 30 X 15 mm",
@@ -28410,7 +28410,7 @@
     {
       "model": "AA-1924 SPL C",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIS SIZE : DIA 25 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIS\nHAVING 24 VDC AND 0.5 AMP\nSIZE : DIA 25 X 30 mm",
@@ -28424,7 +28424,7 @@
     {
       "model": "AA-1924 SPL K",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 10OD X 5ID X 5Thk mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 10OD X 5ID X 5Thk mm\nCAT SR. :- AA-192",
@@ -28676,7 +28676,7 @@
     {
       "model": "AA-19251 SPL 6",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETS SIZE : 60 X 20 X 15 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETS\nSIZE : 60 X 20 X 15 mm\nCAT SR. :- AA-192",
@@ -28844,7 +28844,7 @@
     {
       "model": "AA-1928 SPL 02",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STAND SIZE : 25 X 25 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STAND\nSIZE : 25 X 25 X 50 mm\nCAT SR.:- AA-192",
@@ -29026,7 +29026,7 @@
     {
       "model": "AA-1928 SPL J",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ADJUSTABLE LINKS SIZE : 75 X 40 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ADJUSTABLE LINKS\nSIZE : 75 X 40 X 25 mm\nCAT SR.:- AA-192",
@@ -29068,7 +29068,7 @@
     {
       "model": "AA-1928 SPL.",
       "name": "\"CRYSTAL\" SPL TYPE MAGNET SIZE : 50 X 25 X 10 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ADJUSTABLE LINKS\nSIZE : 50 X 25 X 10 mm",
@@ -29390,7 +29390,7 @@
     {
       "model": "AA-2217 SPL 03",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC SHEET SEPERATOR (FLOATER) SIZE : 530 X 110 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC SHEET SEPERATOR (FLOATER)\nSIZE : 530 X 110 X 50 mm\nCAT SR. :- AA-221",
@@ -29628,7 +29628,7 @@
     {
       "model": "AA-2221 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 6 X 200 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 6 X 200 mm",
@@ -29726,7 +29726,7 @@
     {
       "model": "AA-2223 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK SIZE : DIA 10 X 200 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC STICK\nSIZE : DIA 10 X 200 mm",
@@ -29796,7 +29796,7 @@
     {
       "model": "AA-2229 SPL..",
       "name": "\"CRYSTAL\" MAGNETIC STICK SIZE : DIA 3 X 200mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC STICK\nSIZE : DIA 3 X 200mm",
@@ -29810,7 +29810,7 @@
     {
       "model": "AA-2231 A",
       "name": "\"CRYSTAL\" MAGNETIC SEPERATORS SIZE : DIA 25 X 200 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC SEPERATORS\nSIZE : DIA 25 X 200 mm\nCAT SR. :- AA-223",
@@ -30594,7 +30594,7 @@
     {
       "model": "AA-2231 SPL J",
       "name": "\"CRYSTAL\" SPL TYPE MAG. PLATE SIZE : DIA 150 X 10 mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAG. PLATE\nSIZE : DIA 150 X 10 mm\nCAT SR. :- AA-223",
@@ -31014,7 +31014,7 @@
     {
       "model": "AA-2231 SPL SV",
       "name": "\"CRYSTAL\" MAGNETIC ROLLER SIZE : DIA 25 X 329 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC ROLLER\nSURFACE MAGNETIC INDUCTION :- 10000 GAUSS\nMOC:- S.S304\nOPERATING TEMP :- 70 DEGREE MAX.\nSIZE : DIA 25 X 329 mm",
@@ -31140,7 +31140,7 @@
     {
       "model": "AA-2232",
       "name": "\"CRYSTAL\" MAGNETIC SEPERATORS SIZE : DIA 2\" X 12 Cat SR. No.:223",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MAGNETIC SEPERATORS\nSIZE : DIA 2\" X 12\nCat SR. No.:223",
@@ -32596,7 +32596,7 @@
     {
       "model": "AA-30201",
       "name": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK SIZE :- DIA 100X100 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK\nHAVING O/P VOLTAGE 110 VDC AND O/P CURRENT 2 AMP\nSIZE :- DIA 100X100 MM\nCAT SR. :- AA-302",
@@ -32610,7 +32610,7 @@
     {
       "model": "AA-30201 A",
       "name": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK SIZE :- DIA 300X100 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK\nHAVING TRANSVERSE POLES\nPOLE PITCH 35 MM , POLE GAP 19 MM\nSIZE :- DIA 300X100 MM",
@@ -32624,7 +32624,7 @@
     {
       "model": "AA-30201 SPL",
       "name": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK SIZE :- DIA 150X100 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ROUND ELECTROMAGNETIC CHUCK\nHAVING O/P VOLTAGE 110VDC, O/P CURRENT 2 AMP\nSIZE :- DIA 150X100 MM\nCAT SR. :- AA-302",
@@ -33646,7 +33646,7 @@
     {
       "model": "AA-30501 SPL 4159",
       "name": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 400 X 150 X 90",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HEAVY DUTY MULTICOIL ELECTROMAGNETIC CHUCK SIZE : 400 X 150 X 90\nDC POWER SUPPLY UNIT WITH MAG./DEMAG SWITCH AND VARIABLE CONTROL UNIT\nO/P VOLTAGE 110 DC, O/P CURRENT 2 AAMP",
@@ -34822,7 +34822,7 @@
     {
       "model": "AA-3121 SPL 1",
       "name": "\"CRYSTAL\" ELECTROMAGNETIC ARM SIZE : 100 X 20 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\"SPL TYPE ELECTROMAGNETIC ARM\nHAVING 0.5 AMP. 24 VDC\nSIZE : 100 X 20 X 25 mm\nCAT SR. :- AA-123",
@@ -34850,7 +34850,7 @@
     {
       "model": "AA-3121 SPL 2",
       "name": "\"CRYSTAL\" ELECTROMAGNETIC ARM SIZE : 70 X 20 X 25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC ARM\nHAVING 0.5 AMP, 24 VDC\nSIZE : 70 X 20 X 25 mm",
@@ -34892,7 +34892,7 @@
     {
       "model": "AA-3121 SPL A1",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC ARM SIZE : 300X40X25 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC ARM\nSIZE : 300X40X25 mm\nCAT SR. :- AA-312",
@@ -34934,7 +34934,7 @@
     {
       "model": "AA-3121 SPL B",
       "name": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER SIZE : DIA 165 X 130 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE ELECTROMAGNETIC LIFTER\nHAVING 24VDC, 2 AMP\nRECOMMENDED LIFTING :- 100 KG\nTESTED CAPACITY :- 300 KG\nSIZE : DIA 165 X 130 mm",
@@ -34948,7 +34948,7 @@
     {
       "model": "AA-3121 SPL D",
       "name": "\"CRYSTAL\" ELECTROPOT MAGNET SIZE : DIA 50 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPOT MAGNET\nHAVING 24 VDC, MAX PULL KG :- 40-45 KG\nSIZE : DIA 50 X 50 mm",
@@ -35060,7 +35060,7 @@
     {
       "model": "AA-3121 SPL M",
       "name": "\"CRYSTAL\" ELECTROPOT MAGNET SIZE : DIA 40 X 40 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPOT MAGNET\nWORKS ON 24VDC, 0.24 AMP, 30kgf FORCE\nSIZE : DIA 40 X 40 mm",
@@ -35088,7 +35088,7 @@
     {
       "model": "AA-3121 SPL P",
       "name": "\"CRYSTAL\" ELECTROPOT MAGNET SIZE : DIA 50 X 30 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPOT MAGNET\nHAVING 24VDC\nSIZE : DIA 50 X 30 mm\nCAT SR.:- AA-312",
@@ -36530,7 +36530,7 @@
     {
       "model": "AA-4814 SPL 1",
       "name": "\"CRYSTAL\" HARDENED & GROUND PRECISION GRINDING VICE SIZE : 340L X 150W X 150Ht mm",
-      "category": "",
+      "category": "NON-MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" HARDENED & GROUND PRECISION GRINDING VICE\nJAW OPENING :- 0-200 MM\nSIZE : 340L X 150W X 150Ht mm\nCAT SR. :- AA-481",
@@ -37412,7 +37412,7 @@
     {
       "model": "AA-502 SPL 02.",
       "name": "\"CRYSTAL\" MALE & FEMALE TYPE 2 PIN CONNECTOR FOR EPM CHUCK.",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMALE TYPE 2 PIN CONNECTOR FOR EPM CHUCK.",
@@ -37426,7 +37426,7 @@
     {
       "model": "AA-502 SPL 03.",
       "name": "\"CRYSTAL\" MALE & FEMALE TYPE 3 PIN CONNECTOR FOR EPM CHUCK.",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE & FEMALE TYPE 3 PIN CONNECTOR FOR EPM CHUCK.",
@@ -37440,7 +37440,7 @@
     {
       "model": "AA-502 SPL 4F",
       "name": "\"CRYSTAL\" FEMALE TYPE 4 PIN CONNECTOR OF EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FEMALE TYPE 4 PIN CONNECTOR OF EPM CHUCK",
@@ -37510,7 +37510,7 @@
     {
       "model": "AA-502 SPL F",
       "name": "\"CRYSTAL\" FEMALE TYPE 2 PIN CONNECTOR FOR EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FEMALE TYPE 2 PIN CONNECTOR FOR EPM CHUCK",
@@ -37524,7 +37524,7 @@
     {
       "model": "AA-502 SPL M",
       "name": "\"CRYSTAL\" MALE TYPE 4 PIN CONNECTOR OF EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" MALE TYPE 4 PIN CONNECTOR OF EPM CHUCK",
@@ -37538,7 +37538,7 @@
     {
       "model": "AA-502 SPL S",
       "name": "\"CRYSTAL\" SPRING LOADED RAISER BLOCK FOR MAGNETIC CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPRING LOADED RAISER BLOCK FOR MAGNETIC CHUCK",
@@ -37552,7 +37552,7 @@
     {
       "model": "AA-502 SPL7",
       "name": "\"CRYSTAL\" FEMALE TYPE 7 PIN CONNECTOR OF EPM CHUCK",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" FEMALE TYPE 7 PIN CONNECTOR OF EPM CHUCK",
@@ -37594,7 +37594,7 @@
     {
       "model": "AA-50201 ALS",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM SIZE : 150 X 50 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM\nLIFTING CAPACITY :- 150-200 KG\nSIZE : 150 X 50 X 100 mm\nCAT SR.:- AA-501",
@@ -37608,7 +37608,7 @@
     {
       "model": "AA-50201 LIF",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER SIZE : 330 X 240 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER\nHAVING CAPACITY OF 500 KG\nSIZE : 330 X 240 X 90 mm\nCAT SR. :- AA-502",
@@ -37678,7 +37678,7 @@
     {
       "model": "AA-50201 SPL 17",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 1000 X 750 X 90 mm AA-50201 SPL 17",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nHAVING QUAD POLE 50X50 MM (140 POLES)\nSIZE : 1000 X 750 X 90 mm\nCAT SR. :- AA-502",
@@ -37832,7 +37832,7 @@
     {
       "model": "AA-50201 SPL 52",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 510L X 240W X 90Htmm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nHAVING 70X70MM QUAD POLE (10 POLES)\nSIZE : 510L X 240W X 90Htmm\nCAT SR. :- AA-502",
@@ -37916,7 +37916,7 @@
     {
       "model": "AA-50201 SPL 95",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK SIZE : 955 X 510 X 90 mm AA-50201 SPL 95",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC CHUCK\nHAVING QUAD POLE 50X50 MM (98 POLES)\nSIZE : 955 X 510 X 90 mm\nCAT SR. :- AA-502",
@@ -38042,7 +38042,7 @@
     {
       "model": "AA-50201 SPL ALS1",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM SIZE : 220 X 60 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM\nLIFTING CAPACITY :-150KG\nSIZE : 220 X 60 X 100 mm\nCAT SR. :- AA-502",
@@ -38112,7 +38112,7 @@
     {
       "model": "AA-50201 SPL D",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM SIZE : 320 X 60 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC ARM\nWITH CONTROL POWER PACK\nSIZE : 320 X 60 X 90 mm\nCAT SR. :- AA-502",
@@ -38308,7 +38308,7 @@
     {
       "model": "AA-50201 SPL H",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER SIZE : 250 X 100 X 80 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER\nSIZE : 250 X 100 X 80 mm",
@@ -38322,7 +38322,7 @@
     {
       "model": "AA-50201 SPL H1",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER SIZE : 175 X 100 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC LIFTER\nSIZE : 175 X 100 X 90 mm\nCAT SR. :- AA-502",
@@ -39022,7 +39022,7 @@
     {
       "model": "AA-50205 SPL 10",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 600 X 510 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nHAVING QUAD POLE 70X70 MM (30 POLES)\nSIZE : 600 X 510 X 90 mm\nCAT SR. :- AA-502",
@@ -39218,7 +39218,7 @@
     {
       "model": "AA-50206 SPL 6",
       "name": "\"CRYSTAL\" ELETROPERM MAGNETIC CHUCK SIZE : 690 X 690 X 90 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELETROPERM MAGNETIC CHUCK\nHAVING QUAD POLE 70X70 MM (49 POLES)\nSIZE : 690 X 690 X 90 mm\nCAT SR. :- AA-502",
@@ -39722,7 +39722,7 @@
     {
       "model": "AA-50208 SPL 91",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 920X1550X90 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nHAVING QUAD POLE 70X70 MM (144 POLES)\nSIZE : 920X1550X90 MM\nCAT SR. :- AA-502",
@@ -39806,7 +39806,7 @@
     {
       "model": "AA-50208 SPL D",
       "name": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK SIZE : 950X420X72 MM",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" ELECTROPERM MAGNETIC HEAVY DUTY CHUCK\nHAVING 50X50 QUAD POLE (84 POLES) WITHOUT EPOXY\nSIZE : 950X420X72 MM\nCAT SR. :- AA-502",
@@ -41038,7 +41038,7 @@
     {
       "model": "AA-701 SPL 18",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 35 X 180 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA 35 X 180 mm\nCAT SR. :- AA-701",
@@ -41052,7 +41052,7 @@
     {
       "model": "AA-701 SPL 19",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA 9 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA 9 X 50 mm",
@@ -41066,7 +41066,7 @@
     {
       "model": "AA-701 SPL 20",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA11 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA11 X 50 mm",
@@ -41094,7 +41094,7 @@
     {
       "model": "AA-701 SPL 30",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS SIZE : DIA14.630 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC ROLLER PINS\nSIZE : DIA 14.630 X 50 mm\nCAT SR. :- AA-702",
@@ -41528,7 +41528,7 @@
     {
       "model": "AA-701 SPL A",
       "name": "\"CRYSTAL\" SPL TYPE MAGNETIC PIN SIZE : DIA 12.7 X 100 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE MAGNETIC PIN\nHAVING ACCURACY +/-0.05MM FOR DIA\nSIZE : DIA 12.7 X 100 mm",
@@ -41836,7 +41836,7 @@
     {
       "model": "AA-702 SPL",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 08 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 08 X 50 mm\nCAT SR. :- AA-702",
@@ -41850,7 +41850,7 @@
     {
       "model": "AA-702 SPL 1",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 10 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 10 X 50 mm\nCAT SR. ;- AA-702",
@@ -42004,7 +42004,7 @@
     {
       "model": "AA-702 SPL 2",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 12 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 12 X 50 mm\nCAT SR. :- AA-702 SPL 2",
@@ -42158,7 +42158,7 @@
     {
       "model": "AA-702 SPL 3",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 18 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 18 X 50 mm\nCAT SR. :- AA-702",
@@ -42256,7 +42256,7 @@
     {
       "model": "AA-702 SPL 4",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 20 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 20 X 50 mm\nCAT SR. :- AA-702 SPL 4",
@@ -42270,7 +42270,7 @@
     {
       "model": "AA-702 SPL 5",
       "name": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS SIZE : DIA 22 X 50 mm",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TYPE NON- MAGNETIC ROLLER PINS\nSIZE : DIA 22 X 50 mm\nCAT SR. ;- AA-702",
@@ -42382,7 +42382,7 @@
     {
       "model": "AA-7021 SPARE",
       "name": "\"CRYSTAL\" SPL TOGGLE TYPE ONLY POT MAGNETS",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "\"CRYSTAL\" SPL TOGGLE TYPE ONLY POT MAGNETS",
@@ -42396,7 +42396,7 @@
     {
       "model": "D20",
       "name": "“CRYSTAL” GAUSS METER MODEL D20",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "“CRYSTAL” GAUSS METER MODEL D20\n(With Transverse Hall Probe)",
@@ -42410,7 +42410,7 @@
     {
       "model": "D20B",
       "name": "“CRYSTAL” GAUSS METER MODEL D20B",
-      "category": "",
+      "category": "MAGNETIC",
       "sub_category": "",
       "manufacturer": "",
       "description": "“CRYSTAL” GAUSS METER MODEL D20B\nWITH ONE TRANSVERVSE HALL PROBE OP. ON 9V\nSINGLE BATTERY AS WELL AS ON 230V\nHAVING BELOW GIVEN FEATURE:\nDISPLAY: 3 – 1 /2 DIGIT LED PANEL METER\nRANGE : 0 – 2000 GAUSS WITH ARESOLUTION OF 1 GAUSS 0 – 20000\nGAUSS WITH A RESOLUTION OF 10 GAUSS ACCURACY: ±1.0% on 2K RANGE",
