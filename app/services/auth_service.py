@@ -60,8 +60,17 @@ def verify_credentials(username: str, password: str) -> Optional[UserSession]:
     if not user.get("is_active", True):
         return None
 
-    if user.get("password") != password:
+    import bcrypt
+    stored = user.get("password", "")
+    if not stored:
         return None
+    try:
+        if not bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8')):
+            return None
+    except Exception:
+        # Fallback to plain text for legacy users not yet migrated
+        if stored != password:
+            return None
 
     modules = get_user_modules(user["user_id"])
     if not modules:
@@ -91,7 +100,15 @@ def describe_login_failure(username: str, password: str) -> str:
         return "Invalid username or password."
     if not user.get("is_active", True):
         return "This account has been deactivated. Contact admin."
-    if user.get("password") != password:
+    import bcrypt
+    stored = user.get("password", "")
+    try:
+        if stored.startswith("$2"):
+            if not bcrypt.checkpw(password.encode('utf-8'), stored.encode('utf-8')):
+                return "Invalid username or password."
+        elif stored != password:
+            return "Invalid username or password."
+    except Exception:
         return "Invalid username or password."
     if not get_user_modules(user["user_id"]):
         return "No modules assigned to this account. Contact admin."
