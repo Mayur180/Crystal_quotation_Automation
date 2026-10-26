@@ -43,7 +43,7 @@ class Sidebar(tk.Frame):
         nav_wrap = tk.Frame(self, bg=T.SURFACE)
         nav_wrap.pack(fill="x")
 
-        for key, glyph, label, action in NAV_ITEMS:
+        for key, glyph, label, action in get_nav_items(is_admin):
             item = self._make_item(nav_wrap, key, glyph, label,
                                     getattr(on_navigate, "__call__", None) or (lambda k: None))
             self._items[key] = item
