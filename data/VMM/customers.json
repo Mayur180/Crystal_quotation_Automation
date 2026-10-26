@@ -134,5 +134,22 @@
     "created_at": "2026-10-14T13:54:41",
     "updated_at": "2026-10-14T13:54:41",
     "last_used": ""
+  },
+  {
+    "id": "c2c1fadc",
+    "name": "Sanket Shah",
+    "company": "AUTOTURN INDUSTRIES",
+    "contact_person": "",
+    "address": "",
+    "city": "pune",
+    "state": "Maharashtra",
+    "pincode": "412301",
+    "country": "",
+    "gstin": "",
+    "phone": "9922951564",
+    "email": "",
+    "created_at": "2026-10-26T22:00:15",
+    "updated_at": "2026-10-26T22:00:15",
+    "last_used": "2026-10-26T22:04:44"
   }
 ]

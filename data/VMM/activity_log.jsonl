@@ -1,0 +1,2 @@
+{"timestamp": "2026-10-26T22:04:44", "event": "created", "quotation_number": "AA/VMM/26-27/011", "detail": "", "user": "ADMIN"}
+{"timestamp": "2026-10-26T22:59:39", "event": "status_changed", "quotation_number": "AA/VMM/26-27/011", "detail": "Draft -> Sent", "user": "ADMIN"}
