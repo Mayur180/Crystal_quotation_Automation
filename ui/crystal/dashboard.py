@@ -185,9 +185,8 @@ class Dashboard(tk.Tk):
                 tk.Label(row, text=amt, bg=T.SURFACE, fg=T.ACCENT, font=T.FONT_BODY_B).pack(side="right", padx=10)
 
         # Right: Quick Actions
-        right = tk.Frame(two_col, bg=T.BG, width=300)
-        right.pack(side="right", fill="y", padx=(24, 0))
-        right.pack_propagate(False)
+        right = tk.Frame(two_col, bg=T.BG)
+        right.pack(side="right", fill="both", expand=True, padx=(24, 0))
         
         tk.Label(right, text="Quick Actions", bg=T.BG, fg=T.TEXT,
                  font=T.FONT_H2).pack(anchor="w")
