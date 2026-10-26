@@ -3,16 +3,21 @@ import tkinter as tk
 from ui.crystal import theme as T
 
 
-NAV_ITEMS = [
-    ("dashboard",   "◉",  "Dashboard",        "_go_dashboard"),
-    ("quotes",      "📄", "Quotes",           "_go_quotes"),
-    ("leads",       "🎯", "Leads",            "_go_leads"),
-    ("products",    "📦", "Products",         "_go_products"),
-    ("customers",   "👥", "Customers",        "_go_customers"),
-    ("reports",     "📊", "Reports",          "_go_reports"),
-    ("users",       "👤", "Users",            "_go_users"),
-    ("settings",    "⚙",  "Settings",         "_go_settings"),
-]
+def get_nav_items(is_admin=False):
+    items = [
+        ("dashboard",   "◉",  "Dashboard",        "_go_dashboard"),
+        ("quotes",      "📄", "Quotes",           "_go_quotes"),
+        ("leads",       "🎯", "Leads",            "_go_leads"),
+        ("products",    "📦", "Products",         "_go_products"),
+        ("customers",   "👥", "Customers",        "_go_customers"),
+        ("reports",     "📊", "Reports",          "_go_reports"),
+    ]
+    # Only add Users if the logged-in user is an admin
+    if is_admin:
+        items.append(("users", "👤", "Users", "_go_users"))
+    
+    items.append(("settings", "⚙", "Settings", "_go_settings"))
+    return items
 
 
 class Sidebar(tk.Frame):
