@@ -147,7 +147,7 @@ class Dashboard(tk.Tk):
             ("📦", f"{summary['products']:,}", "Products",     T.ACCENT),
             ("👥", f"{summary['customers']:,}", "Customers",   None),
             ("📄", f"{summary['quotes']:,}",   "Quotations",  None),
-            ("📈", f"{summary['conversion_rate']:.1f}%", "Conversion Rate", "#27AE60"),
+            ("📈", f"{summary['conversion_rate']:.1f}%", "Conversion %", "#27AE60"),
         ]
         for i, (icon, val, label, accent) in enumerate(kpis):
             card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
