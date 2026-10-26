@@ -122,6 +122,13 @@ def _phase_dashboard(session):
 
     logged_out = {"value": False}
 
+    # Force the active module to Crystal so everyone gets the new dashboard
+    try:
+        from app.services.paths import set_active_module
+        set_active_module("Crystal")
+    except Exception:
+        pass
+
     if get_active_module() == "Crystal":
         from ui.crystal.dashboard import Dashboard as CrystalDashboard
         from tkinter import messagebox
