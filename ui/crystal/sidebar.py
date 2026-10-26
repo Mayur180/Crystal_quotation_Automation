@@ -60,7 +60,7 @@ class Sidebar(tk.Frame):
 
         # ─── Quit App ───
         self._quit_app = self._make_item(self, "_quit_app", "⏻", "Quit App",
-                                         lambda _k: _confirm_quit_app(),
+                                         lambda _k: on_quit(),
                                          danger=True)
 
         # mark active
