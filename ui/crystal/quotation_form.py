@@ -3167,7 +3167,7 @@ class QuotationForm(tk.Toplevel):
                     return
                 
                 # 3. Render page 1 as image
-                import fitz
+                import pymupdf as fitz
                 doc = fitz.open(latest_pdf)
                 page = doc[0]
                 pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
