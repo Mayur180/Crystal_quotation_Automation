@@ -52,3 +52,30 @@ def send_to_sheet(data):
     except Exception as e:
         print(f"[google-sheet] unexpected error: {type(e).__name__}: {e}")
         return False
+
+
+def fetch_leads_from_sheet():
+    """Fetch leads from the Google Sheet via the Apps Script webhook."""
+    import requests
+    import json
+    
+    # The Apps Script URL (same as WEBHOOK_URL but with action=get_leads)
+    # We need to send a GET request to the webhook to fetch data
+    try:
+        # We assume WEBHOOK_URL is defined at the top of this file
+        # We send a GET request with action=get_leads
+        response = requests.get(
+            WEBHOOK_URL,
+            params={"action": "get_leads"},
+            timeout=10
+        )
+        if response.status_code == 200:
+            data = response.json()
+            if isinstance(data, list):
+                return data
+            elif isinstance(data, dict) and "leads" in data:
+                return data["leads"]
+    except Exception as e:
+        print(f"[fetch_leads] Error: {e}")
+    
+    return []
