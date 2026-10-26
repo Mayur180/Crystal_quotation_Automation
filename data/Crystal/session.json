@@ -1,0 +1,11 @@
+{
+  "user_id": "U001",
+  "username": "admin",
+  "full_name": "System Administrator",
+  "modules": [
+    "VMM",
+    "Crystal"
+  ],
+  "last_login": "2026-10-19T13:57:41.263853",
+  "pc_name": "DESKTOP-GFDVCPN"
+}
