@@ -3116,7 +3116,7 @@ class QuotationForm(tk.Toplevel):
 
 
     def _show_preview(self, data):
-        """Show the actual generated PDF page in a preview window."""
+        """Generate the PDF and show the first page as an image."""
         import tkinter as tk
         from tkinter import messagebox
         import os
@@ -3128,36 +3128,24 @@ class QuotationForm(tk.Toplevel):
         preview_win.geometry("800x900")
         preview_win.configure(bg="#F4F6F8")
         
-        # Header
         tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).pack(pady=10)
         
-        # Frame to hold the image
         image_frame = tk.Frame(preview_win, bg="#F4F6F8")
         image_frame.pack(fill="both", expand=True, padx=20, pady=10)
         
-        # Label to show status
         status_label = tk.Label(image_frame, text="Generating PDF...", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 12))
         status_label.pack(expand=True)
         
-        # Bottom Buttons
         btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
         btn_frame.pack(pady=15)
-        
-        def close_preview():
-            preview_win.destroy()
-            
-        tk.Button(btn_frame, text="Close", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=close_preview, padx=20, pady=5).pack()
+        tk.Button(btn_frame, text="Close", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=preview_win.destroy, padx=20, pady=5).pack()
 
-        # Background thread to generate PDF and render image
         def generate_and_render():
             try:
-                # 1. Generate the PDF
-                success = self._do_generate_final(data)
-                if not success:
-                    preview_win.after(0, lambda: status_label.config(text="Failed to generate PDF. Check terminal."))
-                    return
+                # 1. Generate PDF
+                self._do_generate_final(data)
                 
-                # 2. Find the latest PDF
+                # 2. Find the newest PDF in Downloads
                 home = os.path.expanduser("~")
                 downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
                 latest_pdf = None
@@ -3178,33 +3166,27 @@ class QuotationForm(tk.Toplevel):
                     preview_win.after(0, lambda: status_label.config(text="PDF not found in Downloads."))
                     return
                 
-                # 3. Render the first page as image using fitz (PyMuPDF)
+                # 3. Render page 1 as image
                 import fitz
                 doc = fitz.open(latest_pdf)
                 page = doc[0]
-                # Render at 2x zoom for better quality
                 pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
                 img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
                 doc.close()
                 
-                # 4. Display the image
+                # 4. Show image
                 def show_image():
-                    # Resize image to fit the window width
                     win_width = preview_win.winfo_width() - 40
                     if win_width < 100:
                         win_width = 760
                     
-                    # Scale image
                     ratio = win_width / img.width
                     new_height = int(img.height * ratio)
                     resized_img = img.resize((win_width, new_height), Image.LANCZOS)
-                    
                     photo = ImageTk.PhotoImage(resized_img)
                     
-                    # Clear loading label
                     status_label.pack_forget()
                     
-                    # Create a canvas with scrollbar for the image
                     canvas = tk.Canvas(image_frame, bg="#F4F6F8", highlightthickness=0)
                     scrollbar = tk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
                     canvas.configure(yscrollcommand=scrollbar.set)
@@ -3213,7 +3195,7 @@ class QuotationForm(tk.Toplevel):
                     canvas.pack(side="left", fill="both", expand=True)
                     
                     canvas.create_image(0, 0, anchor="nw", image=photo)
-                    canvas.image = photo  # Keep reference
+                    canvas.image = photo
                     canvas.configure(scrollregion=canvas.bbox("all"))
                 
                 preview_win.after(0, show_image)
@@ -3224,7 +3206,7 @@ class QuotationForm(tk.Toplevel):
         
         threading.Thread(target=generate_and_render, daemon=True).start()
 
-    def _open_latest_pdf(self):
+    def _open_latest_pdf(self):    def _open_latest_pdf(self):
         """Find the latest PDF in Downloads and open it."""
         import os
         import subprocess
