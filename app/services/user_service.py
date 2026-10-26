@@ -344,3 +344,59 @@ def delete_user(user_id, *, by_username=""):
     save_permissions(perms)
 
     return target
+
+
+def fetch_users_from_sheet():
+    """Fetch users from Google Sheets and update local Users.json.
+    
+    Returns True if successful, False otherwise.
+    """
+    try:
+        import requests
+        from app.services.google_sheet_service import WEBHOOK_URL
+        from app.services.paths import get_data_root
+        import json
+        
+        # Send GET request to fetch users
+        response = requests.get(
+            WEBHOOK_URL,
+            params={"action": "get_users"},
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            data = response.json()
+            sheet_users = data.get("users", [])
+            
+            if sheet_users:
+                # Merge sheet users with local users (sheet is master)
+                local_users = load_users()
+                local_by_id = {u.get("user_id"): u for u in local_users}
+                
+                merged = []
+                for su in sheet_users:
+                    uid = su.get("user_id")
+                    if uid in local_by_id:
+                        # Update existing user with sheet data
+                        local_user = local_by_id[uid]
+                        for key in ("username", "full_name", "role", "is_active", "modules"):
+                            if key in su:
+                                local_user[key] = su[key]
+                        merged.append(local_user)
+                    else:
+                        # New user from sheet
+                        merged.append(su)
+                
+                # Add any local-only users (not in sheet yet)
+                sheet_ids = {u.get("user_id") for u in sheet_users}
+                for lu in local_users:
+                    if lu.get("user_id") not in sheet_ids:
+                        merged.append(lu)
+                
+                save_users(merged)
+                print(f"[user-sync] Fetched {len(sheet_users)} users from Google Sheets.")
+                return True
+    except Exception as e:
+        print(f"[user-sync] Could not fetch users: {e}")
+    
+    return False
