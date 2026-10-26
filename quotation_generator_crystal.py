@@ -1990,8 +1990,6 @@ def _crystal_page(
             ("Rounding (+/-)", f"{rounding:,.2f}"),
             ("Grand Total", f"{grand:,.2f}"),
         ]
-        ("Rounding (+/-)", f"({abs(rounding):.2f})" if rounding else "0.00"),
-    ]
 
     # Left side = amount-in-words, right side = totals rows
     tot_tbl = new_table(len(tot_rows) + 1, 2, widths_mm=[110, 66])
