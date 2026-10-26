@@ -226,12 +226,20 @@ class Dashboard(tk.Tk):
     def _load_summary(self):
         import json
         from app.services.paths import get_data_dir
-        data_dir = get_data_dir()
+        import os
+        
+        # Force the path to the Crystal data folder (not VMM)
+        base_data_dir = get_data_dir()
+        crystal_data_dir = base_data_dir.parent / "Crystal"
+        
+        # If Crystal folder doesn't exist, fall back to base
+        if not crystal_data_dir.exists():
+            crystal_data_dir = base_data_dir
         
         # --- products count from catalog ---
         p_count = 0
         try:
-            cat_file = data_dir / "catalog.json"
+            cat_file = crystal_data_dir / "catalog.json"
             if cat_file.exists():
                 cat = json.loads(cat_file.read_text(encoding="utf-8"))
                 p_count = len(cat.get("products", []))
@@ -241,7 +249,7 @@ class Dashboard(tk.Tk):
         # --- customers count ---
         c_count = 0
         try:
-            c_file = data_dir / "customers.json"
+            c_file = crystal_data_dir / "customers.json"
             if c_file.exists():
                 c_data = json.loads(c_file.read_text(encoding="utf-8"))
                 if isinstance(c_data, list):
@@ -255,7 +263,7 @@ class Dashboard(tk.Tk):
         q_count = 0
         recent = []
         try:
-            q_file = data_dir / "quotations.json"
+            q_file = crystal_data_dir / "quotations.json"
             if q_file.exists():
                 q_data = json.loads(q_file.read_text(encoding="utf-8"))
                 qs = q_data.get("quotations", [])
