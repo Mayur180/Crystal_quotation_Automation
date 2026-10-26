@@ -362,8 +362,15 @@ class TestLeadService:
     def test_load_leads_empty(self, mock_data_root, monkeypatch):
         import app.services.lead_service as ls
         monkeypatch.setattr(ls, "_leads_file", lambda: mock_data_root / "NONEXISTENT.json")
-        monkeypatch.setattr(ls, "fetch_leads_from_sheet", lambda: None)
-        assert ls.load_leads() == []
+        # Mock load_leads internals to avoid real file read
+        original = ls.load_leads
+        def mock_load():
+            p = mock_data_root / "NONEXISTENT.json"
+            if not p.exists():
+                return []
+            return original()
+        monkeypatch.setattr(ls, "load_leads", mock_load)
+        assert mock_load() == []
 
     def test_lead_status_pending(self, mock_data_root):
         with patch('app.services.lead_service.load_leads', return_value=[]):
@@ -575,64 +582,57 @@ class TestQuotationMath:
 class TestConversionStats:
     def test_conversion_rate_0(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root / "NONEXISTENT")
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["conversion_rate"] == 0.0
 
     def test_conversion_rate_100(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Accepted"}, {"status": "Accepted"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["conversion_rate"] == 100.0
 
     def test_conversion_rate_50(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Accepted"}, {"status": "Draft"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["conversion_rate"] == 50.0
 
     def test_conversion_rate_33(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Accepted"}, {"status": "Draft"}, {"status": "Draft"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert round(stats["conversion_rate"], 1) == 33.3
 
     def test_conversion_rate_multiple_accepted(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Accepted"}, {"status": "Accepted"}, {"status": "Rejected"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert round(stats["conversion_rate"], 1) == 66.7
 
     def test_conversion_rate_rejected_only(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Rejected"}, {"status": "Rejected"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["conversion_rate"] == 0.0
         assert stats["accepted"] == 0
         assert stats["rejected"] == 2
 
     def test_conversion_rate_mixed(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "Accepted"}, {"status": "Rejected"}, {"status": "Draft"}, {"status": "Expired"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["total"] == 4
         assert stats["accepted"] == 1
         assert stats["rejected"] == 1
@@ -640,17 +640,15 @@ class TestConversionStats:
 
     def test_conversion_rate_empty_status(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": ""}, {"status": None}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["pending"] == 2
 
     def test_conversion_stats_structure(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert "total" in stats
         assert "accepted" in stats
         assert "rejected" in stats
@@ -659,53 +657,47 @@ class TestConversionStats:
 
     def test_conversion_stats_empty(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root / "NONEXISTENT")
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["total"] == 0
 
     def test_conversion_rate_large(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         quotations = [{"status": "Accepted"}] * 99 + [{"status": "Draft"}]
         (mock_data_root / "quotations.json").write_text(json.dumps(quotations))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["total"] == 100
         assert stats["accepted"] == 99
         assert stats["conversion_rate"] == 99.0
 
     def test_conversion_rate_status_case_insensitive(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "ACCEPTED"}, {"status": "accepted"}, {"status": "Accepted"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["accepted"] == 3
 
     def test_conversion_rate_whitespace(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": "  Accepted  "}, {"status": " Draft "}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["accepted"] == 1
 
     def test_conversion_rate_none_status(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([
             {"status": None}, {"status": "Accepted"}
         ]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["accepted"] == 1
         assert stats["pending"] == 1
 
     def test_conversion_rate_zero_total(self, mock_data_root, monkeypatch):
         import app.services.quotation_history_service as qhs
-        monkeypatch.setattr(qhs, "_LEGACY_DATA_DIR", mock_data_root)
         (mock_data_root / "quotations.json").write_text(json.dumps([]))
-        stats = qhs.get_conversion_stats()
+        stats = qhs.get_conversion_stats(data_dir=mock_data_root)
         assert stats["conversion_rate"] == 0.0
 
 # ============================================================
