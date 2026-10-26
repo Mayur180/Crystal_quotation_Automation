@@ -648,6 +648,7 @@ class Dashboard(tk.Tk):
             ("month", "This Month", "0"),
             ("value", "Total Quotation Value", "₹ 0.00"),
             ("average", "Average Quotation Value", "₹ 0.00"),
+            ("conversion", "Conversion Rate", "0.0%"),
         ]
 
         for index, (key, title, value) in enumerate(counter_defs):
@@ -661,7 +662,7 @@ class Dashboard(tk.Tk):
                 side="left",
                 fill="both",
                 expand=True,
-                padx=(0 if index == 0 else 6, 6 if index < 3 else 0),
+                padx=(0 if index == 0 else 6, 6 if index < 4 else 0),
             )
 
             inner = tk.Frame(card, bg=self.CARD)
@@ -739,7 +740,15 @@ class Dashboard(tk.Tk):
         )
 
         if hasattr(self, "counter_labels"):
-            self.counter_labels["total"].configure(text=f"{total_count:,}")
+                    # Calculate conversion rate
+        accepted_count = 0
+        for record in records:
+            status = str(record.get("status", "")).strip().lower()
+            if status == "accepted":
+                accepted_count += 1
+        conversion_rate = (accepted_count / total_count * 100) if total_count > 0 else 0.0
+
+self.counter_labels["total"].configure(text=f"{total_count:,}")
             self.counter_labels["month"].configure(text=f"{month_count:,}")
             self.counter_labels["value"].configure(
                 text=f"₹ {total_value:,.2f}"
@@ -747,6 +756,8 @@ class Dashboard(tk.Tk):
             self.counter_labels["average"].configure(
                 text=f"₹ {average_value:,.2f}"
             )
+        if "conversion" in self.counter_labels:
+            self.counter_labels["conversion"].config(text=f"{conversion_rate:.1f}%")
 
     # --------------------------------------------------------
     # RECENT QUOTATIONS SECTION
