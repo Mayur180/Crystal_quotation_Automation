@@ -50,6 +50,19 @@ from docx.enum.text import (
 )
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.oxml import OxmlElement
+
+def _set_table_cell_padding(table, top=0, bottom=0, left=0, right=0):
+    """Set cell margins/padding for all cells in a table (values in twips: 1/20th of a point)."""
+    tblPr = table._tbl.tblPr
+    tblCellMar = OxmlElement('w:tblCellMar')
+    for side, val in [('top', top), ('left', left), ('bottom', bottom), ('right', right)]:
+        el = OxmlElement(f'w:{side}')
+        el.set(qn('w:w'), str(val))
+        el.set(qn('w:type'), 'dxa')
+        tblCellMar.append(el)
+    tblPr.append(tblCellMar)
+
 from docx.shared import (
     Mm,
     Pt,
@@ -2055,6 +2068,9 @@ def _crystal_page(
         value = term.get("value") or ""
         set_cell(inner.cell(i, 0), title, bold=True, size=8, bg=BG_HDR)
         set_cell(inner.cell(i, 1), value, size=8)
+    
+    # Add cell padding to the inner terms table
+    _set_table_cell_padding(inner, top=40, bottom=40, left=80, right=80)
 
 
     # ═══════════════════════════════════════════════════════════
