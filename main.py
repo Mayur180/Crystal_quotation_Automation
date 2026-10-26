@@ -263,6 +263,13 @@ def main():
     except Exception:
         pass
 
+    # ---- SYNC USERS FROM GOOGLE SHEETS ----
+    try:
+        from app.services.user_service import fetch_users_from_sheet
+        fetch_users_from_sheet()
+    except Exception as e:
+        print(f"[startup] Could not sync users: {e}")
+
     # ---- PHASE 1: LOGIN ----
     session = _phase_login()
     if session is None:
