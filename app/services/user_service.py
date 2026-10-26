@@ -175,11 +175,15 @@ def create_user(*, username, password, full_name="", role="user",
     if find_user_by_username(username):
         raise ValueError(f"Username '{username}' already exists.")
 
+    # Hash the password with bcrypt
+    import bcrypt
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+
     user_id = _next_user_id()
     user = {
         "user_id":    user_id,
         "username":   username,
-        "password":   password,
+        "password":   hashed_password,
         "full_name":  full_name.strip() or username,
         "role":       role,
         "is_active":  True,
@@ -194,7 +198,7 @@ def create_user(*, username, password, full_name="", role="user",
 
 
 def update_user(user_id, **fields):
-    allowed = {"full_name", "role", "is_active", "username"}
+    allowed = {"full_name", "role", "is_active", "username", "password"}
     users = load_users()
     found = None
     for u in users:
@@ -222,7 +226,11 @@ def update_user(user_id, **fields):
 
     for k, v in fields.items():
         if k in allowed:
-            found[k] = v
+            if k == "password" and v:
+                import bcrypt
+                found[k] = bcrypt.hashpw(str(v).encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            else:
+                found[k] = v
 
     save_users(users)
     sync_user_to_sheet(found)
