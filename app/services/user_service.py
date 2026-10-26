@@ -368,34 +368,32 @@ def fetch_users_from_sheet():
             data = response.json()
             sheet_users = data.get("users", [])
             
-            if sheet_users:
-                # Merge sheet users with local users (sheet is master)
-                local_users = load_users()
-                local_by_id = {u.get("user_id"): u for u in local_users}
-                
-                merged = []
-                for su in sheet_users:
-                    uid = su.get("user_id")
-                    if uid in local_by_id:
-                        # Update existing user with sheet data
-                        local_user = local_by_id[uid]
-                        for key in ("username", "full_name", "role", "is_active", "modules"):
-                            if key in su:
-                                local_user[key] = su[key]
-                        merged.append(local_user)
-                    else:
-                        # New user from sheet
-                        merged.append(su)
-                
-                # Add any local-only users (not in sheet yet)
-                sheet_ids = {u.get("user_id") for u in sheet_users}
-                for lu in local_users:
-                    if lu.get("user_id") not in sheet_ids:
-                        merged.append(lu)
-                
+            # Merge sheet users with local users (sheet is master)
+            local_users = load_users()
+            local_by_id = {u.get("user_id"): u for u in local_users}
+            
+            merged = []
+            for su in sheet_users:
+                uid = su.get("user_id")
+                if uid in local_by_id:
+                    local_user = local_by_id[uid]
+                    for key in ("username", "full_name", "role", "is_active", "modules"):
+                        if key in su:
+                            local_user[key] = su[key]
+                    merged.append(local_user)
+                else:
+                    merged.append(su)
+            
+            # Add any local-only users (not in sheet yet)
+            sheet_ids = {u.get("user_id") for u in sheet_users}
+            for lu in local_users:
+                if lu.get("user_id") not in sheet_ids:
+                    merged.append(lu)
+            
+            if merged:
                 save_users(merged)
-                print(f"[user-sync] Fetched {len(sheet_users)} users from Google Sheets.")
-                return True
+            print(f"[user-sync] Fetched {len(sheet_users)} users from Google Sheets.")
+            return True
     except Exception as e:
         print(f"[user-sync] Could not fetch users: {e}")
     
