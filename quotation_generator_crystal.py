@@ -1955,19 +1955,41 @@ def _crystal_page(
     # 5. TOTALS BLOCK — right-aligned
     # ═══════════════════════════════════════════════════════════
     t = totals or {}
-    total_amt = float(t.get("grand_total") or t.get("grand") or t.get("total") or 0.0)
-
-    gst_pct = 9.0
-    cgst = total_amt * gst_pct / 100.0
-    sgst = total_amt * gst_pct / 100.0
-    pre_round = total_amt + cgst + sgst
+    
+    # Use the values the app already calculated (do NOT recalculate!)
+    total_amt = float(t.get("taxable") or t.get("subtotal") or 0.0)
+    cgst = float(t.get("cgst") or 0.0)
+    sgst = float(t.get("sgst") or 0.0)
+    igst = float(t.get("igst") or 0.0)
+    grand = float(t.get("grand_total") or t.get("grand") or 0.0)
+    
+    # Round to nearest integer
+    pre_round = grand
     grand = round(pre_round)
     rounding = grand - pre_round
-
-    tot_rows = [
-        ("Total", f"{total_amt:,.2f}"),
-        (f"C-Gst {gst_pct:g}%", f"{cgst:,.2f}"),
-        (f"S-Gst {gst_pct:g}%", f"{sgst:,.2f}"),
+    
+    # Determine if IGST or CGST+SGST
+    gst_type = t.get("gst_type", "CGST + SGST")
+    is_igst = (gst_type == "IGST")
+    
+    # Calculate percentage labels
+    gst_rate = float(t.get("gst_rate") or 18.0)
+    
+    if is_igst:
+        tot_rows = [
+            ("Total", f"{total_amt:,.2f}"),
+            (f"IGST {gst_rate:g}%", f"{igst:,.2f}"),
+            ("Rounding (+/-)", f"{rounding:,.2f}"),
+            ("Grand Total", f"{grand:,.2f}"),
+        ]
+    else:
+        tot_rows = [
+            ("Total", f"{total_amt:,.2f}"),
+            (f"C-Gst {gst_rate/2:g}%", f"{cgst:,.2f}"),
+            (f"S-Gst {gst_rate/2:g}%", f"{sgst:,.2f}"),
+            ("Rounding (+/-)", f"{rounding:,.2f}"),
+            ("Grand Total", f"{grand:,.2f}"),
+        ]
         ("Rounding (+/-)", f"({abs(rounding):.2f})" if rounding else "0.00"),
     ]
 
