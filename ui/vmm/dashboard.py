@@ -739,8 +739,7 @@ class Dashboard(tk.Tk):
             else 0.0
         )
 
-        if hasattr(self, "counter_labels"):
-                    # Calculate conversion rate
+        # Calculate conversion rate
         accepted_count = 0
         for record in records:
             status = str(record.get("status", "")).strip().lower()
@@ -748,7 +747,8 @@ class Dashboard(tk.Tk):
                 accepted_count += 1
         conversion_rate = (accepted_count / total_count * 100) if total_count > 0 else 0.0
 
-self.counter_labels["total"].configure(text=f"{total_count:,}")
+        if hasattr(self, "counter_labels"):
+            self.counter_labels["total"].configure(text=f"{total_count:,}")
             self.counter_labels["month"].configure(text=f"{month_count:,}")
             self.counter_labels["value"].configure(
                 text=f"₹ {total_value:,.2f}"
