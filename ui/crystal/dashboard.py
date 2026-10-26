@@ -147,6 +147,7 @@ class Dashboard(tk.Tk):
             ("📦", f"{summary['products']:,}", "Products",     T.ACCENT),
             ("👥", f"{summary['customers']:,}", "Customers",   None),
             ("📄", f"{summary['quotes']:,}",   "Quotations",  None),
+            ("📈", f"{summary['conversion_rate']:.1f}%", "Conversion Rate", "#27AE60"),
         ]
         for i, (icon, val, label, accent) in enumerate(kpis):
             card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
@@ -299,10 +300,30 @@ class Dashboard(tk.Tk):
         except Exception:
             pass
 
+        # Calculate conversion rate (Accepted / Total * 100)
+        accepted_count = 0
+        try:
+            q_file = crystal_data_dir / "quotations.json"
+            if q_file.exists():
+                q_data = json.loads(q_file.read_text(encoding="utf-8"))
+                if isinstance(q_data, list):
+                    qs_all = q_data
+                elif isinstance(q_data, dict):
+                    qs_all = q_data.get("quotations", [])
+                else:
+                    qs_all = []
+                accepted_count = sum(1 for q in qs_all if str(q.get("status", "")).strip().lower() == "accepted")
+        except Exception:
+            pass
+        
+        conversion_rate = (accepted_count / q_count * 100) if q_count > 0 else 0.0
+
         return {
             "products": p_count,
             "customers": c_count,
             "quotes": q_count,
+            "accepted": accepted_count,
+            "conversion_rate": conversion_rate,
             "recent": recent,
         }
 
