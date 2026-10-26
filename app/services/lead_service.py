@@ -82,3 +82,16 @@ def delete_lead(lead_id):
         return False
     save_leads(new_leads)
     return True
+
+
+def restore_leads_from_sheet():
+    """Forcefully fetch leads from Google Sheet and overwrite local JSON."""
+    try:
+        from app.services.google_sheet_service import fetch_leads_from_sheet
+        sheet_leads = fetch_leads_from_sheet()
+        if sheet_leads is not None:
+            save_leads(sheet_leads)
+            return True
+    except Exception as e:
+        print(f"[restore_leads] Error: {e}")
+    return False

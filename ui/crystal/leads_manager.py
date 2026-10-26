@@ -52,6 +52,9 @@ class LeadsManager(tk.Toplevel):
         tk.Button(btn_wrap, text="🗑 Delete", bg="#D32F2F", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._delete_lead).pack(side="left")
         tk.Button(btn_wrap, text="Mark as Sent", bg=T.BG, fg=T.TEXT, font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._mark_sent).pack(side="left", padx=10)
         
+        # Add the Restore button
+        tk.Button(btn_wrap, text="☁ Restore from Sheet", bg="#0277BD", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._restore_from_sheet).pack(side="left", padx=10)
+        
         tk.Button(btn_wrap, text="Convert to Quotation →", bg=T.ACCENT, fg="white", font=("Arial", 11, "bold"), relief="flat", padx=20, pady=8, command=self._convert).pack(side="right")
 
     def _refresh(self):
@@ -100,6 +103,21 @@ class LeadsManager(tk.Toplevel):
                 messagebox.showerror("Error", "Lead not found.", parent=self)
         except Exception as e:
             messagebox.showerror("Error", f"Failed to mark sent: {e}", parent=self)
+
+
+    def _restore_from_sheet(self):
+        """Fetch the latest leads from Google Sheet and refresh the table."""
+        from tkinter import messagebox
+        import threading
+        
+        def do_restore():
+            success = LS.restore_leads_from_sheet()
+            if success:
+                self.after(0, lambda: (self._refresh(), messagebox.showinfo("Restored", "Leads restored from Google Sheet.", parent=self)))
+            else:
+                self.after(0, lambda: messagebox.showerror("Error", "Could not fetch leads from Google Sheet.", parent=self))
+                
+        threading.Thread(target=do_restore, daemon=True).start()
 
     def _delete_lead(self):
         sel = self.tree.selection()
