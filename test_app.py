@@ -114,12 +114,11 @@ class TestAuth:
 # ============================================================
 
 class TestUserService:
-    def test_load_empty_users(self, mock_data_root):
+    def test_load_empty_users(self, mock_data_root, monkeypatch):
         """Test that empty users returns []."""
-        # Ensure Users.json doesn't exist
-        users_file = mock_data_root / "Users.json"
-        if users_file.exists():
-            users_file.unlink()
+        import app.services.user_service as us
+        # Force _users_file to return a non-existent path
+        monkeypatch.setattr(us, "_users_file", lambda: mock_data_root / "NONEXISTENT.json")
         from app.services.user_service import load_users
         assert load_users() == []
 
@@ -253,14 +252,15 @@ class TestConversionStats:
         assert stats["accepted"] == 1
         assert stats["conversion_rate"] == 50.0
 
-    def test_empty_conversion(self, mock_data_root):
+    def test_empty_conversion(self, mock_data_root, monkeypatch):
         """Test conversion rate with no data."""
-        from unittest.mock import patch
-        with patch('app.services.quotation_history_service.load_quotations', return_value=[]):
-            from app.services.quotation_history_service import get_conversion_stats
-            stats = get_conversion_stats()
-            assert stats["total"] == 0
-            assert stats["conversion_rate"] == 0.0
+        import app.services.quotation_history_service as qhs
+        # Patch _resolve_data_dir to return a temp dir with no quotations.json
+        monkeypatch.setattr(qhs, "_resolve_data_dir", lambda: mock_data_root)
+        from app.services.quotation_history_service import get_conversion_stats
+        stats = get_conversion_stats()
+        assert stats["total"] == 0
+        assert stats["conversion_rate"] == 0.0
 
 # ============================================================
 # TEST 6: CATALOG
