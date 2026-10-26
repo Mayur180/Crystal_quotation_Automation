@@ -2492,7 +2492,6 @@ def generate_quotation(
         machine_qty,
         totals,
         selected_terms=selected_terms,
-        items=call_kwargs.get("items"),
         **call_kwargs,
     )
 
