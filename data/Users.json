@@ -19,7 +19,7 @@
     {
       "user_id": "U003",
       "username": "crystal_user",
-      "password": "crystal123",
+      "password": "crystal",
       "full_name": "Crystal Operator",
       "is_active": true,
       "created_at": "2026-10-13"
