@@ -367,3 +367,38 @@ if __name__ == "__main__":
               f"₹ {r.get('grand_total')}")
 
     print("=" * 60)
+
+def get_conversion_stats():
+    """Return conversion metrics for the current module.
+    
+    Returns:
+        dict with keys: total, accepted, rejected, pending, conversion_rate
+    """
+    try:
+        quotations = load_quotations() or []
+    except Exception:
+        quotations = []
+    
+    total = len(quotations)
+    accepted = 0
+    rejected = 0
+    pending = 0
+    
+    for q in quotations:
+        status = str(q.get("status", "")).strip().lower()
+        if status == "accepted":
+            accepted += 1
+        elif status == "rejected":
+            rejected += 1
+        else:
+            pending += 1
+    
+    conversion_rate = (accepted / total * 100) if total > 0 else 0.0
+    
+    return {
+        "total": total,
+        "accepted": accepted,
+        "rejected": rejected,
+        "pending": pending,
+        "conversion_rate": conversion_rate,
+    }
