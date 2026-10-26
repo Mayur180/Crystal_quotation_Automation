@@ -101,11 +101,13 @@ class TestAuth:
 
     def test_create_user_hashes_password(self, mock_data_root):
         """Test that create_user hashes the password."""
-        from app.services.user_service import create_user, find_user_by_username
-        create_user(username="testuser", password="test123", full_name="Test")
-        user = find_user_by_username("testuser")
-        assert user is not None
-        assert user["password"].startswith("$2b$")
+        from unittest.mock import patch
+        with patch('app.services.user_service.sync_user_to_sheet'):
+            from app.services.user_service import create_user, find_user_by_username
+            create_user(username="testuser", password="test123", full_name="Test")
+            user = find_user_by_username("testuser")
+            assert user is not None
+            assert user["password"].startswith("$2b$")
 
 # ============================================================
 # TEST 2: USER SERVICE
@@ -138,15 +140,17 @@ class TestUserService:
 
     def test_delete_user(self, mock_data_root):
         """Test deleting a user."""
-        from app.services.user_service import save_users, delete_user, load_users
-        save_users([
-            {"user_id": "U001", "username": "admin", "password": "hash", "role": "admin"},
-            {"user_id": "U002", "username": "user", "password": "hash", "role": "user"},
-        ])
-        delete_user("U002", by_username="admin")
-        users = load_users()
-        assert len(users) == 1
-        assert users[0]["username"] == "admin"
+        from unittest.mock import patch
+        with patch('app.services.user_service.sync_user_to_sheet'):
+            from app.services.user_service import save_users, delete_user, load_users
+            save_users([
+                {"user_id": "U001", "username": "admin", "password": "hash", "role": "admin"},
+                {"user_id": "U002", "username": "user", "password": "hash", "role": "user"},
+            ])
+            delete_user("U002", by_username="admin")
+            users = load_users()
+            assert len(users) == 1
+            assert users[0]["username"] == "admin"
 
 # ============================================================
 # TEST 3: LEAD SERVICE
@@ -155,19 +159,21 @@ class TestUserService:
 class TestLeadService:
     def test_add_lead(self, mock_data_root):
         """Test adding a lead."""
-        from app.services.lead_service import add_lead, load_leads
-        lead = add_lead(
-            customer="Test Customer",
-            company="Test Co",
-            phone="1234567890",
-            email="test@test.com",
-            qty=5,
-            source="Gmail",
-            notes="Test lead"
-        )
-        assert lead["customer"] == "Test Customer"
-        leads = load_leads()
-        assert len(leads) == 1
+        from unittest.mock import patch
+        with patch('app.services.lead_service.send_to_sheet'):
+            from app.services.lead_service import add_lead, load_leads
+            lead = add_lead(
+                customer="Test Customer",
+                company="Test Co",
+                phone="1234567890",
+                email="test@test.com",
+                qty=5,
+                source="Gmail",
+                notes="Test lead"
+            )
+            assert lead["customer"] == "Test Customer"
+            leads = load_leads()
+            assert len(leads) == 1
 
     def test_delete_lead(self, mock_data_root):
         """Test deleting a lead locally."""
