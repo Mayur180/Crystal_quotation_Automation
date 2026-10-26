@@ -41,6 +41,34 @@ def _phase_login():
     """Show login. Returns UserSession on success, None on cancel."""
     import tkinter as tk
     from ui.login_window import LoginWindow
+    
+    # Check for saved session (auto-login)
+    try:
+        import json
+        from app.services.paths import get_data_root
+        session_file = get_data_root() / "session.json"
+        if session_file.exists():
+            session_data = json.loads(session_file.read_text(encoding='utf-8'))
+            # Reconstruct the UserSession from saved data
+            from app.services.auth_service import UserSession
+            saved_session = UserSession(
+                user_id=session_data.get("user_id", ""),
+                username=session_data.get("username", ""),
+                full_name=session_data.get("full_name", ""),
+                modules=session_data.get("modules", []),
+            )
+            # Verify the user still exists and is active
+            from app.services.user_service import find_user_by_username
+            user = find_user_by_username(saved_session.username)
+            if user and user.get("is_active", True):
+                print(f"[auto-login] Welcome back, {saved_session.username}!")
+                return saved_session
+            else:
+                # User no longer exists or is inactive — delete the session
+                session_file.unlink()
+                print("[auto-login] Session invalid, please log in again.")
+    except Exception as e:
+        print(f"[auto-login] Could not auto-login: {e}")
 
     result = {"session": None}
     root = tk.Tk()
@@ -154,6 +182,15 @@ def _phase_dashboard(session):
                 "Log out and return to login?",
             ):
                 return
+            # Clear the saved session on logout
+            try:
+                import json
+                from app.services.paths import get_data_root
+                session_file = get_data_root() / "session.json"
+                if session_file.exists():
+                    session_file.unlink()
+            except Exception:
+                pass
             logged_out["value"] = True
             app.quit()
 
