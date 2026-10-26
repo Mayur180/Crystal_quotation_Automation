@@ -266,7 +266,13 @@ class Dashboard(tk.Tk):
             q_file = crystal_data_dir / "quotations.json"
             if q_file.exists():
                 q_data = json.loads(q_file.read_text(encoding="utf-8"))
-                qs = q_data.get("quotations", [])
+                # Handle both list and dict formats
+                if isinstance(q_data, list):
+                    qs = q_data
+                elif isinstance(q_data, dict):
+                    qs = q_data.get("quotations", [])
+                else:
+                    qs = []
                 q_count = len(qs)
                 # Sort newest first, take last 5
                 qs_sorted = sorted(qs, key=lambda x: x.get("date", ""), reverse=True)[:5]
