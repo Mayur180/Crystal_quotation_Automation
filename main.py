@@ -260,6 +260,13 @@ def _center_window(root, w, h):
 
 def main():
     _setup_paths()
+    
+    # Bootstrap: create folders, download catalog/users if missing
+    try:
+        from bootstrap import bootstrap
+        bootstrap()
+    except Exception as e:
+        print(f"[bootstrap] Warning: {e}")
 
     try:
         from app.services import paths
