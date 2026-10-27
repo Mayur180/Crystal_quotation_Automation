@@ -56,8 +56,14 @@ class LeadsManager(tk.Toplevel):
         
         # Column widths
         widths = {
-            "date": 100, "customer": 160, "phone": 120, "email": 200,
-            "qty": 60, "source": 100, "notes": 300, "status": 100
+            "date": 90, 
+            "customer": 130, 
+            "phone": 110, 
+            "email": 180, 
+            "qty": 50, 
+            "source": 80, 
+            "notes": 220,  # Reduced from 300 to fit Status
+            "status": 80
         }
         for col in columns:
             self.tree.heading(col, text=col.title(), anchor="w")
