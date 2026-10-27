@@ -377,11 +377,14 @@ def fetch_users_from_sheet():
                 uid = su.get("user_id")
                 if uid in local_by_id:
                     local_user = local_by_id[uid]
+                    # Only update non-sensitive fields; KEEP the local password!
                     for key in ("username", "full_name", "role", "is_active", "modules"):
                         if key in su:
                             local_user[key] = su[key]
                     merged.append(local_user)
                 else:
+                    # New user from sheet: keep as-is, but it won't have a password
+                    # until the admin sets one locally.
                     merged.append(su)
             
             # Add any local-only users (not in sheet yet)
