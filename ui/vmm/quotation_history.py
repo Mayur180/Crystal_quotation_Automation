@@ -470,6 +470,126 @@ class QuotationHistory(tk.Toplevel):
 
     # --------------------------------------------------------
 
+    def _send_whatsapp(self):
+        """Open WhatsApp Web with a pre-filled message for the selected
+        quotation. Also opens Explorer with the PDF selected (if any)."""
+        record = self._current_record()
+        if not record:
+            messagebox.showinfo(
+                "WhatsApp",
+                "Select a quotation first.",
+                parent=self,
+            )
+            return
+
+        # ---- phone cleanup ----
+        raw_phone = str(record.get("customer_phone") or "").strip()
+
+        # Fallback: if no phone, look up the customer in the DB
+        if not raw_phone:
+            try:
+                from app.services.customer_service import find_duplicate
+                cust = find_duplicate(
+                    record.get("customer_name", ""),
+                    record.get("customer_company", ""),
+                    "",
+                    record.get("customer_email", ""),
+                )
+                if cust:
+                    raw_phone = str(cust.get("phone") or "").strip()
+            except Exception:
+                pass
+
+        digits = "".join(ch for ch in raw_phone if ch.isdigit())
+        if not digits:
+            # Ask user for a phone number
+            entered = self._prompt_for_phone(record)
+            if not entered:
+                return
+            raw_phone = entered
+            digits = entered
+
+            # Update local record so subsequent operations see it
+            record["customer_phone"] = entered
+        if digits.startswith("91") and len(digits) >= 12:
+            full_phone = digits
+        else:
+            full_phone = "91" + digits.lstrip("0")
+
+        # ---- build message ----
+        cust_name = (record.get("customer_name") or "").strip() or "Customer"
+        number    = (record.get("quotation_number") or "").strip()
+        model     = (record.get("model") or "").strip()
+
+        try:
+            from decimal import Decimal
+            amount = f"\u20b9 {Decimal(str(record.get('grand_total', 0))):,.2f}"
+        except Exception:
+            amount = "\u20b9 0.00"
+
+        message_lines = [
+            f"Dear {cust_name},",
+            "",
+            "Please find attached our quotation:",
+            "",
+            f"Offer No:  {number}",
+            f"Model:     {model}",
+            f"Amount:    {amount}",
+            "",
+            "Kindly review and let us know.",
+            "",
+            "Regards,",
+            "Armatech Associates",
+        ]
+        message = "\n".join(message_lines)
+
+        try:
+            url = f"https://wa.me/{full_phone}?text={_url_quote(message)}"
+        except Exception as e:
+            messagebox.showerror(
+                "WhatsApp",
+                f"Could not build WhatsApp link:\n{e}",
+                parent=self,
+            )
+            return
+
+        # ---- open WhatsApp Web ----
+        try:
+            import webbrowser
+            webbrowser.open_new_tab(url)
+        except Exception as e:
+            messagebox.showerror(
+                "WhatsApp",
+                f"Could not open WhatsApp Web:\n{e}",
+                parent=self,
+            )
+            return
+
+        # ---- reveal the PDF in Explorer ----
+        pdf_path = record.get("pdf_path")
+        docx_path = record.get("docx_path")
+        target = pdf_path if pdf_path and os.path.isfile(pdf_path) else (
+            docx_path if docx_path and os.path.isfile(docx_path) else None
+        )
+        if target:
+            try:
+                if sys.platform.startswith("win"):
+                    subprocess.Popen(["explorer", "/select,", target])
+            except Exception:
+                pass
+        else:
+            messagebox.showinfo(
+                "WhatsApp",
+                "WhatsApp Web opened.\n\n"
+                "No PDF/DOCX file found on disk for this quotation — "
+                "attach manually if needed.",
+                parent=self,
+            )
+
+        # W → send WhatsApp
+        self.tree.bind("<KeyPress-w>", lambda _e: self._send_whatsapp())
+        self.tree.bind("<KeyPress-W>", lambda _e: self._send_whatsapp())
+
     def _build_actions(self):
 
         bar = tk.Frame(self, bg=self.CARD, height=70,
@@ -483,6 +603,7 @@ class QuotationHistory(tk.Toplevel):
 
         self._btn(left, "Open Word", self._open_docx).pack(side="left", pady=14)
         self._btn(left, "Open PDF", self._open_pdf).pack(side="left", padx=(8, 0), pady=14)
+        self._btn(left, "Send WhatsApp", self._send_whatsapp).pack(side="left", padx=(8, 0), pady=14)
         self._btn(left, "Show in folder", self._reveal).pack(side="left", padx=(8, 0), pady=14)
         self._btn(left, "Set Status", self._set_status).pack(side="left", padx=(8, 0), pady=14)
 
