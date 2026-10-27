@@ -102,11 +102,11 @@ def _phase_login():
 
 
 def _phase_launcher(session):
-    """Show module selector. Returns module name, or None if logout."""
+    """Show module selector. Returns dict with action: select/logout/exit."""
     import tkinter as tk
     from ui.launcher_window import LauncherWindow
 
-    result = {"module": None, "action": "cancel"}
+    result = {"module": None, "action": "exit"}
     root = tk.Tk()
     root.title("CRYSTAL v4 — Choose Module")
     root.geometry("900x650")
@@ -122,10 +122,14 @@ def _phase_launcher(session):
         result["action"] = "logout"
         root.quit()
 
+    def on_close():
+        result["action"] = "exit"
+        root.quit()
+
     LauncherWindow(root, session=session,
                    on_select=on_select, on_logout=on_logout)
 
-    root.protocol("WM_DELETE_WINDOW", on_logout)
+    root.protocol("WM_DELETE_WINDOW", on_close)
     root.mainloop()
 
     # Fully release Tk
@@ -282,8 +286,11 @@ def main():
     # ---- PHASE 2: LAUNCHER (only if multi-module) ----
     if session.is_multi_module():
         result = _phase_launcher(session)
+        if result["action"] == "exit":
+            print("Application closed by user.")
+            return
         if result["action"] == "logout":
-            # Restart the whole flow
+            # Restart the whole flow (show login again)
             return main()
         if result["module"] is None:
             print("No module selected. Exiting.")
