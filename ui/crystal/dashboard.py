@@ -103,6 +103,25 @@ class Dashboard(tk.Tk):
         tk.Label(left, text="Dashboard", bg=T.SURFACE, fg=T.TEXT,
                  font=T.FONT_H2).pack(side="left", padx=(12, 0))
 
+        # Global Search Bar
+        search_frame = tk.Frame(bar, bg=T.SURFACE)
+        search_frame.pack(side="left", padx=15)
+        
+        tk.Label(search_frame, text="🔍", bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=("Arial", 12)).pack(side="left", padx=(0, 5))
+        
+        self._search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            search_frame,
+            textvariable=self._search_var,
+            font=("Arial", 10),
+            width=30,
+            relief="solid",
+            bd=1
+        )
+        search_entry.pack(side="left", pady=15)
+        search_entry.bind("<Return>", lambda e: self._do_global_search())
+
         right = tk.Frame(bar, bg=T.SURFACE)
         right.pack(side="right", fill="y", padx=(0, 20))
         
