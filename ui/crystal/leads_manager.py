@@ -29,11 +29,24 @@ class LeadsManager(tk.Toplevel):
         columns = ("date", "customer", "phone", "email", "qty", "source", "notes", "status")
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
         
-        # Configure columns
-        widths = {"date": 100, "customer": 150, "phone": 120, "email": 180, "qty": 60, "source": 100, "notes": 250, "status": 100}
+        # Configure columns with proper widths
+        widths = {
+            "date": 90, 
+            "customer": 140, 
+            "phone": 110, 
+            "email": 180, 
+            "qty": 50, 
+            "source": 90, 
+            "notes": 250, 
+            "status": 80
+        }
         for col in columns:
             self.tree.heading(col, text=col.title())
-            self.tree.column(col, width=widths[col], anchor="w")
+            self.tree.column(col, width=widths[col], anchor="w", stretch=False)
+        
+        # Force row height to be uniform (prevent long text from breaking layout)
+        style = ttk.Style()
+        style.configure("Treeview", rowheight=28)
             
         vsb = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
