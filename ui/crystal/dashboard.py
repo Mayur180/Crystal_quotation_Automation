@@ -152,7 +152,7 @@ class Dashboard(tk.Tk):
         ]
         for i, (icon, val, label, accent) in enumerate(kpis):
             card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
-            card_wrap.pack(side="left", fill="both", expand=True, padx=(0 if i == 0 else 16, 0))
+            card_wrap.pack(side="left", fill="both", expand=True, padx=(0 if i == 0 else 8, 0))
             
             # Make Follow-ups card clickable
             if label == "Follow-ups":
@@ -166,7 +166,7 @@ class Dashboard(tk.Tk):
                         bind_children(child, cmd)
             
             icon_lbl = tk.Label(card_wrap, text=icon, bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 24))
-            icon_lbl.pack(side="left", padx=(20, 10), pady=20)
+            icon_lbl.pack(side="left", padx=(12, 6), pady=20)
             
             card = W.StatCard(card_wrap, value=val, label=label, accent_color=accent)
             card.pack(side="left", fill="both", expand=True, pady=10, padx=(0, 20))
@@ -398,7 +398,7 @@ class Dashboard(tk.Tk):
         header = tk.Frame(popup, bg=T.SURFACE)
         header.pack(fill="x")
         tk.Label(header, text=f"Quotation: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 14, "bold")).pack(side="left", padx=20, pady=15)
-        tk.Label(header, text=f"Customer: {quotation.get('customer_name', '—')}", bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 10)).pack(side="right", padx=20, pady=15)
+        tk.Label(header, text=f"Customer: {quotation.get('customer_name', '—')}", bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 9)).pack(side="right", padx=20, pady=15)
         
         tk.Frame(popup, bg=T.BORDER, height=1).pack(fill="x")
         
@@ -532,6 +532,59 @@ class Dashboard(tk.Tk):
                   padx=15, pady=6).pack(side="right", padx=10)
         tk.Button(btn_frame, text="Close", command=popup.destroy,
                   bg=T.BG, fg=T.TEXT, relief="flat").pack(side="right", padx=10)
+
+    def _do_global_search(self):
+        """Execute a global search and show results in a popup."""
+        import tkinter as tk
+        from tkinter import ttk
+        from app.services.search_service import global_search
+        
+        query = self._search_var.get().strip()
+        if len(query) < 2:
+            from tkinter import messagebox
+            messagebox.showinfo("Search", "Please enter at least 2 characters.", parent=self)
+            return
+        
+        results = global_search(query)
+        
+        popup = tk.Toplevel(self)
+        popup.title(f"Search Results: {query}")
+        popup.geometry("800x500")
+        popup.configure(bg="#F4F6F8")
+        popup.transient(self)
+        popup.grab_set()
+        
+        tk.Label(popup, text=f"🔍 Results for \"{query}\" ({len(results)} found)",
+                 bg="#F4F6F8", fg="#2C3E50", font=("Arial", 14, "bold")).pack(pady=15)
+        
+        if not results:
+            tk.Label(popup, text="No results found.", bg="#F4F6F8", fg="#7F8C8D",
+                     font=("Arial", 11)).pack(pady=50)
+            tk.Button(popup, text="Close", command=popup.destroy, bg="#F4F6F8", relief="flat").pack(pady=10)
+            return
+        
+        # Treeview
+        frame = tk.Frame(popup, bg="#F4F6F8")
+        frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        cols = ("type", "title", "subtitle")
+        tree = ttk.Treeview(frame, columns=cols, show="headings", height=15)
+        tree.heading("type", text="Type")
+        tree.heading("title", text="Name / Number")
+        tree.heading("subtitle", text="Details")
+        tree.column("type", width=100)
+        tree.column("title", width=250)
+        tree.column("subtitle", width=380)
+        
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        
+        for r in results:
+            tree.insert("", "end", values=(r["type"], r["title"], r["subtitle"]))
+        
+        tk.Button(popup, text="Close", command=popup.destroy, bg="#F4F6F8", relief="flat").pack(pady=10)
 
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
