@@ -430,6 +430,39 @@ class ProductManager(tk.Toplevel):
         self.selected_key = None
         self._reload()
 
+    def _filter_products(self):
+        """Filter the product table based on the search query."""
+        query = self._search_var.get().strip().lower()
+        
+        # Clear the table
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+        
+        # Get the original product list (from self._all_products or similar)
+        # If we don't have a cached list, we need to fetch it
+        if not hasattr(self, '_all_products'):
+            return
+        
+        count = 0
+        for p in self._all_products:
+            model = str(p.get("model", "")).lower()
+            name = str(p.get("name", "")).lower()
+            category = str(p.get("category", "")).lower()
+            
+            if not query or query in model or query in name or query in category:
+                self.tree.insert("", "end", values=(
+                    p.get("model", ""),
+                    p.get("category", ""),
+                    p.get("name", ""),
+                    f"₹{float(p.get('price', 0)):,.0f}",
+                    p.get("status", "Active"),
+                ))
+                count += 1
+        
+        # Update the count label if it exists
+        if hasattr(self, '_count_label'):
+            self._count_label.config(text=f"{count} product(s)")
+
     def _reload(self):
 
         for widget in self.body.winfo_children():
