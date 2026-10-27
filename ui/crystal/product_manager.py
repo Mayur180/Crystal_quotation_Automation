@@ -351,6 +351,25 @@ class ProductManager(tk.Toplevel):
                                     fg=self.MUTED, font=("Arial", 9))
         self.count_label.pack(anchor="e", pady=26)
 
+        # Search Bar
+        search_frame = tk.Frame(header, bg=self.CARD)
+        search_frame.pack(side="right", padx=10)
+        
+        tk.Label(search_frame, text="🔍", bg=self.CARD, fg=self.MUTED,
+                 font=("Arial", 12)).pack(side="left", padx=(0, 5))
+        
+        self._search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            search_frame,
+            textvariable=self._search_var,
+            font=("Arial", 10),
+            width=28,
+            relief="solid",
+            bd=1
+        )
+        search_entry.pack(side="left", pady=26, ipady=4)
+        search_entry.bind("<KeyRelease>", lambda e: self._filter_products())
+
         tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
 
         # Tabs
