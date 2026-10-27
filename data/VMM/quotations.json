@@ -1,0 +1,22 @@
+[
+  {
+    "quotation_number": "AA/VMM/26-27/011",
+    "date": "2026-10-26",
+    "customer_name": "Sanket Shah",
+    "customer_company": "AUTOTURN INDUSTRIES",
+    "customer_phone": "9922951564",
+    "customer_email": "",
+    "customer_address": "",
+    "customer_city": "pune",
+    "customer_state": "Maharashtra",
+    "customer_pincode": "412301",
+    "customer_gstin": "",
+    "contact_person": "",
+    "model": "AA-9041AC",
+    "grand_total": "1852600.00",
+    "docx_path": "C:\\Users\\ADMIN\\Downloads\\CrystalQuotation\\26-10-2026\\word\\Quotation_AA_VMM_26-27_011_AA-9041AC.docx",
+    "pdf_path": "",
+    "created_at": "2026-10-26T22:04:44",
+    "status": "Sent"
+  }
+]

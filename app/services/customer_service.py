@@ -237,7 +237,29 @@ def save_customer(data, customer_id=None):
     }
     records.append(record)
     _save_raw(records)
-    return record, True
+    _result = record, True
+
+    # ---- Send to Google Sheet (fire and forget) ----
+    try:
+        from app.services.google_sheet_service import send_to_sheet
+        import os as _os
+        _user = _os.environ.get('USERNAME') or 'user'
+        send_to_sheet({
+            'action':  'customer',
+            'user':    _user,
+            'name':    _text(record.get('name', '')),
+            'company': _text(record.get('company', '')),
+            'phone':   _text(record.get('phone', '')),
+            'email':   _text(record.get('email', '')),
+            'address': _text(record.get('address', '')),
+            'city':    _text(record.get('city', '')),
+            'state':   _text(record.get('state', '')),
+            'pincode': _text(record.get('pincode', '')),
+            'gstin':   _text(record.get('gstin', '')),
+        })
+    except Exception:
+        pass
+    return _result
 
 
 def touch_last_used(customer_id):

@@ -10,10 +10,7 @@ import os
 import json
 from datetime import datetime
 
-try:
-    from app.services.user_service import get_current_user
-except Exception:
-    get_current_user = None
+get_current_user = None
 
 
 from app.services.paths import get_data_dir

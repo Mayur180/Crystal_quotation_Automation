@@ -3,54 +3,58 @@ CRYSTAL / ARMATECH ASSOCIATES
 CATALOG SERVICE
 
 Loads and manages the master product and accessory catalog.
+Supports both JSON shapes:
+  (A) list    : [ {product}, ... ]                          <- Crystal v4
+  (B) dict    : { "products": [...], "accessories": [...] } <- VMM legacy
+Products with key "rate" are normalized so callers can read "price".
 """
 
 import json
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
+from app.services.paths import get_data_dir
 
-# ============================================================
-# PATH
-# ============================================================
 
-from app.services.paths import get_project_root
-PROJECT_ROOT = get_project_root()
-
-CATALOG_FILE = (
-    PROJECT_ROOT
-    / "data"
-    / "catalog.json"
-)
+def _catalog_file():
+    return get_data_dir() / "catalog.json"
 
 
 # ============================================================
-# LOAD CATALOG
+# LOAD (shape-tolerant)
 # ============================================================
 
 def load_catalog():
+    catalog_path = _catalog_file()
+    if not catalog_path.exists():
+        raise FileNotFoundError(f"Catalog file not found:\n{catalog_path}")
 
-    if not CATALOG_FILE.exists():
+    with open(catalog_path, "r", encoding="utf-8") as f:
+        raw = json.load(f)
 
-        raise FileNotFoundError(
-            f"Catalog file not found:\n{CATALOG_FILE}"
-        )
+    # Normalize to {"products": [...], "accessories": [...]}
+    if isinstance(raw, list):
+        products = raw
+        accessories = []
+    elif isinstance(raw, dict):
+        products = raw.get("products", []) or []
+        accessories = raw.get("accessories", []) or []
+    else:
+        products, accessories = [], []
 
-    with open(
-        CATALOG_FILE,
-        "r",
-        encoding="utf-8",
-    ) as file:
+    # Field alias: rate -> price (Crystal) if price missing
+    for p in products:
+        if isinstance(p, dict) and "price" not in p and "rate" in p:
+            p["price"] = p["rate"]
 
-        return json.load(file)
+    return {"products": products, "accessories": accessories}
 
 
 # ============================================================
-# INTERNAL HELPERS (safe coercion)
+# HELPERS
 # ============================================================
 
 def _safe_price(value):
-    """Return a float price; blank/None/missing → 0.0."""
     if value is None or value == "":
         return 0.0
     try:
@@ -60,7 +64,6 @@ def _safe_price(value):
 
 
 def _safe_quantity(value):
-    """Return an int quantity >= 1; blank/None/missing → 1."""
     if value is None or value == "":
         return 1
     try:
@@ -75,63 +78,35 @@ def _safe_quantity(value):
 # ============================================================
 
 def get_products():
-
-    catalog = load_catalog()
-
-    return catalog.get(
-        "products",
-        [],
-    )
+    try:
+        catalog = load_catalog()
+    except FileNotFoundError:
+        return []
+    return catalog["products"]
 
 
 def get_product_models():
-
-    products = get_products()
-
-    return [
-        product["model"]
-        for product in products
-    ]
+    return [p["model"] for p in get_products() if p.get("model")]
 
 
 def get_product_categories():
-
-    products = get_products()
-
-    categories = []
-
-    for product in products:
-
-        category = product["category"]
-
-        if category not in categories:
-
-            categories.append(category)
-
-    return categories
+    seen, out = set(), []
+    for p in get_products():
+        c = p.get("category") or ""
+        if c and c not in seen:
+            seen.add(c)
+            out.append(c)
+    return out
 
 
 def get_products_by_category(category):
-
-    products = get_products()
-
-    return [
-        product
-        for product in products
-        if product["category"] == category
-    ]
+    return [p for p in get_products() if p.get("category") == category]
 
 
 def get_product(model):
-
-    products = get_products()
-
-    for product in products:
-
-        if product["model"] == model:
-
-            return product
-
+    for p in get_products():
+        if p.get("model") == model:
+            return p
     return None
 
 
@@ -140,99 +115,49 @@ def get_product(model):
 # ============================================================
 
 def get_accessories(active_only=True):
-    """
-    Return accessory records from data/catalog.json.
-
-    Each record preserves every field present in the JSON
-    (code, name, category, description, unit, price,
-     default_quantity, status) and adds safe defaults:
-
-        price            → 0.0  if blank/None/missing
-        default_quantity → 1    if blank/None/missing or < 1
-
-    If active_only=True (default), only records whose
-    status is "active" (case-insensitive) are returned.
-    """
-
     catalog = load_catalog()
-
-    raw = catalog.get("accessories", []) or []
-
+    raw = catalog["accessories"]
     result = []
-
     for item in raw:
-
         if not isinstance(item, dict):
             continue
-
         code = str(item.get("code", "")).strip()
         if not code:
             continue
-
         status = str(item.get("status", "active")).strip().lower()
-
         if active_only and status != "active":
             continue
-
-        result.append(
-            {
-                "code": code,
-                "name": str(item.get("name", code)).strip() or code,
-                "category": str(item.get("category", "Accessory")).strip(),
-                "description": str(item.get("description", "")).strip(),
-                "unit": str(item.get("unit", "Nos")).strip() or "Nos",
-                "price": _safe_price(item.get("price", 0)),
-                "default_quantity": _safe_quantity(
-                    item.get("default_quantity", 1)
-                ),
-                "status": status or "active",
-            }
-        )
-
+        result.append({
+            "code": code,
+            "name": str(item.get("name", code)).strip() or code,
+            "category": str(item.get("category", "Accessory")).strip(),
+            "description": str(item.get("description", "")).strip(),
+            "unit": str(item.get("unit", "Nos")).strip() or "Nos",
+            "price": _safe_price(item.get("price", 0)),
+            "default_quantity": _safe_quantity(item.get("default_quantity", 1)),
+            "status": status or "active",
+        })
     return result
 
 
 def get_accessory_codes(active_only=True):
-
-    accessories = get_accessories(active_only=active_only)
-
-    return [
-        accessory["code"]
-        for accessory in accessories
-    ]
+    return [a["code"] for a in get_accessories(active_only=active_only)]
 
 
 def get_accessory(code, active_only=True):
-
     if not code:
         return None
-
     code = str(code).strip()
-
-    accessories = get_accessories(active_only=active_only)
-
-    for accessory in accessories:
-
-        if accessory["code"] == code:
-
-            return accessory
-
+    for a in get_accessories(active_only=active_only):
+        if a["code"] == code:
+            return a
     return None
 
 
-# ============================================================
-# SUMMARY
-# ============================================================
-
 def get_catalog_summary():
-
-    products = get_products()
-
-    accessories = get_accessories()
-
     return {
-        "product_count": len(products),
-        "accessory_count": len(accessories),
+        "product_count": len(get_products()),
+        "accessory_count": len(get_accessories()),
         "categories": get_product_categories(),
     }
 
@@ -242,42 +167,18 @@ def get_catalog_summary():
 # ============================================================
 
 if __name__ == "__main__":
-
     print("=" * 60)
-    print("CRYSTAL CATALOG SERVICE TEST")
+    print("CATALOG SERVICE TEST")
     print("=" * 60)
 
     summary = get_catalog_summary()
-
     print(f"Products    : {summary['product_count']}")
     print(f"Accessories : {summary['accessory_count']}")
+    print(f"Categories  : {summary['categories']}")
 
-    print("\nPRODUCT MODELS")
-    print("-" * 60)
-
-    for model in get_product_models():
-
+    print("\nFirst 5 models:")
+    for model in get_product_models()[:5]:
         product = get_product(model)
-
-        print(f"{model:<12} {product['category']}")
-
-    print("\nACCESSORIES (active)")
-    print("-" * 60)
-
-    for accessory in get_accessories():
-
-        print(
-            f"{accessory['code']:<18} "
-            f"{accessory['name']:<22} "
-            f"price={accessory['price']:<10} "
-            f"qty={accessory['default_quantity']}"
-        )
-
-    print("\nCATEGORIES")
-    print("-" * 60)
-
-    for category in get_product_categories():
-
-        print(category)
+        print(f"  {model:<20} {product.get('category','')}")
 
     print("\nCATALOG SERVICE: OK")

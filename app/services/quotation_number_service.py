@@ -45,7 +45,25 @@ def _resolve_data_dir() -> Path:
 
 DATA_DIR = _resolve_data_dir()
 COUNTER_FILE = DATA_DIR / "quotation_counter.json"
-QUOTATION_PREFIX = "AA/VMM"
+# Module-aware prefix
+# VMM   → "AA/VMM"
+# Crystal → "CRY"
+
+_DEFAULT_PREFIX = "AA/VMM"
+
+def _get_quotation_prefix() -> str:
+    """Return the prefix for the active module."""
+    try:
+        from app.services.paths import get_active_module
+        module = get_active_module()
+    except Exception:
+        module = "VMM"
+    if module == "Crystal":
+        return "CRY"
+    return _DEFAULT_PREFIX
+
+# Kept for backwards-compat (some code may read _get_quotation_prefix() directly)
+QUOTATION_PREFIX = _DEFAULT_PREFIX
 FINANCIAL_YEAR = "26-27"
 
 
@@ -166,7 +184,7 @@ def get_next_quotation_number():
     # --------------------------------------------------------
 
     return (
-        f"{QUOTATION_PREFIX}/"
+        f"{_get_quotation_prefix()}/"
         f"{FINANCIAL_YEAR}/"
         f"{last_number:03d}"
     )
@@ -188,7 +206,7 @@ def get_current_quotation_number():
     )
 
     return (
-        f"{QUOTATION_PREFIX}/"
+        f"{_get_quotation_prefix()}/"
         f"{FINANCIAL_YEAR}/"
         f"{last_number:03d}"
     )

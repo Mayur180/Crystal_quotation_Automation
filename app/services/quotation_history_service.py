@@ -152,6 +152,14 @@ def save_quotation(result):
         "date":             _text(result.get("quotation_date")),
         "customer_name":    _text(result.get("customer_name")),
         "customer_company": _text(result.get("customer_company")),
+        "customer_phone":   _text(result.get("customer_phone")),
+        "customer_email":   _text(result.get("customer_email")),
+        "customer_address": _text(result.get("customer_address")),
+        "customer_city":    _text(result.get("customer_city")),
+        "customer_state":   _text(result.get("customer_state")),
+        "customer_pincode": _text(result.get("customer_pincode")),
+        "customer_gstin":   _text(result.get("customer_gstin")),
+        "contact_person":   _text(result.get("contact_person")),
         "model":            _text(result.get("model")),
         "grand_total":      _decimal_str(grand),
         "docx_path":        _text(result.get("docx_path") or result.get("path")),
@@ -176,6 +184,37 @@ def save_quotation(result):
         _save_raw(records)
     except Exception:
         return record
+
+    # ---- Send to Google Sheet (fire and forget) ----
+    try:
+        from app.services.google_sheet_service import send_to_sheet
+        # Get current user (falls back to Windows username)
+        try:
+            import os as _os
+            _user = _os.environ.get('USERNAME') or 'user'
+        except Exception:
+            _user = 'user'
+
+        send_to_sheet({
+            'action':           'quotation',
+            'date':             record.get('date', ''),
+            'user':             _user,
+            'quotation_number': record.get('quotation_number', ''),
+            'customer':         record.get('customer_name', ''),
+            'company':          record.get('customer_company', ''),
+            'phone':            record.get('customer_phone', ''),
+            'email':            record.get('customer_email', ''),
+            'address':          record.get('customer_address', ''),
+            'city':             record.get('customer_city', ''),
+            'state':            record.get('customer_state', ''),
+            'pincode':          record.get('customer_pincode', ''),
+            'gstin':            record.get('customer_gstin', ''),
+            'model':            record.get('model', ''),
+            'grand_total':      record.get('grand_total', ''),
+            'status':           record.get('status', 'Draft'),
+        })
+    except Exception as _e:
+        print(f'[google-sheet] hook failed: {_e}')
 
     return record
 
@@ -328,3 +367,124 @@ if __name__ == "__main__":
               f"₹ {r.get('grand_total')}")
 
     print("=" * 60)
+
+def get_conversion_stats(module=None, data_dir=None):
+    """Return conversion metrics for the specified module (or active module).
+    
+    Args:
+        module: "Crystal", "VMM", or None (uses active module)
+        data_dir: Optional Path to read quotations.json from directly (for testing)
+    
+    Returns:
+        dict with keys: total, accepted, rejected, pending, conversion_rate
+    """
+    try:
+        if data_dir is not None:
+            # Direct path (used for testing)
+            from pathlib import Path
+            q_file = Path(data_dir) / "quotations.json"
+            if q_file.exists():
+                data = json.loads(q_file.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    quotations = data
+                elif isinstance(data, dict):
+                    quotations = data.get("quotations", [])
+                else:
+                    quotations = []
+            else:
+                quotations = []
+        elif module:
+            # Explicitly read from the specified module's folder
+            base = _LEGACY_DATA_DIR.parent
+            module_dir = base / module
+            if not module_dir.exists():
+                module_dir = _LEGACY_DATA_DIR
+            q_file = module_dir / "quotations.json"
+            if q_file.exists():
+                data = json.loads(q_file.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    quotations = data
+                elif isinstance(data, dict):
+                    quotations = data.get("quotations", [])
+                else:
+                    quotations = []
+            else:
+                quotations = []
+        else:
+            quotations = load_quotations() or []
+    except Exception:
+        quotations = []
+
+    total = len(quotations)
+    accepted = 0
+    rejected = 0
+    pending = 0
+
+    for q in quotations:
+        status = str(q.get("status", "")).strip().lower()
+        if status == "accepted":
+            accepted += 1
+        elif status == "rejected":
+            rejected += 1
+        else:
+            pending += 1
+
+    conversion_rate = (accepted / total * 100) if total > 0 else 0.0
+
+    return {
+        "total": total,
+        "accepted": accepted,
+        "rejected": rejected,
+        "pending": pending,
+        "conversion_rate": conversion_rate,
+    }
+
+
+
+def get_pending_followups(days_old=3):
+    """Return quotations that are older than `days_old` days and still Draft/Sent.
+    
+    Returns list of dicts with quotation_number, customer_name, date, grand_total, status.
+    """
+    from datetime import datetime, timedelta
+    
+    try:
+        quotations = load_quotations() or []
+    except Exception:
+        quotations = []
+    
+    cutoff = datetime.now() - timedelta(days=days_old)
+    pending = []
+    
+    for q in quotations:
+        status = str(q.get("status", "")).strip().lower()
+        if status not in ("draft", "sent", ""):
+            continue
+        
+        # Parse date
+        date_str = str(q.get("date", "")).strip()
+        try:
+            # Try common formats
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+                try:
+                    q_date = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    continue
+            else:
+                continue
+            
+            if q_date < cutoff:
+                pending.append({
+                    "quotation_number": q.get("quotation_number", ""),
+                    "customer_name": q.get("customer_name", "—"),
+                    "date": date_str,
+                    "grand_total": q.get("grand_total", 0),
+                    "status": q.get("status", "Draft"),
+                })
+        except Exception:
+            continue
+    
+    # Sort by oldest first
+    pending.sort(key=lambda x: x.get("date", ""))
+    return pending

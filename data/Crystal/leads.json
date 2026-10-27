@@ -1,0 +1,17 @@
+{
+  "leads": [
+    {
+      "date": "2026-10-19",
+      "customer": "mayuresh",
+      "company": "mayuresh agency",
+      "phone": 8624012775,
+      "email": "",
+      "quantity": 10,
+      "source": "WhatsApp",
+      "notes": "AA-1616",
+      "status": "Sent",
+      "lastreminder": "2026-10-26",
+      "leadid": "L1792390532"
+    }
+  ]
+}
