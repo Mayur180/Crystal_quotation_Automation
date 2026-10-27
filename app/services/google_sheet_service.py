@@ -55,15 +55,15 @@ def send_to_sheet(data):
 
 
 def fetch_leads_from_sheet():
-    """Fetch leads from the Google Sheet via the Apps Script webhook."""
-    import requests
-    import json
+    """Fetch leads from the Google Sheet via the Apps Script webhook.
     
-    # The Apps Script URL (same as WEBHOOK_URL but with action=get_leads)
-    # We need to send a GET request to the webhook to fetch data
+    Returns:
+        list: The list of leads (can be empty if the sheet is empty)
+        None: If the connection failed (so the caller knows NOT to overwrite local data)
+    """
+    import requests
+    
     try:
-        # We assume WEBHOOK_URL is defined at the top of this file
-        # We send a GET request with action=get_leads
         response = requests.get(
             WEBHOOK_URL,
             params={"action": "get_leads"},
@@ -75,7 +75,11 @@ def fetch_leads_from_sheet():
                 return data
             elif isinstance(data, dict) and "leads" in data:
                 return data["leads"]
+            elif isinstance(data, dict) and data.get("status") == "ok":
+                # Success but no "leads" key — means empty sheet
+                return []
+        print(f"[fetch_leads] HTTP {response.status_code}: {response.text[:200]}")
+        return None
     except Exception as e:
         print(f"[fetch_leads] Error: {e}")
-    
-    return []
+        return None

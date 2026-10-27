@@ -85,13 +85,25 @@ def delete_lead(lead_id):
 
 
 def restore_leads_from_sheet():
-    """Forcefully fetch leads from Google Sheet and overwrite local JSON."""
+    """Forcefully fetch leads from Google Sheet and overwrite local JSON.
+    
+    Returns:
+        True: If fetch succeeded (even if sheet was empty)
+        False: If connection failed (local data preserved)
+    """
     try:
         from app.services.google_sheet_service import fetch_leads_from_sheet
         sheet_leads = fetch_leads_from_sheet()
-        if sheet_leads is not None:
-            save_leads(sheet_leads)
-            return True
+        
+        # If None, the connection failed — DO NOT overwrite local data
+        if sheet_leads is None:
+            print("[restore_leads] Connection failed — local data preserved.")
+            return False
+        
+        # If we got a list (even empty), save it
+        save_leads(sheet_leads)
+        print(f"[restore_leads] Restored {len(sheet_leads)} leads from Google Sheet.")
+        return True
     except Exception as e:
         print(f"[restore_leads] Error: {e}")
     return False
