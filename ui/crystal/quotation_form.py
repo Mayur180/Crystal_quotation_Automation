@@ -1414,6 +1414,32 @@ class QuotationForm(tk.Toplevel):
         self.disc_var = tk.StringVar(value="0")
         tk.Entry(row, textvariable=self.disc_var, width=8, font=("Arial", 10)).pack(side="left", padx=(0, 20))
         
+        # --- Update Catalog Checkbox ---
+        catalog_frame = tk.Frame(top, bg=self.CARD)
+        catalog_frame.pack(fill="x", pady=(0, 5))
+        
+        self._update_catalog_var = tk.BooleanVar(value=False)
+        tk.Checkbutton(
+            catalog_frame,
+            text="Also update catalog price for this model",
+            variable=self._update_catalog_var,
+            bg=self.CARD,
+            fg=self.MUTED,
+            activebackground=self.CARD,
+            selectcolor="white",
+            font=("Arial", 9),
+            anchor="w"
+        ).pack(side="left")
+        
+        tk.Label(
+            catalog_frame,
+            text="Unchecked: only this quotation uses the new price. Checked: all future quotations for this model will use it.",
+            bg=self.CARD,
+            fg="#999999",
+            font=("Arial", 8, "italic"),
+            anchor="w"
+        ).pack(side="left", padx=(10, 0))
+
         tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
         # --- Product Info Panel (Now in the right column) ---
@@ -1453,6 +1479,16 @@ class QuotationForm(tk.Toplevel):
             return
         try: price = float(str(self.machine_price.get() or "0").strip() or "0")
         except: price = 0.0
+        
+        # Update catalog if checkbox is checked
+        if getattr(self, '_update_catalog_var', None) and self._update_catalog_var.get():
+            if price > 0:
+                try:
+                    from app.services.catalog_admin_service import update_product
+                    update_product(model, {"price": price})
+                    print(f"[catalog] Updated price for {model} to {price}")
+                except Exception as e:
+                    print(f"[catalog] Could not update price: {e}")
         try: qty = int(float(str(self.machine_qty.get() or "1").strip() or "1"))
         except: qty = 1
         try: disc_val = float(str(self.disc_var.get() or "0").strip() or "0")
@@ -1485,6 +1521,8 @@ class QuotationForm(tk.Toplevel):
         self.machine_price.set("")
         self.machine_qty.set("1")
         self.disc_var.set("0")
+        if hasattr(self, '_update_catalog_var'):
+            self._update_catalog_var.set(False)
 
     def _remove_cart_item(self):
         sel = self.cart_tree.selection()
