@@ -457,10 +457,15 @@ class ProductManager(tk.Toplevel):
         for item in self.tree.get_children():
             self.tree.delete(item)
         
-        # Get the original product list (from self._all_products or similar)
-        # If we don't have a cached list, we need to fetch it
-        if not hasattr(self, '_all_products'):
-            return
+        # If _all_products doesn't exist, load the catalog now
+        if not hasattr(self, '_all_products') or not self._all_products:
+            try:
+                from app.services.catalog_service import load_catalog
+                catalog = load_catalog() or {}
+                self._all_products = catalog.get("products", [])
+            except Exception as e:
+                print(f"[products] Could not load catalog: {e}")
+                self._all_products = []
         
         count = 0
         for p in self._all_products:
@@ -483,6 +488,16 @@ class ProductManager(tk.Toplevel):
             self._count_label.config(text=f"{count} product(s)")
 
     def _reload(self):
+        # Load all products into memory for fast filtering
+        try:
+            from app.services.catalog_service import load_catalog
+            catalog = load_catalog() or {}
+            self._all_products = catalog.get("products", [])
+            print(f"[products] Loaded {len(self._all_products)} products into memory.")
+        except Exception as e:
+            print(f"[products] Could not load catalog: {e}")
+            self._all_products = []
+        
 
         for widget in self.body.winfo_children():
             widget.destroy()
