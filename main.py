@@ -286,14 +286,24 @@ def main():
     # ---- PHASE 2: LAUNCHER (only if multi-module) ----
     if session.is_multi_module():
         result = _phase_launcher(session)
+        print(f"[DEBUG] Launcher returned: action={result['action']}, module={result['module']}")
         if result["action"] == "exit":
-            print("Application closed by user.")
+            print("[DEBUG] Exiting application.")
             return
         if result["action"] == "logout":
-            # Restart the whole flow (show login again)
+            print("[DEBUG] Logout detected — clearing session and restarting...")
+            # Delete session file so auto-login doesn't fire
+            try:
+                from app.services.paths import get_data_root
+                session_file = get_data_root() / "session.json"
+                if session_file.exists():
+                    session_file.unlink()
+                    print("[DEBUG] Session file deleted.")
+            except Exception as e:
+                print(f"[DEBUG] Could not delete session: {e}")
             return main()
         if result["module"] is None:
-            print("No module selected. Exiting.")
+            print("[DEBUG] No module selected. Exiting.")
             return
         session.active_module = result["module"]
     else:
