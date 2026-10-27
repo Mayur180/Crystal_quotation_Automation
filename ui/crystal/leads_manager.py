@@ -62,13 +62,14 @@ class LeadsManager(tk.Toplevel):
         btn_wrap = tk.Frame(bar, bg=T.SURFACE)
         btn_wrap.pack(fill="x", padx=24, pady=15)
 
-        tk.Button(btn_wrap, text="🗑 Delete", bg="#D32F2F", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._delete_lead).pack(side="left")
-        tk.Button(btn_wrap, text="Mark as Sent", bg=T.BG, fg=T.TEXT, font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._mark_sent).pack(side="left", padx=10)
+        tk.Button(btn_wrap, text="🗑 Delete", bg="#FFFFFF", fg="#D32F2F", font=("Arial", 10, "bold"), relief="solid", bd=1, padx=15, pady=8, command=self._delete_lead).pack(side="left")
+        tk.Button(btn_wrap, text="Mark as Sent", bg="#FFFFFF", fg=T.TEXT, font=("Arial", 10, "bold"), relief="solid", bd=1, padx=15, pady=8, command=self._mark_sent).pack(side="left", padx=10)
         
         # Add the Restore button
         tk.Button(btn_wrap, text="☁ Restore from Sheet", bg="#0277BD", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._restore_from_sheet).pack(side="left", padx=10)
         
-        tk.Button(btn_wrap, text="Convert to Quotation →", bg=T.ACCENT, fg="white", font=("Arial", 11, "bold"), relief="flat", padx=20, pady=8, command=self._convert).pack(side="right")
+        # Primary Action (Right side)
+        tk.Button(btn_wrap, text="Convert to Quotation →", bg="#C40000", fg="white", font=("Arial", 11, "bold"), relief="flat", padx=20, pady=8, command=self._convert).pack(side="right")
 
     def _refresh(self):
         # Clear table and show loading
