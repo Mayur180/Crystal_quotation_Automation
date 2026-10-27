@@ -7,7 +7,8 @@
       "full_name": "System Administrator",
       "is_active": true,
       "created_at": "2026-10-13",
-      "role": "admin"
+      "role": "admin",
+      "modules": ""
     },
     {
       "user_id": "U002",
@@ -15,7 +16,9 @@
       "password": "$2b$12$UHSyXvGCxFFaNxnIpqYshOQ54XD9TmJlV87gLAKKuIrF8a.Tur1Eu",
       "full_name": "VMM Operator",
       "is_active": true,
-      "created_at": "2026-10-13"
+      "created_at": "2026-10-13",
+      "role": "",
+      "modules": ""
     },
     {
       "user_id": "U003",
@@ -23,7 +26,9 @@
       "password": "$2b$12$u5T5MP0xjMKxAKluCOnBa.eIVqaohLWVLDcdF6IOUqhUiljodc90W",
       "full_name": "Crystal Operator",
       "is_active": true,
-      "created_at": "2026-10-13"
+      "created_at": "2026-10-13",
+      "role": "",
+      "modules": ""
     },
     {
       "user_id": "U004",
@@ -33,7 +38,8 @@
       "role": "admin",
       "is_active": true,
       "created_at": "2026-10-26",
-      "created_by": "admin"
+      "created_by": "admin",
+      "modules": ""
     }
   ]
 }
