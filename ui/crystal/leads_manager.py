@@ -23,31 +23,50 @@ class LeadsManager(tk.Toplevel):
         tk.Button(hdr, text="+ Log New Lead", bg=T.ACCENT, fg="white", font=("Arial", 11, "bold"), relief="flat", padx=15, pady=8, cursor="hand2", command=self._open_add_dialog).pack(side="right", padx=24)
 
         # Table Frame
+        # Table Frame
         table_frame = tk.Frame(self, bg=T.BG)
         table_frame.pack(fill="both", expand=True, padx=24, pady=10)
+
+        # Apply premium theme
+        style = ttk.Style(self)
+        style.theme_use("clam")
+        
+        # Dark headers
+        style.configure("Treeview.Heading",
+                        background="#2C3E50",
+                        foreground="white",
+                        font=("Arial", 10, "bold"),
+                        relief="flat",
+                        padding=6)
+        style.map("Treeview.Heading",
+                  background=[("active", "#34495E")],
+                  foreground=[("active", "white")])
+        
+        # Row styling
+        style.configure("Treeview",
+                        rowheight=35,
+                        font=("Arial", 10),
+                        background="white",
+                        fieldbackground="white",
+                        borderwidth=1,
+                        relief="solid")
 
         columns = ("date", "customer", "phone", "email", "qty", "source", "notes", "status")
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
         
-        # Configure columns with proper widths
+        # Column widths
         widths = {
-            "date": 90, 
-            "customer": 140, 
-            "phone": 110, 
-            "email": 180, 
-            "qty": 50, 
-            "source": 90, 
-            "notes": 250, 
-            "status": 80
+            "date": 100, "customer": 160, "phone": 120, "email": 200,
+            "qty": 60, "source": 100, "notes": 300, "status": 100
         }
         for col in columns:
-            self.tree.heading(col, text=col.title())
-            self.tree.column(col, width=widths[col], anchor="w", stretch=False)
+            self.tree.heading(col, text=col.title(), anchor="w")
+            self.tree.column(col, width=widths[col], anchor="w", stretch=True)
         
-        # Force row height to be uniform (prevent long text from breaking layout)
-        style = ttk.Style()
-        style.configure("Treeview", rowheight=28)
-            
+        # Zebra striping
+        self.tree.tag_configure("evenrow", background="#F8F9FA")
+        self.tree.tag_configure("oddrow", background="#FFFFFF")
+        
         vsb = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
         
