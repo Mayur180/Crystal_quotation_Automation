@@ -77,48 +77,18 @@ def verify_credentials(username: str, password: str) -> Optional[UserSession]:
         # User exists but has zero module access — reject
         return None
 
-    session = UserSession(
+    return UserSession(
         user_id=user["user_id"],
         username=user["username"],
         full_name=user.get("full_name", user["username"]),
         modules=modules,
         active_module=None,
     )
-    
-    # Log this login to Google Sheets (background thread, non-blocking)
-    _log_login_to_sheet(session)
-    
-    return session
 
 
 # ============================================================
 # ERROR MESSAGES (for UI)
 # ============================================================
-
-def _log_login_to_sheet(session: UserSession) -> None:
-    """Log a successful login to Google Sheets (background thread)."""
-    try:
-        import threading
-        import socket
-        from app.services.google_sheet_service import send_to_sheet
-        
-        def _background_log():
-            try:
-                pc_name = socket.gethostname()
-                send_to_sheet({
-                    "action": "login",
-                    "user_id": session.user_id,
-                    "username": session.username,
-                    "full_name": session.full_name,
-                    "pc_name": pc_name,
-                })
-            except Exception as e:
-                print(f"[login-log] Background error: {e}")
-        
-        threading.Thread(target=_background_log, daemon=True).start()
-    except Exception as e:
-        print(f"[login-log] Could not start thread: {e}")
-
 
 def describe_login_failure(username: str, password: str) -> str:
     """Return a human-friendly error message for a failed login attempt."""
