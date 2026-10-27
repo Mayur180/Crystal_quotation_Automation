@@ -154,6 +154,17 @@ class Dashboard(tk.Tk):
             card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
             card_wrap.pack(side="left", fill="both", expand=True, padx=(0 if i == 0 else 16, 0))
             
+            # Make Follow-ups card clickable
+            if label == "Follow-ups":
+                card_wrap.configure(cursor="hand2")
+                for w in (card_wrap,):
+                    w.bind("<Button-1>", lambda e: self._show_pending_followups())
+                # Bind children too
+                def bind_children(parent, cmd):
+                    for child in parent.winfo_children():
+                        child.bind("<Button-1>", lambda e: cmd())
+                        bind_children(child, cmd)
+            
             icon_lbl = tk.Label(card_wrap, text=icon, bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 24))
             icon_lbl.pack(side="left", padx=(20, 10), pady=20)
             
@@ -441,6 +452,86 @@ class Dashboard(tk.Tk):
             widget.destroy()
         # Rebuild
         self._build_body()
+
+    def _show_pending_followups(self):
+        """Show a popup listing quotations that need follow-up."""
+        import tkinter as tk
+        from tkinter import ttk
+        from app.services.quotation_history_service import get_pending_followups
+        
+        pending = get_pending_followups(days_old=3)
+        
+        popup = tk.Toplevel(self)
+        popup.title("Pending Follow-ups")
+        popup.geometry("750x450")
+        popup.configure(bg=T.BG)
+        popup.transient(self)
+        popup.grab_set()
+        
+        tk.Label(popup, text="⏰ Quotations Needing Follow-up (3+ days old)",
+                 bg=T.BG, fg=T.TEXT, font=("Arial", 14, "bold")).pack(pady=15)
+        
+        if not pending:
+            tk.Label(popup, text="✅ No pending follow-ups! All quotations are up to date.",
+                     bg=T.BG, fg="#27AE60", font=("Arial", 11)).pack(pady=50)
+            tk.Button(popup, text="Close", command=popup.destroy, bg=T.BG, relief="flat").pack(pady=10)
+            return
+        
+        # Table
+        frame = tk.Frame(popup, bg=T.BG)
+        frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        cols = ("quotation", "customer", "date", "total")
+        tree = ttk.Treeview(frame, columns=cols, show="headings", height=12)
+        tree.heading("quotation", text="Quotation No.")
+        tree.heading("customer", text="Customer")
+        tree.heading("date", text="Date")
+        tree.heading("total", text="Grand Total")
+        tree.column("quotation", width=180)
+        tree.column("customer", width=250)
+        tree.column("date", width=120)
+        tree.column("total", width=150, anchor="e")
+        
+        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        
+        for q in pending:
+            try:
+                total_str = f"₹{float(q['grand_total']):,.2f}"
+            except Exception:
+                total_str = f"₹{q['grand_total']}"
+            tree.insert("", "end", values=(
+                q["quotation_number"],
+                q["customer_name"],
+                q["date"],
+                total_str,
+            ))
+        
+        # Bottom buttons
+        btn_frame = tk.Frame(popup, bg=T.BG)
+        btn_frame.pack(fill="x", pady=10)
+        
+        def open_selected():
+            sel = tree.selection()
+            if not sel:
+                return
+            values = tree.item(sel[0], "values")
+            quot_no = values[0]
+            popup.destroy()
+            # Open Quotation History and select this quotation
+            try:
+                from ui.crystal.quotation_history import QuotationHistory
+                QuotationHistory(self)
+            except Exception as e:
+                print(f"Could not open history: {e}")
+        
+        tk.Button(btn_frame, text="Open Quotation History", command=open_selected,
+                  bg=T.ACCENT, fg="white", font=("Arial", 10, "bold"), relief="flat",
+                  padx=15, pady=6).pack(side="right", padx=10)
+        tk.Button(btn_frame, text="Close", command=popup.destroy,
+                  bg=T.BG, fg=T.TEXT, relief="flat").pack(side="right", padx=10)
 
     def _on_nav(self, key):
         """Dispatch sidebar clicks to the correct screen."""
