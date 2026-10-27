@@ -42,7 +42,7 @@ class LeadsManager(tk.Toplevel):
                   background=[("active", "#34495E")],
                   foreground=[("active", "white")])
         
-        # Row styling
+        # Row styling WITH horizontal grid lines
         style.configure("Treeview",
                         rowheight=35,
                         font=("Arial", 10),
@@ -50,6 +50,13 @@ class LeadsManager(tk.Toplevel):
                         fieldbackground="white",
                         borderwidth=1,
                         relief="solid")
+        
+        # Add horizontal separators (gridlines)
+        style.layout("Treeview", [
+            ('Treeview.treearea', {'sticky': 'nswe'})
+        ])
+        # Set the color of the grid lines
+        style.configure("Treeview", bordercolor="#D5DBE1", lightcolor="#D5DBE1", darkcolor="#D5DBE1")
 
         columns = ("date", "customer", "phone", "email", "qty", "source", "notes", "status")
         self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
