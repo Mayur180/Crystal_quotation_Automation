@@ -148,6 +148,7 @@ class Dashboard(tk.Tk):
             ("👥", f"{summary['customers']:,}", "Customers",   None),
             ("📄", f"{summary['quotes']:,}",   "Quotations",  None),
             ("📈", f"{summary['conversion_rate']:.1f}%", "Conversion %", "#27AE60"),
+            ("⏰", f"{summary.get('pending_followups', 0)}", "Follow-ups", "#E67E22"),
         ]
         for i, (icon, val, label, accent) in enumerate(kpis):
             card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
@@ -318,12 +319,21 @@ class Dashboard(tk.Tk):
         
         conversion_rate = (accepted_count / q_count * 100) if q_count > 0 else 0.0
 
+        # Count pending follow-ups (3+ days old, not accepted/rejected)
+        pending_followups = 0
+        try:
+            from app.services.quotation_history_service import get_pending_followups
+            pending_followups = len(get_pending_followups(days_old=3))
+        except Exception:
+            pass
+        
         return {
             "products": p_count,
             "customers": c_count,
             "quotes": q_count,
             "accepted": accepted_count,
             "conversion_rate": conversion_rate,
+            "pending_followups": pending_followups,
             "recent": recent,
         }
 
