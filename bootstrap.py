@@ -8,7 +8,7 @@ import json
 import requests
 from pathlib import Path
 
-WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzhtawFNa_Wlo644joUFEJvRJV9LiiMXu7En_sOzWH2fK6rvVG_XEIqiTE6OgNMnyQ/exec"
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwhhqEsHfFmh8Iv4ndlSbTcKiuDuDFMaee1k5dsPaXNmZpSked5adzzOCu-N6UxiO83ZQ/exec"
 
 def ensure_folders():
     """Create all required folders."""

@@ -12,7 +12,7 @@ import urllib.error
 
 
 # ---- Paste your Apps Script Web App URL here ----
-WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzhtawFNa_Wlo644joUFEJvRJV9LiiMXu7En_sOzWH2fK6rvVG_XEIqiTE6OgNMnyQ/exec"
+WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwhhqEsHfFmh8Iv4ndlSbTcKiuDuDFMaee1k5dsPaXNmZpSked5adzzOCu-N6UxiO83ZQ/exec"
 
 
 def send_to_sheet(data):
