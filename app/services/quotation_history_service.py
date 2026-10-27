@@ -439,3 +439,52 @@ def get_conversion_stats(module=None, data_dir=None):
         "conversion_rate": conversion_rate,
     }
 
+
+
+def get_pending_followups(days_old=3):
+    """Return quotations that are older than `days_old` days and still Draft/Sent.
+    
+    Returns list of dicts with quotation_number, customer_name, date, grand_total, status.
+    """
+    from datetime import datetime, timedelta
+    
+    try:
+        quotations = load_quotations() or []
+    except Exception:
+        quotations = []
+    
+    cutoff = datetime.now() - timedelta(days=days_old)
+    pending = []
+    
+    for q in quotations:
+        status = str(q.get("status", "")).strip().lower()
+        if status not in ("draft", "sent", ""):
+            continue
+        
+        # Parse date
+        date_str = str(q.get("date", "")).strip()
+        try:
+            # Try common formats
+            for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+                try:
+                    q_date = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    continue
+            else:
+                continue
+            
+            if q_date < cutoff:
+                pending.append({
+                    "quotation_number": q.get("quotation_number", ""),
+                    "customer_name": q.get("customer_name", "—"),
+                    "date": date_str,
+                    "grand_total": q.get("grand_total", 0),
+                    "status": q.get("status", "Draft"),
+                })
+        except Exception:
+            continue
+    
+    # Sort by oldest first
+    pending.sort(key=lambda x: x.get("date", ""))
+    return pending
