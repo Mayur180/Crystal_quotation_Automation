@@ -80,8 +80,12 @@ class LeadsManager(tk.Toplevel):
             self.tree.insert("", "end", values=(f"Error: {error}", "", "", "", "", "", "", ""))
             return
             
-        for lead in leads:
+        seen_ids = set()
+        for idx, lead in enumerate(leads):
             lead_id = lead.get("leadid") or lead.get("id") or ""
+            if not lead_id or lead_id in seen_ids:
+                lead_id = f"row_{idx}_{lead_id}"
+            seen_ids.add(lead_id)
             
             # Handle both "qty" and "quantity" keys
             qty = lead.get("qty") or lead.get("quantity") or ""
