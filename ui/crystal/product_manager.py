@@ -583,7 +583,7 @@ class ProductManager(tk.Toplevel):
                             values=(
                                 p.get("model", ""),
                                 p.get("category", ""),
-                                p.get("product_name", ""),
+                                p.get("name") or p.get("product_name", ""),
                                 _money(p.get("price", 0)),
                                 p.get("status", ""),
                             ))
