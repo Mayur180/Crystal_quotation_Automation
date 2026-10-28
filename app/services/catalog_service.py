@@ -18,14 +18,16 @@ from app.services.paths import get_data_dir
 
 def _catalog_file():
     """Return the Crystal catalog path, always."""
+    import os
     from app.services.paths import get_data_root
-    # Force the Crystal folder, regardless of active module
+    # HARD FIX: Always look in the Crystal folder, no matter what
     base = get_data_root()
     crystal_dir = base / "Crystal"
     if crystal_dir.exists():
         return crystal_dir / "catalog.json"
-    # Fallback to base data dir
     return base / "catalog.json"
+
+
 def load_catalog():
     catalog_path = _catalog_file()
     if not catalog_path.exists():
