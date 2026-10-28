@@ -17,13 +17,15 @@ from app.services.paths import get_data_dir
 
 
 def _catalog_file():
-    return get_data_dir() / "catalog.json"
-
-
-# ============================================================
-# LOAD (shape-tolerant)
-# ============================================================
-
+    """Return the Crystal catalog path, always."""
+    from app.services.paths import get_data_root
+    # Force the Crystal folder, regardless of active module
+    base = get_data_root()
+    crystal_dir = base / "Crystal"
+    if crystal_dir.exists():
+        return crystal_dir / "catalog.json"
+    # Fallback to base data dir
+    return base / "catalog.json"
 def load_catalog():
     catalog_path = _catalog_file()
     if not catalog_path.exists():
