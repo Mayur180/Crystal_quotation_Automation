@@ -12,7 +12,7 @@ from pathlib import Path
 # ACTIVE MODULE STATE
 # ============================================================
 
-_ACTIVE_MODULE = "VMM"   # Default keeps backward compatibility
+_ACTIVE_MODULE = "Crystal"   # Default to Crystal
 
 VALID_MODULES = ("VMM", "Crystal")
 
