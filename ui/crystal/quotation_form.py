@@ -1726,19 +1726,19 @@ class QuotationForm(tk.Toplevel):
         if not model:
             return
         
-        # Get product from catalog
+        # Import get_product HERE to avoid UnboundLocalError
         try:
             from app.services.catalog_service import get_product
             product = get_product(model)
-        except Exception:
+        except Exception as e:
+            print(f"Error fetching product: {e}")
             product = None
         
-        # Auto-fill HSN
+        # Auto-fill HSN and Price
         if product:
             hsn = product.get('hsn') or product.get('hsn_code') or ""
             self.hsn_var.set(str(hsn))
             
-            # Auto-fill Price
             price = product.get('price')
             if price is not None:
                 try:
@@ -1780,7 +1780,7 @@ class QuotationForm(tk.Toplevel):
                 self.info_text.insert("1.0", f"Model '{model}' not found in catalog.")
                 self.info_text.config(state="disabled")
         
-        # Try to update summary
+        # Update summary
         try:
             self._recalculate()
         except Exception:
