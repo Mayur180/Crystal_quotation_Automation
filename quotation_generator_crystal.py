@@ -1984,12 +1984,18 @@ def _crystal_page(
         except Exception:
             item_prod = {}
 
-        desc = item_prod.get("description") or ""
+        # Use a clean, short description for the PDF table
         name = item_prod.get("name") or ""
-        body = (desc or name).strip()
-        full_desc = body
-        if item_model and item_model not in body:
-            full_desc = f"{body}\nModel: {item_model}"
+        # Fall back to a short snippet if name is empty
+        if not name:
+            desc = item_prod.get("description") or ""
+            # Take only the first line of the description
+            name = desc.split("\n")[0].strip()
+        
+        # Build a clean description: Name + Model
+        full_desc = name.strip()
+        if item_model and item_model not in full_desc:
+            full_desc = f"{full_desc}\nModel: {item_model}"
 
         hsn = str(item.get("hsn") or item_prod.get("hsn") or "85059000")
         tax_pct = item_prod.get("tax_percent", 18.0)
