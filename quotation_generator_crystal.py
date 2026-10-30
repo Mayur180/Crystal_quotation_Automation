@@ -2068,7 +2068,7 @@ def _crystal_page(
 
     # Left side = amount-in-words, right side = totals rows
     # Adjust widths so the left column fills the space and aligns with the border
-    tot_tbl = new_table(len(tot_rows) + 1, 2, widths_mm=[130, 46])
+    tot_tbl = new_table(len(tot_rows) + 1, 2, widths_mm=[150, 26])
 
     # Amount in words (spans left column, all rows)
     aw_cell = tot_tbl.cell(0, 0)
