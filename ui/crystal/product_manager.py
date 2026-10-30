@@ -668,105 +668,73 @@ class ProductManager(tk.Toplevel):
         self.selected_key = sel[0] if sel else None
 
     def _add_new_product(self):
-        """Open a popup to add a new product to the catalog."""
-        import tkinter as tk
-        from tkinter import messagebox
-        
-        dialog = tk.Toplevel(self)
-        dialog.title("Add New Product")
-        dialog.geometry("500x550")
-        dialog.configure(bg=self.BG)
-        dialog.transient(self)
-        dialog.grab_set()
-        
-        tk.Label(dialog, text="Add New Product", bg=self.BG, fg=self.TEXT, font=("Arial", 16, "bold")).pack(pady=15)
-        
-        form = tk.Frame(dialog, bg=self.BG)
-        form.pack(fill="both", expand=True, padx=30, pady=10)
-        
-        fields = {}
-        field_list = [
-            ("Model", "model"),
-            ("Category", "category"),
-            ("Product Name", "name"),
-            ("Description", "description"),
-            ("Price (₹)", "price"),
-            ("HSN/SAC Code", "hsn"),
-            ("Unit", "unit"),
-            ("Tax %", "tax"),
-        ]
-        
-        for label_text, key in field_list:
-            tk.Label(form, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 10, "bold"), anchor="w").pack(fill="x", pady=(8, 2))
-            var = tk.StringVar()
-            fields[key] = var
-            
-            if key == "description":
-                entry = tk.Text(form, height=3, font=("Arial", 10), relief="solid", bd=1)
-                entry.pack(fill="x")
-                fields[key + "_widget"] = entry
-            else:
-                entry = tk.Entry(form, textvariable=var, font=("Arial", 10), relief="solid", bd=1)
-                entry.pack(fill="x", ipady=3)
-        
-        def save():
-            model = fields["model"].get().strip()
-            if not model:
-                messagebox.showerror("Error", "Model is required.", parent=dialog)
-                return
-            
-            try:
-                price = float(fields["price"].get().strip() or "0")
-            except ValueError:
-                messagebox.showerror("Error", "Price must be a number.", parent=dialog)
-                return
-            
-            new_product = {
-                "model": model,
-                "category": fields["category"].get().strip() or "Uncategorized",
-                "name": fields["name"].get().strip(),
-                "product_name": fields["name"].get().strip(),
-                "description": fields["description_widget"].get("1.0", "end").strip(),
-                "price": price,
-                "hsn": fields["hsn"].get().strip() or "85059000",
-                "unit": fields["unit"].get().strip() or "NOS",
-                "tax_percent": fields["tax"].get().strip() or "18",
-                "status": "Active",
-            }
-            
-            try:
-                from app.services.catalog_admin_service import add_product
-                add_product(new_product)
-                messagebox.showinfo("Success", f"Product '{model}' added to catalog.", parent=dialog)
-                dialog.destroy()
-                self._reload()
-            except Exception as e:
-                messagebox.showerror("Error", f"Could not add product: {e}", parent=dialog)
-        
-        btns = tk.Frame(dialog, bg=self.BG)
-        btns.pack(fill="x", padx=30, pady=15)
-        tk.Button(btns, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=20, pady=8).pack(side="right")
-        tk.Button(btns, text="Save Product", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
+        """Open the Add New Product form (uses the same 2-column layout as Edit)."""
+        self._open_product_form(mode="add")
+
 
     def _open_product_form(self, mode="add", product=None):
-        """Open a popup form to add or edit a product."""
+        """Open a compact 2-column popup form to add or edit a product."""
         import tkinter as tk
         from tkinter import messagebox
         
         dialog = tk.Toplevel(self)
         dialog.title("Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}")
-        dialog.geometry("600x900")
+        dialog.geometry("650x450")
         dialog.configure(bg=self.BG)
         dialog.transient(self)
         dialog.grab_set()
         
-        # 1. Title (Top)
-        tk.Label(dialog, text="Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}",
-                 bg=self.BG, fg=self.TEXT, font=("Arial", 16, "bold")).pack(pady=10)
+        main_frame = tk.Frame(dialog, bg=self.BG, padx=20, pady=20)
+        main_frame.pack(fill="both", expand=True)
         
-        # 2. Fixed Bottom Buttons
-        btn_frame = tk.Frame(dialog, bg=self.BG)
-        btn_frame.pack(fill="x", side="bottom", padx=30, pady=15)
+        # Title
+        tk.Label(main_frame, text="Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}",
+                 bg=self.BG, fg=self.TEXT, font=("Arial", 14, "bold")).grid(row=0, column=0, columnspan=4, pady=(0, 15), sticky="w")
+        
+        fields = {}
+        field_list = [
+            ("Model", "model"), ("Category", "category"), ("Product Name", "name"), ("Price (Rs)", "price"),
+            ("HSN/SAC Code", "hsn"), ("Unit", "unit"), ("Tax %", "tax_percent"),
+        ]
+        
+        # Place 7 fields in 2 columns (Left: 4, Right: 3)
+        for i, (label_text, key) in enumerate(field_list):
+            col_offset = 0 if i < 4 else 2
+            row = (i % 4) + 1
+            
+            tk.Label(main_frame, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 9, "bold")).grid(row=row, column=col_offset, sticky="w", padx=(0, 10), pady=5)
+            
+            var = tk.StringVar()
+            fields[key] = var
+            if product:
+                if key == "name":
+                    var.set(str(product.get("name") or product.get("product_name") or ""))
+                elif key == "tax_percent":
+                    var.set(str(product.get("tax_percent") or product.get("tax") or "18"))
+                else:
+                    val = product.get(key, "")
+                    if val is not None:
+                        var.set(str(val))
+                        
+            entry = tk.Entry(main_frame, textvariable=var, font=("Arial", 10), relief="solid", bd=1, width=20)
+            entry.grid(row=row, column=col_offset + 1, sticky="ew", pady=5, ipady=2)
+            if mode == "edit" and key == "model":
+                entry.config(state="disabled")
+        
+        # Description spans both columns at the bottom
+        tk.Label(main_frame, text="Description", bg=self.BG, fg=self.TEXT, font=("Arial", 9, "bold")).grid(row=5, column=0, sticky="nw", pady=5)
+        text_widget = tk.Text(main_frame, height=3, font=("Arial", 10), relief="solid", bd=1)
+        text_widget.grid(row=5, column=1, columnspan=3, sticky="ew", pady=5)
+        if product:
+            text_widget.insert("1.0", str(product.get("description") or ""))
+        fields["description_widget"] = text_widget
+        
+        main_frame.grid_columnconfigure(1, weight=1)
+        main_frame.grid_columnconfigure(3, weight=1)
+        
+        # Buttons
+        btn_frame = tk.Frame(main_frame, bg=self.BG)
+        btn_frame.grid(row=6, column=0, columnspan=4, pady=(20, 0), sticky="e")
         
         def save():
             model = fields["model"].get().strip()
@@ -804,66 +772,8 @@ class ProductManager(tk.Toplevel):
             except Exception as e:
                 messagebox.showerror("Error", f"Could not save: {e}", parent=dialog)
         
-        tk.Button(btn_frame, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=20, pady=8).pack(side="right")
-        tk.Button(btn_frame, text="Save", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
-        
-        # 3. Scrollable Form Area
-        container = tk.Frame(dialog, bg=self.BG)
-        container.pack(fill="both", expand=True, padx=20, pady=5)
-        
-        canvas = tk.Canvas(container, bg=self.BG, highlightthickness=0)
-        scrollbar = tk.Scrollbar(container, orient="vertical", command=canvas.yview)
-        form = tk.Frame(canvas, bg=self.BG)
-        
-        canvas_window = canvas.create_window((0, 0), window=form, anchor="nw")
-        
-        def _on_form_configure(event):
-            canvas.configure(scrollregion=canvas.bbox("all"))
-            canvas.itemconfigure(canvas_window, width=canvas.winfo_width())
-        
-        form.bind("<Configure>", _on_form_configure)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # Mousewheel
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-        
-        # 4. Form Fields
-        fields = {}
-        field_list = [
-            ("Model", "model"), ("Category", "category"), ("Product Name", "name"),
-            ("Description", "description"), ("Price (Rs)", "price"), ("HSN/SAC Code", "hsn"),
-            ("Unit", "unit"), ("Tax %", "tax_percent"),
-        ]
-        
-        for label_text, key in field_list:
-            tk.Label(form, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 10, "bold"), anchor="w").pack(fill="x", pady=(8, 2))
-            var = tk.StringVar()
-            fields[key] = var
-            if product:
-                if key == "name":
-                    var.set(str(product.get("name") or product.get("product_name") or ""))
-                elif key == "tax_percent":
-                    var.set(str(product.get("tax_percent") or product.get("tax") or "18"))
-                else:
-                    val = product.get(key, "")
-                    if val is not None:
-                        var.set(str(val))
-            if key == "description":
-                text_widget = tk.Text(form, height=3, font=("Arial", 10), relief="solid", bd=1)
-                text_widget.pack(fill="x")
-                if product:
-                    text_widget.insert("1.0", str(product.get("description") or ""))
-                fields[key + "_widget"] = text_widget
-            else:
-                entry = tk.Entry(form, textvariable=var, font=("Arial", 10), relief="solid", bd=1)
-                entry.pack(fill="x", ipady=3)
-                if mode == "edit" and key == "model":
-                    entry.config(state="disabled")
+        tk.Button(btn_frame, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=15, pady=5).pack(side="right")
+        tk.Button(btn_frame, text="Save", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=5).pack(side="right", padx=(0, 10))
 
 
     def _edit_selected(self):
