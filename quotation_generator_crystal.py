@@ -1943,7 +1943,7 @@ def _crystal_page(
     # Product table
     cols = ["Sr.", "Product Description", "HSN/SAC Code", "Tax %",
             "Quantity", "Units", "Rate", "Dis %", "Amount"]
-    widths = [8, 60, 20, 12, 14, 12, 16, 10, 24]   # sum ~ 176 mm
+    widths = [8, 58, 18, 10, 12, 10, 18, 10, 22]   # sum = 166mm (fits page)
 
     tbl = new_table(2, len(cols), widths_mm=widths)
 
@@ -2006,7 +2006,14 @@ def _crystal_page(
         unit = str(item_prod.get("unit") or "NOS")
         qty_str = f"{item_qty:g}"
         rate_str = f"{item_price:,.2f}"
-        disc_str = f"{item_disc:g}" if item_disc else "0"
+        # Check if discount was entered as percentage or amount
+        raw_disc = item.get("raw_discount", 0)
+        disc_mode = item.get("disc_mode", "Amount (₹)")
+        
+        if disc_mode == "Percentage (%)":
+            disc_str = f"{raw_disc:g}%" if raw_disc else "0%"
+        else:
+            disc_str = f"{item_disc:,.2f}" if item_disc else "0"
         amount_str = f"{item_total:,.2f}"
 
         row_vals = [str(idx), full_desc, hsn, tax_str, qty_str, unit, rate_str, disc_str, amount_str]
