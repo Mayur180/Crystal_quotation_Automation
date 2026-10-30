@@ -748,6 +748,112 @@ class ProductManager(tk.Toplevel):
         tk.Button(btns, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=20, pady=8).pack(side="right")
         tk.Button(btns, text="Save Product", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
 
+    def _open_product_form(self, mode="add", product=None):
+        """Open a popup form to add or edit a product."""
+        import tkinter as tk
+        from tkinter import messagebox
+        
+        dialog = tk.Toplevel(self)
+        dialog.title("Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}")
+        dialog.geometry("550x600")
+        dialog.configure(bg=self.BG)
+        dialog.transient(self)
+        dialog.grab_set()
+        
+        tk.Label(dialog, text="Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}",
+                 bg=self.BG, fg=self.TEXT, font=("Arial", 16, "bold")).pack(pady=15)
+        
+        form = tk.Frame(dialog, bg=self.BG)
+        form.pack(fill="both", expand=True, padx=30, pady=10)
+        
+        fields = {}
+        field_list = [
+            ("Model", "model"),
+            ("Category", "category"),
+            ("Product Name", "name"),
+            ("Description", "description"),
+            ("Price (₹)", "price"),
+            ("HSN/SAC Code", "hsn"),
+            ("Unit", "unit"),
+            ("Tax %", "tax_percent"),
+        ]
+        
+        for label_text, key in field_list:
+            tk.Label(form, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 10, "bold"), anchor="w").pack(fill="x", pady=(8, 2))
+            
+            var = tk.StringVar()
+            fields[key] = var
+            
+            # Pre-fill for edit mode
+            if product:
+                if key == "name":
+                    var.set(str(product.get("name") or product.get("product_name") or ""))
+                elif key == "tax_percent":
+                    var.set(str(product.get("tax_percent") or product.get("tax") or "18"))
+                else:
+                    val = product.get(key, "")
+                    if val is not None:
+                        var.set(str(val))
+            
+            if key == "description":
+                text_widget = tk.Text(form, height=3, font=("Arial", 10), relief="solid", bd=1)
+                text_widget.pack(fill="x")
+                if product:
+                    desc = product.get("description") or ""
+                    text_widget.insert("1.0", str(desc))
+                fields[key + "_widget"] = text_widget
+            else:
+                entry = tk.Entry(form, textvariable=var, font=("Arial", 10), relief="solid", bd=1)
+                entry.pack(fill="x", ipady=3)
+                
+                if mode == "edit" and key == "model":
+                    entry.config(state="disabled")
+        
+        def save():
+            model = fields["model"].get().strip()
+            if not model:
+                messagebox.showerror("Error", "Model is required.", parent=dialog)
+                return
+            
+            try:
+                price = float(fields["price"].get().strip() or "0")
+            except ValueError:
+                messagebox.showerror("Error", "Price must be a number.", parent=dialog)
+                return
+            
+            product_data = {
+                "model": model,
+                "category": fields["category"].get().strip() or "Uncategorized",
+                "name": fields["name"].get().strip(),
+                "product_name": fields["name"].get().strip(),
+                "description": fields["description_widget"].get("1.0", "end").strip(),
+                "price": price,
+                "hsn": fields["hsn"].get().strip() or "85059000",
+                "unit": fields["unit"].get().strip() or "NOS",
+                "tax_percent": fields["tax_percent"].get().strip() or "18",
+                "status": "Active",
+            }
+            
+            try:
+                if mode == "add":
+                    from app.services.catalog_admin_service import add_product
+                    add_product(product_data)
+                    messagebox.showinfo("Success", f"Product '{model}' added.", parent=dialog)
+                else:
+                    from app.services.catalog_admin_service import update_product
+                    update_product(model, product_data)
+                    messagebox.showinfo("Success", f"Product '{model}' updated.", parent=dialog)
+                dialog.destroy()
+                self._reload()
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not save: {e}", parent=dialog)
+        
+        btns = tk.Frame(dialog, bg=self.BG)
+        btns.pack(fill="x", padx=30, pady=15)
+        tk.Button(btns, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=20, pady=8).pack(side="right")
+        tk.Button(btns, text="Save", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
+
+
     def _edit_selected(self):
         """Open the form pre-filled with the selected product."""
         if not self.selected_key:
