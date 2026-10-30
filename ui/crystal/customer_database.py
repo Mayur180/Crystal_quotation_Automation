@@ -587,8 +587,8 @@ class CustomerDatabase(tk.Toplevel):
         
         # Load quotations
         try:
-            from app.services.quotation_history_service import load_quotations
-            quotations = load_quotations() or []
+            from app.services.quotation_history_service import list_quotations
+            quotations = list_quotations() or []
         except Exception as e:
             messagebox.showerror("History", f"Could not load quotations: {e}", parent=self)
             return
