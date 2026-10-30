@@ -290,3 +290,37 @@ if __name__ == "__main__":
         print(f"  {ts}  {path.name}")
 
     print("=" * 60)
+
+def add_product(product: dict) -> bool:
+    """Add a new product to the Crystal catalog.
+    
+    Returns True if successful, False otherwise.
+    """
+    try:
+        import json
+        from app.services.paths import get_data_root
+        
+        catalog_file = get_data_root() / "Crystal" / "catalog.json"
+        if not catalog_file.exists():
+            catalog_file.parent.mkdir(parents=True, exist_ok=True)
+            data = {"products": [], "accessories": []}
+        else:
+            data = json.loads(catalog_file.read_text(encoding="utf-8"))
+        
+        products = data.get("products", [])
+        
+        # Check if model already exists
+        model = product.get("model", "").strip()
+        if any(p.get("model") == model for p in products):
+            raise ValueError(f"Model '{model}' already exists.")
+        
+        # Add new product
+        products.append(product)
+        data["products"] = products
+        
+        catalog_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"[catalog] Added new product: {model}")
+        return True
+    except Exception as e:
+        print(f"[catalog] Error adding product: {e}")
+        return False
