@@ -749,19 +749,31 @@ class ProductManager(tk.Toplevel):
         tk.Button(btns, text="Save Product", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
 
     def _edit_selected(self):
-
+        """Open the form pre-filled with the selected product."""
         if not self.selected_key:
-            messagebox.showinfo("No selection",
-                                "Please select a row first.",
-                                parent=self)
+            messagebox.showinfo("No selection", "Please select a row first.", parent=self)
             return
 
         if self.current_tab == "products":
+            # Get the selected row
+            sel = self.tree.selection()
+            if not sel:
+                messagebox.showinfo("No selection", "Please select a row first.", parent=self)
+                return
+            
+            # Get the MODEL from the first column (values[0]), not the iid
+            values = self.tree.item(sel[0], "values")
+            model_name = str(values[0]).strip() if values else ""
+            
+            if not model_name:
+                messagebox.showerror("Error", "Could not read model name.", parent=self)
+                return
+            
+            # Find the product in the catalog
             catalog = load_catalog() or {}
             product = None
+            search_key = model_name.strip().lower()
             
-            # Robust search: case-insensitive, whitespace-trimmed
-            search_key = str(self.selected_key or "").strip().lower()
             for p in catalog.get("products", []):
                 if str(p.get("model", "")).strip().lower() == search_key:
                     product = p
@@ -770,20 +782,17 @@ class ProductManager(tk.Toplevel):
             if product is None:
                 messagebox.showerror(
                     "Not found",
-                    f"Product '{self.selected_key}' not found in catalog.\n\n"
+                    f"Product '{model_name}' not found in catalog.\n\n"
                     f"Try clicking 'Reload' first.",
                     parent=self
                 )
                 return
+            
             dialog = ProductEditDialog(self, product)
             self.wait_window(dialog)
             if dialog.result is not None:
                 self._reload()
 
-
-    # --------------------------------------------------------
-    # BULK ADJUST
-    # --------------------------------------------------------
 
     def _bulk_adjust(self):
 
