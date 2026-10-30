@@ -1493,6 +1493,9 @@ class QuotationForm(tk.Toplevel):
         mode = getattr(self, 'disc_mode', None)
         mode_val = mode.get() if mode else "Amount (₹)"
         
+        # Save raw disc value and mode for display
+        raw_disc = disc_val
+        
         if mode_val == "Percentage (%)":
             disc = subtotal * (disc_val / 100.0)
         else:
@@ -1524,7 +1527,12 @@ class QuotationForm(tk.Toplevel):
         self.cart_tree.delete(*self.cart_tree.get_children())
         for i, item in enumerate(self.items):
             self.cart_tree.insert("", "end", iid=f"row_{i}", values=(
-                item["model"], item.get("hsn", "85059000"), item["qty"], f"₹{item['price']:,.0f}", f"₹{item['discount']:,.0f}", f"₹{item['total']:,.0f}"
+                item["model"], 
+            item.get("hsn", "85059000"), 
+            item["qty"], 
+            f"₹{item['price']:,.0f}", 
+            f"{item.get('raw_discount', 0)}%" if item.get('disc_mode') == "Percentage (%)" else f"₹{item['discount']:,.0f}",
+            f"₹{item['total']:,.0f}"
             ))
 
     def _get_categories(self):
