@@ -1722,124 +1722,65 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _model_changed(self, event=None):
-        model = self.model.get()
-
+        model = self.model.get().strip()
         if not model:
-            self.product_title.set("Select a machine")
-            self.product_subtitle.set("")
-            self.machine_price.set("")
-            self._recalculate()
             return
-
-        size = MODEL_SIZE.get(
-            model,
-            "Catalog specification available"
-        )
-
-        self.product_title.set(
-            f"CRYSTAL  •  {model}"
-        )
-
-        self.product_subtitle.set(
-            f"{self.category.get()}   ·   "
-            f"Measuring range / size: {size}"
-        )
-
-        # --------------------------------------------------------
-        # AUTO-FILL PRICE FROM CATALOG
-        # --------------------------------------------------------
-        auto_price = None
-
-        if get_product is not None:
-            try:
-                product = get_product(model)
-                if isinstance(product, dict):
-                    raw = product.get("price")
-                    if raw not in (None, ""):
-                        auto_price = raw
-            except Exception:
-                auto_price = None
-
-        if auto_price is not None:
-            try:
-                from decimal import Decimal as _Dec
-                d = _Dec(str(auto_price))
-                if d == d.to_integral_value():
-                    self.machine_price.set(str(int(d)))
-                else:
-                    self.machine_price.set(str(d))
-            except Exception:
-                self.machine_price.set(str(auto_price))
-        else:
-            self.machine_price.set("")
+        
+        # Get product from catalog
+        try:
+            from app.services.catalog_service import get_product
+            product = get_product(model)
+        except Exception:
+            product = None
+        
+        # Auto-fill HSN
+        if product:
+            hsn = product.get('hsn') or product.get('hsn_code') or ""
+            self.hsn_var.set(str(hsn))
             
-        # Auto-fill HSN from catalog
-        if get_product is not None and 'product' in locals() and isinstance(product, dict):
-            hsn = product.get("hsn") or product.get("hsn_code") or ""
-            if hasattr(self, "hsn_var"):
-                self.hsn_var.set(str(hsn))
-
-        # Update Product Info Panel
-        if hasattr(self, "info_label") and get_product is not None and 'product' in locals() and isinstance(product, dict):
-            desc = product.get("description") or product.get("name") or "No description available."
-            size = product.get("size") or ""
-            info_text = f"Model: {model}\n{desc}"
-            if size:
-                info_text += f"\nSize: {size}"
-            self.info_label.config(text=info_text)
-
-        # Update Product Info Panel
-        if hasattr(self, 'info_text'):
-            try:
-                # Get the product from the catalog
-                from app.services.catalog_service import get_product
-                product = get_product(model)
-                
-                self.info_text.config(state="normal")
-                self.info_text.delete("1.0", "end")
-                
-                if product:
+            # Auto-fill Price
+            price = product.get('price')
+            if price is not None:
+                try:
+                    self.machine_price.set(str(float(price)))
+                except Exception:
+                    pass
+            
+            # Update Info Panel
+            if hasattr(self, 'info_text'):
+                try:
+                    self.info_text.config(state="normal")
+                    self.info_text.delete("1.0", "end")
+                    
                     info = f"MODEL: {product.get('model', 'N/A')}\n"
                     info += f"CATEGORY: {product.get('category', 'N/A')}\n"
                     info += "=" * 40 + "\n\n"
                     
-                    # Description
                     desc = product.get('description') or product.get('product_name') or ''
                     if desc:
                         info += f"DESCRIPTION:\n{desc}\n\n"
                     
-                    # Size / Dimensions
                     size = product.get('dimension') or product.get('measuring_range') or product.get('size') or ''
                     if size:
                         info += f"SIZE / DIMENSIONS:\n{size}\n\n"
                     
-                    # Other specs
-                    specs = []
-                    for key in ('accuracy', 'repeatability', 'weight', 'hardware_features', 'software_features'):
-                        val = product.get(key)
-                        if val:
-                            if isinstance(val, list):
-                                val = ", ".join(str(v) for v in val)
-                            specs.append(f"{key.title()}: {val}")
-                    
-                    if specs:
-                        info += "SPECIFICATIONS:\n" + "\n".join(specs) + "\n\n"
-                    
-                    # Price
                     price = product.get('price', 0)
-                    info += f"\nLIST PRICE: ₹{float(price):,.2f}"
-                else:
-                    info = f"Model '{model}' not found in catalog."
-                
-                self.info_text.insert("1.0", info)
-                self.info_text.config(state="disabled")
-            except Exception as e:
+                    info += f"LIST PRICE: ₹{float(price):,.2f}"
+                    
+                    self.info_text.insert("1.0", info)
+                    self.info_text.config(state="disabled")
+                except Exception as e:
+                    print(f"Info panel error: {e}")
+        else:
+            self.hsn_var.set("")
+            self.machine_price.set("")
+            if hasattr(self, 'info_text'):
                 self.info_text.config(state="normal")
                 self.info_text.delete("1.0", "end")
-                self.info_text.insert("1.0", f"Could not load product info: {e}")
+                self.info_text.insert("1.0", f"Model '{model}' not found in catalog.")
                 self.info_text.config(state="disabled")
-
-        # Update summary panel
+        
+        # Try to update summary
         try:
             self._recalculate()
         except Exception:
@@ -1849,10 +1790,6 @@ class QuotationForm(tk.Toplevel):
         except Exception:
             pass
 
-
-    # ========================================================
-    # PRODUCT VALIDATION
-    # ========================================================
 
     def _validate_product(self):
         """Validation bypassed. The cart check in _next handles everything."""
