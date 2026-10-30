@@ -1788,6 +1788,57 @@ class QuotationForm(tk.Toplevel):
                 info_text += f"\nSize: {size}"
             self.info_label.config(text=info_text)
 
+        # Update Product Info Panel
+        if hasattr(self, 'info_text'):
+            try:
+                # Get the product from the catalog
+                from app.services.catalog_service import get_product
+                product = get_product(model)
+                
+                self.info_text.config(state="normal")
+                self.info_text.delete("1.0", "end")
+                
+                if product:
+                    info = f"MODEL: {product.get('model', 'N/A')}\n"
+                    info += f"CATEGORY: {product.get('category', 'N/A')}\n"
+                    info += "=" * 40 + "\n\n"
+                    
+                    # Description
+                    desc = product.get('description') or product.get('product_name') or ''
+                    if desc:
+                        info += f"DESCRIPTION:\n{desc}\n\n"
+                    
+                    # Size / Dimensions
+                    size = product.get('dimension') or product.get('measuring_range') or product.get('size') or ''
+                    if size:
+                        info += f"SIZE / DIMENSIONS:\n{size}\n\n"
+                    
+                    # Other specs
+                    specs = []
+                    for key in ('accuracy', 'repeatability', 'weight', 'hardware_features', 'software_features'):
+                        val = product.get(key)
+                        if val:
+                            if isinstance(val, list):
+                                val = ", ".join(str(v) for v in val)
+                            specs.append(f"{key.title()}: {val}")
+                    
+                    if specs:
+                        info += "SPECIFICATIONS:\n" + "\n".join(specs) + "\n\n"
+                    
+                    # Price
+                    price = product.get('price', 0)
+                    info += f"\nLIST PRICE: ₹{float(price):,.2f}"
+                else:
+                    info = f"Model '{model}' not found in catalog."
+                
+                self.info_text.insert("1.0", info)
+                self.info_text.config(state="disabled")
+            except Exception as e:
+                self.info_text.config(state="normal")
+                self.info_text.delete("1.0", "end")
+                self.info_text.insert("1.0", f"Could not load product info: {e}")
+                self.info_text.config(state="disabled")
+
         # Update summary panel
         try:
             self._recalculate()
