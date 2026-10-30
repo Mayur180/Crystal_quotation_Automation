@@ -1361,25 +1361,9 @@ class QuotationForm(tk.Toplevel):
         card = self._create_card(self.content_area)
         self._section_header(card, 2, "Choose your machine", "Add machines to the quotation.")
 
-        # Create a 2-column layout
-        main_layout = tk.Frame(card, bg=self.CARD)
-        main_layout.pack(fill="x", expand=False, pady=(10, 20))
-        
-        # Left Column (Inputs)
-        left_col = tk.Frame(main_layout, bg=self.CARD)
-        left_col.pack(side="left", fill="x", expand=True, padx=(0, 20))
-        
-        # Right Column (Product Info)
-        right_col = tk.Frame(main_layout, bg=self.CARD, height=220)
-        right_col.pack(side="right", fill="y", expand=False, padx=(20, 0))
-        right_col.pack_propagate(False)
-
-        top = tk.Frame(left_col, bg=self.CARD)
-        top.pack(fill="x")
-
         # --- 2-Column Layout (Left: Inputs, Right: Info) ---
         main_layout = tk.Frame(card, bg=self.CARD)
-        main_layout.pack(fill="x", pady=10)
+        main_layout.pack(fill="both", expand=True, pady=10)
         
         # Left Column (Inputs)
         top = tk.Frame(main_layout, bg=self.CARD)
@@ -1406,8 +1390,7 @@ class QuotationForm(tk.Toplevel):
         self.info_text.insert("1.0", "Select a model to see its details here.")
         self.info_text.config(state="disabled")
         
-        # --- Left Column Inputs Start Here ---
-
+        # --- Left Column Inputs ---
         tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
         self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox", width=50)
         self.category_combo.pack(anchor="w", pady=(6, 16))
@@ -1435,58 +1418,31 @@ class QuotationForm(tk.Toplevel):
         tk.Label(row, text="Qty", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
         tk.Entry(row, textvariable=self.machine_qty, width=6, font=("Arial", 10)).pack(side="left", padx=(0, 20))
 
-        # --- Discount UI ---
+        # Discount
         tk.Label(row, text="Discount:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
-        
         self.disc_mode = tk.StringVar(value="Amount (₹)")
         disc_mode_box = ttk.Combobox(row, textvariable=self.disc_mode, values=["Amount (₹)", "Percentage (%)"], state="readonly", width=12, font=("Arial", 9))
         disc_mode_box.pack(side="left", padx=(0, 5))
-        
         self.disc_var = tk.StringVar(value="0")
         tk.Entry(row, textvariable=self.disc_var, width=8, font=("Arial", 10)).pack(side="left", padx=(0, 20))
         
-        # --- Update Catalog Checkbox ---
+        # Update Catalog Checkbox
         catalog_frame = tk.Frame(top, bg=self.CARD)
         catalog_frame.pack(fill="x", pady=(0, 5))
-        
         self._update_catalog_var = tk.BooleanVar(value=False)
         tk.Checkbutton(
             catalog_frame,
             text="Also update catalog price for this model",
             variable=self._update_catalog_var,
-            bg=self.CARD,
-            fg=self.MUTED,
-            activebackground=self.CARD,
-            selectcolor="white",
-            font=("Arial", 9),
-            anchor="w"
+            bg=self.CARD, fg=self.MUTED, activebackground=self.CARD, selectcolor="white", font=("Arial", 9), anchor="w"
         ).pack(side="left")
         
-        tk.Label(
-            catalog_frame,
-            text="Unchecked: only this quotation uses the new price. Checked: all future quotations for this model will use it.",
-            bg=self.CARD,
-            fg="#999999",
-            font=("Arial", 8, "italic"),
-            anchor="w"
-        ).pack(side="left", padx=(10, 0))
-
+        # Add to Quotation Button
         tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
 
-        # --- Product Info Panel (Now in the right column) ---
-        self.info_frame = tk.Frame(right_col, bg=self.SOFT, highlightbackground=self.BORDER, highlightthickness=1)
-        self.info_frame.pack(fill="both", expand=True, pady=(6, 0), padx=(0, 0))
-        
-        self.info_label = tk.Label(
-            self.info_frame, 
-            text="Select a model to see product details here.", 
-            bg=self.SOFT, fg=self.MUTED, font=("Arial", 10, "italic"),
-            anchor="nw", justify="left", wraplength=400
-        )
-        self.info_label.pack(fill="both", expand=True, padx=15, pady=15)
-
+        # --- Cart Table ---
         self.cart_frame = tk.Frame(card, bg=self.CARD)
-        self.cart_frame.pack(fill="x", expand=False, pady=(10, 0))
+        self.cart_frame.pack(fill="both", expand=True, pady=(10, 0))
         
         cols = ("model", "hsn", "qty", "price", "discount", "total")
         self.cart_tree = ttk.Treeview(self.cart_frame, columns=cols, show="headings", height=6)
@@ -1502,6 +1458,7 @@ class QuotationForm(tk.Toplevel):
         tk.Button(card, text="🗑 Remove Selected", bg=self.SOFT, fg=self.TEXT, font=("Arial", 9), command=self._remove_cart_item).pack(anchor="w", pady=10)
 
         self._refresh_cart_table()
+
 
     def _add_item_to_cart(self, silent=False):
         model = self.model.get().strip()
