@@ -64,28 +64,10 @@ class LoginWindow:
         card.place(relx=0.5, rely=0.5, anchor="center",
                    width=420, height=440)
 
-        # ---- Logo / Title ----
-        import os
-        logo_path = os.path.join("assets", "logo", "LOGO.png")
-        if os.path.exists(logo_path):
-            try:
-                from PIL import Image, ImageTk
-                img = Image.open(logo_path)
-                # Resize to fit the login card (larger for visibility)
-                img = img.resize((200, 70), Image.LANCZOS)
-                self._logo_photo = ImageTk.PhotoImage(img)
-                tk.Label(card, image=self._logo_photo, bg=CARD_COLOR).pack(pady=(40, 0))
-                print(f"[login] Logo loaded from {logo_path}")
-            except Exception as e:
-                print(f"[login] Could not load logo: {e}")
-                tk.Label(card, text="CRYSTAL",
-                         font=("Segoe UI", 28, "bold"),
-                         fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
-        else:
-            print(f"[login] Logo file not found at {logo_path}")
-            tk.Label(card, text="CRYSTAL",
-                     font=("Segoe UI", 28, "bold"),
-                     fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
+        # ---- Logo / Title (Text only inside card) ----
+        tk.Label(card, text="CRYSTAL",
+                 font=("Segoe UI", 28, "bold"),
+                 fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
 
         tk.Label(card, text="ARMATECH ASSOCIATES",
                  font=("Segoe UI", 11, "bold"),
