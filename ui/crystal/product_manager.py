@@ -788,10 +788,8 @@ class ProductManager(tk.Toplevel):
                 )
                 return
             
-            dialog = ProductEditDialog(self, product)
-            self.wait_window(dialog)
-            if dialog.result is not None:
-                self._reload()
+            # Use our new simple form instead of the old ProductEditDialog
+            self._open_product_form(mode="edit", product=product)
 
 
     def _bulk_adjust(self):
