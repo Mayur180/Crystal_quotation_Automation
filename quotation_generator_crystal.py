@@ -2099,16 +2099,16 @@ def _crystal_page(
     # Create the table with enough rows for Amount in Words + Tax Rows + Grand Total
     tot_tbl = new_table(len(tot_rows) + 2, 2, widths_mm=[150, 26])
     
-    # Row 0: Amount in Words (Merged) - FONT INCREASED TO 10
+    # Row 0: Amount in Words (merged)
     aw_cell = tot_tbl.cell(0, 0).merge(tot_tbl.cell(0, 1))
     set_cell(aw_cell, f"Amount In Words :  {_amount_in_words_helper(grand)}", bold=False, size=10, align=WD_ALIGN_PARAGRAPH.LEFT)
     
-    # Rows 1 to N: Labels on left, Values on right
+    # Rows 1 to N: Totals (labels on left, values on right)
     for i, (label, value) in enumerate(tot_rows):
-        set_cell(tot_tbl.cell(i + 1, 0), f"{label}", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        set_cell(tot_tbl.cell(i + 1, 1), f"{value}", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        set_cell(tot_tbl.cell(i + 1, 0), label, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        set_cell(tot_tbl.cell(i + 1, 1), value, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
     
-    # Final Row: Grand Total (Merged)
+    # Final Row: Grand Total (merged)
     gt_cell = tot_tbl.cell(len(tot_rows) + 1, 0).merge(tot_tbl.cell(len(tot_rows) + 1, 1))
     set_cell(gt_cell, f"Grand Total    {grand:,.2f}", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
 
