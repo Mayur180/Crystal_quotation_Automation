@@ -1377,6 +1377,37 @@ class QuotationForm(tk.Toplevel):
         top = tk.Frame(left_col, bg=self.CARD)
         top.pack(fill="x")
 
+        # --- 2-Column Layout (Left: Inputs, Right: Info) ---
+        main_layout = tk.Frame(card, bg=self.CARD)
+        main_layout.pack(fill="x", pady=10)
+        
+        # Left Column (Inputs)
+        top = tk.Frame(main_layout, bg=self.CARD)
+        top.pack(side="left", fill="both", expand=True, padx=(0, 20))
+        
+        # Right Column (Product Info Panel)
+        self.info_panel = tk.Frame(main_layout, bg="#F8F9FA", highlightbackground="#D5DBE1", highlightthickness=1, width=350)
+        self.info_panel.pack(side="right", fill="y", expand=False)
+        self.info_panel.pack_propagate(False)
+        
+        # Info Panel Header
+        tk.Label(self.info_panel, text="📋 Product Information", bg="#2C3E50", fg="white", font=("Arial", 10, "bold"), pady=8).pack(fill="x")
+        
+        # Scrollable Text Area
+        text_frame = tk.Frame(self.info_panel, bg="#F8F9FA")
+        text_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        
+        self.info_text = tk.Text(text_frame, bg="#F8F9FA", fg="#2C3E50", font=("Arial", 9), wrap="word", relief="flat", height=15)
+        self.info_text.pack(side="left", fill="both", expand=True)
+        
+        scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=self.info_text.yview)
+        scrollbar.pack(side="right", fill="y")
+        self.info_text.configure(yscrollcommand=scrollbar.set)
+        self.info_text.insert("1.0", "Select a model to see its details here.")
+        self.info_text.config(state="disabled")
+        
+        # --- Left Column Inputs Start Here ---
+
         tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
         self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox", width=50)
         self.category_combo.pack(anchor="w", pady=(6, 16))
