@@ -65,11 +65,27 @@ class LoginWindow:
                    width=420, height=440)
 
         # ---- Logo / Title ----
-        tk.Label(card, text="CRYSTAL",
-                 font=("Segoe UI", 28, "bold"),
-                 fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
+        import os
+        logo_path = os.path.join("assets", "crystal.png")
+        if os.path.exists(logo_path):
+            try:
+                from PIL import Image, ImageTk
+                img = Image.open(logo_path)
+                # Resize to fit the login card
+                img = img.resize((180, 60), Image.LANCZOS)
+                self._logo_photo = ImageTk.PhotoImage(img)
+                tk.Label(card, image=self._logo_photo, bg=CARD_COLOR).pack(pady=(40, 0))
+            except Exception as e:
+                print(f"[login] Could not load logo: {e}")
+                tk.Label(card, text="CRYSTAL",
+                         font=("Segoe UI", 28, "bold"),
+                         fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
+        else:
+            tk.Label(card, text="CRYSTAL",
+                     font=("Segoe UI", 28, "bold"),
+                     fg=ACCENT_COLOR, bg=CARD_COLOR).pack(pady=(40, 0))
 
-        tk.Label(card, text="ARM ATECH ASSOCIATES",
+        tk.Label(card, text="ARMATECH ASSOCIATES",
                  font=("Segoe UI", 11, "bold"),
                  fg=TEXT_COLOR, bg=CARD_COLOR).pack(pady=(0, 4))
 
