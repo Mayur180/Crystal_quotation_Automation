@@ -682,7 +682,7 @@ class QuotationPreview(tk.Toplevel):
 
         hardware, software = [], []
         try:
-            from quotation_generator import (
+            from app.generators.quotation_generator import (
                 _hardware_features,
                 _software_features,
             )
