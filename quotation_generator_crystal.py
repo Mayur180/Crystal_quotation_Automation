@@ -1619,6 +1619,40 @@ def _convert_docx_to_pdf(
         except Exception as e:
             print(f"[PDF] LibreOffice failed: {e}")
 
+    # ---------- Attempt 1: LibreOffice (Free, no activation needed) ----------
+    try:
+        import subprocess
+        import os
+        
+        # Common LibreOffice installation paths
+        possible_paths = [
+            r"C:\Program Files\LibreOffice\program\soffice.exe",
+            r"C:\Program Files (x86)\LibreOffice\program\soffice.exe",
+        ]
+        
+        soffice = None
+        for p in possible_paths:
+            if os.path.exists(p):
+                soffice = p
+                break
+        
+        if soffice:
+            # Use LibreOffice to convert to PDF
+            out_dir = str(pdf_path.parent)
+            subprocess.run([
+                soffice,
+                "--headless",
+                "--convert-to", "pdf",
+                "--outdir", out_dir,
+                str(docx_path)
+            ], check=True, timeout=60, capture_output=True)
+            
+            if pdf_path.exists():
+                print(f"[PDF] LibreOffice -> {pdf_path}")
+                return pdf_path
+    except Exception as e:
+        print(f"[PDF] LibreOffice failed: {e}")
+
     # ---------- Attempt 2: docx2pdf (uses Word) ----------
     try:
         from docx2pdf import convert as _docx2pdf_convert
