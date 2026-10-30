@@ -43,6 +43,26 @@ class LoginWindow:
         self.on_success = on_success
         self.on_cancel = on_cancel
 
+        # --- Set Window Title Bar Icon ---
+        import os
+        try:
+            ico_path = os.path.join("assets", "logo", "LOGO.ico")
+            png_path = os.path.join("assets", "logo", "LOGO.png")
+            
+            if os.path.exists(ico_path):
+                self.root.iconbitmap(ico_path)
+                print(f"[login] Title bar icon set from {ico_path}")
+            elif os.path.exists(png_path):
+                from PIL import Image, ImageTk
+                img = Image.open(png_path)
+                self._icon_photo = ImageTk.PhotoImage(img)
+                self.root.iconphoto(True, self._icon_photo)
+                print(f"[login] Title bar icon set from {png_path}")
+            else:
+                print("[login] No logo file found for title bar icon.")
+        except Exception as e:
+            print(f"[login] Could not set title bar icon: {e}")
+
         # The container frame — this is what we destroy on success
         self.frame = tk.Frame(root, bg=BG_COLOR)
         self.frame.pack(fill="both", expand=True)
