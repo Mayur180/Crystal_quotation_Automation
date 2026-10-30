@@ -755,7 +755,7 @@ class ProductManager(tk.Toplevel):
         
         dialog = tk.Toplevel(self)
         dialog.title("Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}")
-        dialog.geometry("550x600")
+        dialog.geometry("550x750")
         dialog.configure(bg=self.BG)
         dialog.transient(self)
         dialog.grab_set()
