@@ -174,10 +174,10 @@ BORDER = "D9D9D9"
 
 FONT = "Arial"
 
-PAGE_MARGIN_LEFT = Mm(15)
-PAGE_MARGIN_RIGHT = Mm(15)
-PAGE_MARGIN_TOP = Mm(12)
-PAGE_MARGIN_BOTTOM = Mm(10)
+PAGE_MARGIN_LEFT = Mm(12)
+PAGE_MARGIN_RIGHT = Mm(12)
+PAGE_MARGIN_TOP = Mm(8)
+PAGE_MARGIN_BOTTOM = Mm(8)
 
 
 # ============================================================
