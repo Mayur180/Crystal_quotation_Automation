@@ -454,6 +454,8 @@ class CustomerDatabase(tk.Toplevel):
             side="left", pady=14)
         self._btn(left, "Edit", self._edit).pack(side="left",
                                                   padx=(8, 0), pady=14)
+        self._btn(left, "📋 View History", self._view_history).pack(
+            side="left", padx=(8, 0), pady=14)
         self._btn(left, "Delete", self._delete, danger=True).pack(
             side="left", padx=(8, 0), pady=14)
 
@@ -564,6 +566,108 @@ class CustomerDatabase(tk.Toplevel):
                 f"Could not open Quotation form:\\n{e}",
                 parent=self,
             )
+
+    def _view_history(self):
+        """Show the quotation history for the selected customer."""
+        import tkinter as tk
+        from tkinter import ttk, messagebox
+        
+        sel = self.tree.selection()
+        if not sel:
+            messagebox.showinfo("History", "Please select a customer first.", parent=self)
+            return
+        
+        # Get the selected customer name
+        values = self.tree.item(sel[0], "values")
+        customer_name = str(values[0]).strip() if values else ""
+        
+        if not customer_name:
+            messagebox.showerror("History", "Could not read customer name.", parent=self)
+            return
+        
+        # Load quotations
+        try:
+            from app.services.quotation_history_service import load_quotations
+            quotations = load_quotations() or []
+        except Exception as e:
+            messagebox.showerror("History", f"Could not load quotations: {e}", parent=self)
+            return
+        
+        # Filter by customer name (case-insensitive)
+        search_key = customer_name.strip().lower()
+        customer_quotations = [
+            q for q in quotations
+            if str(q.get("customer_name", "")).strip().lower() == search_key
+        ]
+        
+        # Calculate totals
+        total_count = len(customer_quotations)
+        total_value = 0.0
+        for q in customer_quotations:
+            try:
+                total_value += float(str(q.get("grand_total", 0)).replace(",", "").replace("₹", "").strip() or 0)
+            except Exception:
+                pass
+        
+        # --- Build the popup ---
+        popup = tk.Toplevel(self)
+        popup.title(f"History: {customer_name}")
+        popup.geometry("850x550")
+        popup.configure(bg=self.BG)
+        popup.transient(self)
+        popup.grab_set()
+        
+        # Header
+        tk.Label(popup, text=f"📋 History for {customer_name}", bg=self.BG, fg=self.TEXT,
+                 font=("Arial", 16, "bold")).pack(pady=15)
+        
+        # Summary Stats
+        stats_frame = tk.Frame(popup, bg=self.CARD, highlightbackground=self.BORDER, highlightthickness=1)
+        stats_frame.pack(fill="x", padx=20, pady=10)
+        
+        tk.Label(stats_frame, text=f"Total Quotations: {total_count}", bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 12, "bold")).pack(side="left", padx=20, pady=15)
+        tk.Label(stats_frame, text=f"Total Business Value: ₹{total_value:,.2f}", bg=self.CARD, fg=self.RED,
+                 font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
+        
+        # Quotation Table
+        table_frame = tk.Frame(popup, bg=self.BG)
+        table_frame.pack(fill="both", expand=True, padx=20, pady=10)
+        
+        cols = ("number", "date", "model", "amount", "status")
+        tree = ttk.Treeview(table_frame, columns=cols, show="headings", height=15)
+        
+        headings = {"number": "Quotation No.", "date": "Date", "model": "Model", "amount": "Amount", "status": "Status"}
+        widths = {"number": 180, "date": 120, "model": 200, "amount": 150, "status": 100}
+        
+        for c in cols:
+            tree.heading(c, text=headings[c])
+            tree.column(c, width=widths[c], anchor="w")
+        
+        vsb = ttk.Scrollbar(table_frame, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+        
+        if not customer_quotations:
+            tree.insert("", "end", values=("No quotations found for this customer.", "", "", "", ""))
+        else:
+            for q in customer_quotations:
+                try:
+                    amount = f"₹{float(q.get('grand_total', 0)):,.2f}"
+                except Exception:
+                    amount = f"₹{q.get('grand_total', 0)}"
+                tree.insert("", "end", values=(
+                    q.get("quotation_number", "—"),
+                    q.get("date", "—"),
+                    q.get("model", "—"),
+                    amount,
+                    q.get("status", "—"),
+                ))
+        
+        # Close button
+        tk.Button(popup, text="Close", command=popup.destroy, bg=self.BG, fg=self.TEXT,
+                  relief="flat", padx=20, pady=8).pack(pady=10)
 
     def _edit(self):
         if not self.selected_id:
