@@ -4454,7 +4454,7 @@ class QuotationForm(tk.Toplevel):
         except Exception as exc:
             messagebox.showerror(
                 "Preview unavailable",
-                f"Could not import quotation_generator.\n\n"
+                f"Could not from app.generators import quotation_generator.\n\n"
                 f"{type(exc).__name__}: {exc}",
                 parent=self,
             )
