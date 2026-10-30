@@ -569,6 +569,7 @@ class CustomerDatabase(tk.Toplevel):
 
     def _view_history(self):
         """Show the quotation history for the selected customer."""
+        print("[history] _view_history called")
         import tkinter as tk
         from tkinter import ttk, messagebox
         
@@ -668,6 +669,13 @@ class CustomerDatabase(tk.Toplevel):
         # Close button
         tk.Button(popup, text="Close", command=popup.destroy, bg=self.BG, fg=self.TEXT,
                   relief="flat", padx=20, pady=8).pack(pady=10)
+        
+        # Force popup to front
+        popup.lift()
+        popup.focus_force()
+        popup.attributes('-topmost', True)
+        popup.after(100, lambda: popup.attributes('-topmost', False))
+        print(f"[history] Popup opened for {customer_name} with {total_count} quotations.")
 
     def _edit(self):
         if not self.selected_id:
