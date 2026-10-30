@@ -2066,31 +2066,52 @@ def _crystal_page(
             ("Grand Total", f"{grand:,.2f}"),
         ]
 
-    # Left side = amount-in-words, right side = totals rows
-    # Adjust widths so the left column fills the space and aligns with the border
-    tot_tbl = new_table(len(tot_rows) + 1, 2, widths_mm=[150, 26])
-
-    # Amount in words (spans left column, all rows)
-    aw_cell = tot_tbl.cell(0, 0)
-    for i in range(1, len(tot_rows)):
-        aw_cell = aw_cell.merge(tot_tbl.cell(i, 0))
-    aw_text = f"Amount In Words :  {_amount_in_words_helper(grand)}"
-    set_cell(aw_cell, aw_text, bold=False, size=8, align=WD_ALIGN_PARAGRAPH.LEFT)
-
-    # Totals rows
+    # ─── Totals Table (Compact & Fixed) ───
+    t = totals or {}
+    total_amt = float(t.get("taxable") or t.get("subtotal") or 0.0)
+    cgst = float(t.get("cgst") or 0.0)
+    sgst = float(t.get("sgst") or 0.0)
+    igst = float(t.get("igst") or 0.0)
+    grand = float(t.get("grand_total") or t.get("grand") or 0.0)
+    
+    pre_round = grand
+    grand = round(pre_round)
+    rounding = grand - pre_round
+    
+    gst_type = t.get("gst_type", "CGST + SGST")
+    is_igst = (gst_type == "IGST")
+    gst_rate = float(t.get("gst_rate") or 18.0)
+    
+    if is_igst:
+        tot_rows = [
+            ("Total", f"{total_amt:,.2f}"),
+            (f"IGST {gst_rate:g}%", f"{igst:,.2f}"),
+            ("Rounding (+/-)", f"{rounding:,.2f}"),
+        ]
+    else:
+        tot_rows = [
+            ("Total", f"{total_amt:,.2f}"),
+            (f"C-Gst {gst_rate/2:g}%", f"{cgst:,.2f}"),
+            (f"S-Gst {gst_rate/2:g}%", f"{sgst:,.2f}"),
+            ("Rounding (+/-)", f"{rounding:,.2f}"),
+        ]
+    
+    # Create the table with enough rows for Amount in Words + Tax Rows + Grand Total
+    tot_tbl = new_table(len(tot_rows) + 2, 2, widths_mm=[150, 26])
+    
+    # Row 0: Amount in Words (Merged) - FONT INCREASED TO 10
+    aw_cell = tot_tbl.cell(0, 0).merge(tot_tbl.cell(0, 1))
+    set_cell(aw_cell, f"Amount In Words :  {_amount_in_words_helper(grand)}", bold=False, size=10, align=WD_ALIGN_PARAGRAPH.LEFT)
+    
+    # Rows 1 to N: Labels on left, Values on right
     for i, (label, value) in enumerate(tot_rows):
-        set_cell(tot_tbl.cell(i, 1), f"{label}    {value}", size=8,
-                 align=WD_ALIGN_PARAGRAPH.RIGHT)
+        set_cell(tot_tbl.cell(i + 1, 0), f"{label}", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        set_cell(tot_tbl.cell(i + 1, 1), f"{value}", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    
+    # Final Row: Grand Total (Merged)
+    gt_cell = tot_tbl.cell(len(tot_rows) + 1, 0).merge(tot_tbl.cell(len(tot_rows) + 1, 1))
+    set_cell(gt_cell, f"Grand Total    {grand:,.2f}", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
 
-    # Grand total row (spans both cols)
-    grand_row = new_table(1, 2, widths_mm=[110, 66])
-    set_cell(grand_row.cell(0, 0), "", size=8, bg=BG_HDR)
-    set_cell(grand_row.cell(0, 1), f"Grand Total    {grand:,.2f}",
-             bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
-
-    # ═══════════════════════════════════════════════════════════
-    # 6. SUBJECT LINE
-    # ═══════════════════════════════════════════════════════════
     para('" Subject to Pune jurisdiction only "',
          size=9, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
 
