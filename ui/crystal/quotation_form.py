@@ -3307,7 +3307,6 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
                 "items": data.get("items", []),
-                "items": data.get("items", []),
             })
             return True
         except Exception as e:
@@ -3343,7 +3342,6 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
                 "items": data.get("items", []),
-                "items": data.get("items", []),
             })
             return True
         except Exception as e:
@@ -3379,7 +3377,6 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
                 "items": data.get("items", []),
-                "items": data.get("items", []),
             })
             return True
         except Exception as e:
@@ -3414,7 +3411,6 @@ class QuotationForm(tk.Toplevel):
                 "gst_type": data.get("gst_type", "CGST + SGST"),
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
-                "items": data.get("items", []),
                 "items": data.get("items", []),
             })
         except Exception as e:
