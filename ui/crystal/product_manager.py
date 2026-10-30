@@ -406,6 +406,7 @@ class ProductManager(tk.Toplevel):
         left = tk.Frame(bar, bg=self.CARD)
         left.pack(side="left", padx=22)
 
+        self._btn(left, "➕ Add New Product", self._add_new_product, primary=True).pack(side="left", padx=(0, 8))
         self.edit_btn = self._btn(left, "Edit Selected", self._edit_selected,
                                    primary=True)
         self.edit_btn.pack(side="left", pady=14)
@@ -665,6 +666,87 @@ class ProductManager(tk.Toplevel):
     def _on_select(self, _event=None):
         sel = self.tree.selection() if hasattr(self, "tree") else ()
         self.selected_key = sel[0] if sel else None
+
+    def _add_new_product(self):
+        """Open a popup to add a new product to the catalog."""
+        import tkinter as tk
+        from tkinter import messagebox
+        
+        dialog = tk.Toplevel(self)
+        dialog.title("Add New Product")
+        dialog.geometry("500x550")
+        dialog.configure(bg=self.BG)
+        dialog.transient(self)
+        dialog.grab_set()
+        
+        tk.Label(dialog, text="Add New Product", bg=self.BG, fg=self.TEXT, font=("Arial", 16, "bold")).pack(pady=15)
+        
+        form = tk.Frame(dialog, bg=self.BG)
+        form.pack(fill="both", expand=True, padx=30, pady=10)
+        
+        fields = {}
+        field_list = [
+            ("Model", "model"),
+            ("Category", "category"),
+            ("Product Name", "name"),
+            ("Description", "description"),
+            ("Price (₹)", "price"),
+            ("HSN/SAC Code", "hsn"),
+            ("Unit", "unit"),
+            ("Tax %", "tax"),
+        ]
+        
+        for label_text, key in field_list:
+            tk.Label(form, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 10, "bold"), anchor="w").pack(fill="x", pady=(8, 2))
+            var = tk.StringVar()
+            fields[key] = var
+            
+            if key == "description":
+                entry = tk.Text(form, height=3, font=("Arial", 10), relief="solid", bd=1)
+                entry.pack(fill="x")
+                fields[key + "_widget"] = entry
+            else:
+                entry = tk.Entry(form, textvariable=var, font=("Arial", 10), relief="solid", bd=1)
+                entry.pack(fill="x", ipady=3)
+        
+        def save():
+            model = fields["model"].get().strip()
+            if not model:
+                messagebox.showerror("Error", "Model is required.", parent=dialog)
+                return
+            
+            try:
+                price = float(fields["price"].get().strip() or "0")
+            except ValueError:
+                messagebox.showerror("Error", "Price must be a number.", parent=dialog)
+                return
+            
+            new_product = {
+                "model": model,
+                "category": fields["category"].get().strip() or "Uncategorized",
+                "name": fields["name"].get().strip(),
+                "product_name": fields["name"].get().strip(),
+                "description": fields["description_widget"].get("1.0", "end").strip(),
+                "price": price,
+                "hsn": fields["hsn"].get().strip() or "85059000",
+                "unit": fields["unit"].get().strip() or "NOS",
+                "tax_percent": fields["tax"].get().strip() or "18",
+                "status": "Active",
+            }
+            
+            try:
+                from app.services.catalog_admin_service import add_product
+                add_product(new_product)
+                messagebox.showinfo("Success", f"Product '{model}' added to catalog.", parent=dialog)
+                dialog.destroy()
+                self._reload()
+            except Exception as e:
+                messagebox.showerror("Error", f"Could not add product: {e}", parent=dialog)
+        
+        btns = tk.Frame(dialog, bg=self.BG)
+        btns.pack(fill="x", padx=30, pady=15)
+        tk.Button(btns, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=20, pady=8).pack(side="right")
+        tk.Button(btns, text="Save Product", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=8).pack(side="right", padx=(0, 10))
 
     def _edit_selected(self):
 
