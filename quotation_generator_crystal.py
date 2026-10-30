@@ -2097,20 +2097,45 @@ def _crystal_page(
         ]
     
     # Create the table with enough rows for Amount in Words + Tax Rows + Grand Total
-    tot_tbl = new_table(len(tot_rows) + 2, 2, widths_mm=[150, 26])
+    # ─── Totals Layout (Exact 2-Column Split) ───
+    # Outer table: Left (Amount in Words) | Right (Totals)
+    outer_tbl = new_table(1, 2, widths_mm=[110, 66])
     
-    # Row 0: Amount in Words (merged)
-    aw_cell = tot_tbl.cell(0, 0).merge(tot_tbl.cell(0, 1))
-    set_cell(aw_cell, f"Amount In Words :  {_amount_in_words_helper(grand)}", bold=False, size=10, align=WD_ALIGN_PARAGRAPH.LEFT)
+    # --- Left Cell: Amount in Words ---
+    left_cell = outer_tbl.cell(0, 0)
+    set_cell(left_cell, f"Amount In Words : {_amount_in_words_helper(grand)}", bold=False, size=10, align=WD_ALIGN_PARAGRAPH.LEFT)
     
-    # Rows 1 to N: Totals (labels on left, values on right)
-    for i, (label, value) in enumerate(tot_rows):
-        set_cell(tot_tbl.cell(i + 1, 0), label, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
-        set_cell(tot_tbl.cell(i + 1, 1), value, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    # --- Right Cell: Nested Totals Table ---
+    right_cell = outer_tbl.cell(0, 1)
+    right_cell.text = "" # Clear default paragraph
     
-    # Final Row: Grand Total (merged)
-    gt_cell = tot_tbl.cell(len(tot_rows) + 1, 0).merge(tot_tbl.cell(len(tot_rows) + 1, 1))
-    set_cell(gt_cell, f"Grand Total    {grand:,.2f}", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
+    # Prepare the totals list
+    final_totals = [("Total", f"{total_amt:,.2f}")]
+    if is_igst:
+        final_totals.append((f"IGST {gst_rate:g}%", f"{igst:,.2f}"))
+    else:
+        final_totals.append((f"C-Gst 9%", f"{cgst:,.2f}"))
+        final_totals.append((f"S-Gst 9%", f"{sgst:,.2f}"))
+    final_totals.append(("Rounding (+/-)", f"{rounding:,.2f}"))
+    
+    # Create a nested table inside the right cell for the totals
+    nested_tbl = right_cell.add_table(rows=len(final_totals), cols=2)
+    nested_tbl.style = "Table Grid"
+    
+    # Set nested column widths (so labels fit on the left)
+    for row in nested_tbl.rows:
+        row.cells[0].width = Mm(45)
+        row.cells[1].width = Mm(21)
+        
+    # Fill nested table
+    for i, (label, value) in enumerate(final_totals):
+        set_cell(nested_tbl.cell(i, 0), label, size=8, align=WD_ALIGN_PARAGRAPH.LEFT)
+        set_cell(nested_tbl.cell(i, 1), value, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    
+    # --- Grand Total Row (Merged 2-Column Table below) ---
+    gt_tbl = new_table(1, 2, widths_mm=[150, 26])
+    gt_merged = gt_tbl.cell(0, 0).merge(gt_tbl.cell(0, 1))
+    set_cell(gt_merged, f"Grand Total    {grand:,.2f}", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
 
     para('" Subject to Pune jurisdiction only "',
          size=9, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
