@@ -759,14 +759,21 @@ class ProductManager(tk.Toplevel):
         if self.current_tab == "products":
             catalog = load_catalog() or {}
             product = None
+            
+            # Robust search: case-insensitive, whitespace-trimmed
+            search_key = str(self.selected_key or "").strip().lower()
             for p in catalog.get("products", []):
-                if p.get("model") == self.selected_key:
+                if str(p.get("model", "")).strip().lower() == search_key:
                     product = p
                     break
+            
             if product is None:
-                messagebox.showerror("Not found",
-                                     "Product not found in catalog.",
-                                     parent=self)
+                messagebox.showerror(
+                    "Not found",
+                    f"Product '{self.selected_key}' not found in catalog.\n\n"
+                    f"Try clicking 'Reload' first.",
+                    parent=self
+                )
                 return
             dialog = ProductEditDialog(self, product)
             self.wait_window(dialog)
