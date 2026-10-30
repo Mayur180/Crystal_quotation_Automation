@@ -57,7 +57,7 @@ except Exception:
 
 
 try:
-    from quotation_generator import generate_quotation
+    from app.generators.quotation_generator import generate_quotation
 except Exception:
     generate_quotation = None
 
@@ -4454,7 +4454,7 @@ class QuotationForm(tk.Toplevel):
         except Exception as exc:
             messagebox.showerror(
                 "Preview unavailable",
-                f"Could not from app.generators import quotation_generator.\n\n"
+                f"Could not import VMM generator.\n\n"
                 f"{type(exc).__name__}: {exc}",
                 parent=self,
             )
