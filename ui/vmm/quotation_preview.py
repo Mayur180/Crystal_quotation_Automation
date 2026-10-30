@@ -501,7 +501,7 @@ class QuotationPreview(tk.Toplevel):
         # ---- Machine image ----
         image_path = None
         try:
-            from quotation_generator import find_product_image
+            from app.generators.quotation_generator import find_product_image
             image_path = find_product_image(self.product)
         except Exception:
             image_path = None
