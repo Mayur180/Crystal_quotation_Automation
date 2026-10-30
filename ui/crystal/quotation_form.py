@@ -1506,7 +1506,16 @@ class QuotationForm(tk.Toplevel):
             disc = subtotal
             
         total = subtotal - disc
-        self.items.append({"model": model, "hsn": (getattr(self, "hsn_var", tk.StringVar()).get().strip() or "85059000"), "price": price, "qty": qty, "discount": disc, "total": total})
+        self.items.append({
+            "model": model, 
+            "hsn": (getattr(self, "hsn_var", tk.StringVar()).get().strip() or "85059000"), 
+            "price": price, 
+            "qty": qty, 
+            "discount": disc, 
+            "raw_discount": raw_disc,
+            "disc_mode": mode_val,
+            "total": total
+        })
         self._refresh_cart_table()
         self.model.set("")
         self.machine_price.set("")
