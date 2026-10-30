@@ -4447,7 +4447,7 @@ class QuotationForm(tk.Toplevel):
 
         # ---- 3. Resolve product from catalog ----
         try:
-            from quotation_generator import (
+            from app.generators.quotation_generator import (
                 _resolve_product,
                 calculate_totals,
             )
