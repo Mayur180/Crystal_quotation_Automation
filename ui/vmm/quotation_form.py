@@ -3704,7 +3704,7 @@ class QuotationForm(tk.Toplevel):
                     "code": row["code"],
                     "name": row["name"],
                     "qty": qty,
-                    "unit_price": unit_price,
+                    "price": unit_price,
                     "total": qty * unit_price,
                     "selected": is_selected,
                 }
