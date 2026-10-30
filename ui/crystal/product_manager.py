@@ -407,7 +407,6 @@ class ProductManager(tk.Toplevel):
         left.pack(side="left", padx=22)
 
         self._btn(left, "➕ Add New Product", self._add_new_product, primary=True).pack(side="left", padx=(0, 8))
-        self._btn(left, "➕ Add New Product", self._add_new_product, primary=True).pack(side="left", padx=(0, 8))
         self.edit_btn = self._btn(left, "Edit Selected", self._edit_selected,
                                    primary=True)
         self.edit_btn.pack(side="left", pady=14)
