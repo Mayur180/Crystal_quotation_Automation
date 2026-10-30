@@ -3164,12 +3164,17 @@ class QuotationForm(tk.Toplevel):
         image_frame = tk.Frame(preview_win, bg="#F4F6F8")
         image_frame.pack(fill="both", expand=True, padx=20, pady=10)
         
-        status_label = tk.Label(image_frame, text="Generating PDF...", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 12))
+        status_label = tk.Label(image_frame, text="Click 'Generate PDF' to create the document.", bg="#F4F6F8", fg="#7F8C8D", font=("Arial", 11))
         status_label.pack(expand=True)
         
         btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
         btn_frame.pack(pady=15)
-        tk.Button(btn_frame, text="Close", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=preview_win.destroy, padx=20, pady=5).pack()
+        
+        # Add the Generate PDF button
+        gen_btn = tk.Button(btn_frame, text="Generate PDF", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=20, pady=5)
+        gen_btn.pack(side="left", padx=10)
+        
+        tk.Button(btn_frame, text="Close", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10), relief="flat", command=preview_win.destroy, padx=20, pady=5).pack(side="left", padx=10)
 
         def generate_and_render():
             try:
@@ -3235,7 +3240,8 @@ class QuotationForm(tk.Toplevel):
                 err_msg = str(e)
                 preview_win.after(0, lambda: status_label.config(text=f"Error: {err_msg}"))
         
-        threading.Thread(target=generate_and_render, daemon=True).start()
+        # Bind the button to the generation function
+        gen_btn.config(command=lambda: threading.Thread(target=generate_and_render, daemon=True).start())
 
     def _open_latest_pdf(self):
         """Find the latest PDF in Downloads and open it."""
