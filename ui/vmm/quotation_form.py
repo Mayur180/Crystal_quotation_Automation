@@ -4322,6 +4322,20 @@ class QuotationForm(tk.Toplevel):
             font=("Arial", 8, "bold"),
         ).pack(anchor="w", padx=22, pady=(18, 6))
 
+        # ── Search entry (debounced) ──────────────────────────────
+        search_var = tk.StringVar()
+        search_entry = tk.Entry(
+            picker, textvariable=search_var,
+            font=("Arial", 10), relief="solid", bd=1,
+        )
+        search_entry.pack(fill="x", padx=22, pady=(0, 8))
+        search_entry.focus_set()
+
+        tk.Label(
+            picker, text="Type name, company or phone…",
+            bg=self.BG, fg=self.MUTED, font=("Arial", 8),
+        ).pack(anchor="w", padx=24, pady=(0, 6))
+
         listbox = tk.Listbox(
             picker,
             bg="white", fg=self.TEXT,
@@ -4340,19 +4354,48 @@ class QuotationForm(tk.Toplevel):
                     return str(value)
             return ""
 
-        for r in records:
-            label = (
-                f"{customer_value(r, 'name', 'contact_person')}  —  "
-                f"{customer_value(r, 'company', 'company_name')}  —  "
-                f"{customer_value(r, 'phone')}"
-            )
-            listbox.insert("end", label)
+        records.sort(key=lambda r: customer_value(r, "name", "contact_person").lower())
+
+        VISIBLE_CAP = 200
+        _state = {"filtered": [], "after_id": None}
+
+        def _render(filtered):
+            _state["filtered"] = filtered
+            listbox.delete(0, "end")
+            for r in filtered[:VISIBLE_CAP]:
+                label = (
+                    f"{customer_value(r, 'name', 'contact_person')}  —  "
+                    f"{customer_value(r, 'company', 'company_name')}  —  "
+                    f"{customer_value(r, 'phone')}"
+                )
+                listbox.insert("end", label)
+
+        def _apply_filter():
+            q = search_var.get().strip().lower()
+            if not q:
+                _render(records)
+                return
+            matches = [
+                r for r in records
+                if q in customer_value(r, "name", "contact_person").lower()
+                or q in customer_value(r, "company", "company_name").lower()
+                or q in customer_value(r, "phone").lower()
+            ]
+            _render(matches)
+
+        def _on_type(*_):
+            if _state["after_id"]:
+                picker.after_cancel(_state["after_id"])
+            _state["after_id"] = picker.after(250, _apply_filter)
+
+        search_var.trace_add("write", _on_type)
+        _apply_filter()
 
         def apply_selection():
             sel = listbox.curselection()
             if not sel:
                 return
-            record = records[sel[0]]
+            record = _state["filtered"][sel[0]]
 
             self.customer_name.set(
                 customer_value(record, 'name', 'contact_person')
