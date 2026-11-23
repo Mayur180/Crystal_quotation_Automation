@@ -5,3 +5,13 @@ __pycache__/
 *.pyd
 output/quotations/*
 data/quotations/*
+.venv/
+build/
+dist/
+__pycache__/
+*.log
+data/VMM/backups/
+data/*/activity_log.jsonl
+*.bak
+*.bak2
+ui/output/
