@@ -15,3 +15,6 @@ data/*/activity_log.jsonl
 *.bak
 *.bak2
 ui/output/
+jarvis/
+data/Crystal/deleted_quotations.json
+data/offer_counter.json
