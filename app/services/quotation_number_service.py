@@ -4,6 +4,7 @@ Quotation Number Service
 """
 
 import json
+import re
 from pathlib import Path
 
 try:
@@ -210,6 +211,41 @@ def get_current_quotation_number():
         f"{FINANCIAL_YEAR}/"
         f"{last_number:03d}"
     )
+
+
+# ============================================================
+# REVISIONS
+# ============================================================
+
+_REVISION_RE = re.compile(r"^(?P<base>.+?)-R(?P<rev>\d+)$", re.IGNORECASE)
+
+
+def split_revision(quotation_number):
+    """Return (base_number, revision_index).
+
+    CRY/26-27/067-R2 → ("CRY/26-27/067", 2)
+    CRY/26-27/067    → ("CRY/26-27/067", 0)
+    """
+    text = str(quotation_number or "").strip()
+    match = _REVISION_RE.match(text)
+    if not match:
+        return text, 0
+    return match.group("base"), int(match.group("rev"))
+
+
+def next_revision_number(quotation_number, existing_numbers=()):
+    """Return the next revision number for a quotation.
+
+    Revising CRY/26-27/067-R1 (or CRY/26-27/067) yields CRY/26-27/067-R2
+    when R1 is the highest revision found in ``existing_numbers``.
+    """
+    base, _ = split_revision(quotation_number)
+    highest = 0
+    for number in existing_numbers or ():
+        other_base, rev = split_revision(number)
+        if other_base == base and rev > highest:
+            highest = rev
+    return f"{base}-R{highest + 1}"
 
 
 # ============================================================

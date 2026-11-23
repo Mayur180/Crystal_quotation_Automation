@@ -307,7 +307,7 @@ class QuotationHistory(tk.Toplevel):
         status_cb = ttk.Combobox(
             bar,
             textvariable=self.status_var,
-            values=("All", "Draft", "Sent", "Accepted", "Rejected", "Expired"),
+            values=("All", "Draft", "Sent", "Accepted", "Rejected", "Expired", "Superseded"),
             state="readonly",
             width=10,
             font=("Arial", 9),
@@ -358,6 +358,7 @@ class QuotationHistory(tk.Toplevel):
             "Accepted": ("#E7F6EC", "#0F6B3A"),
             "Rejected": ("#FDECEC", "#A01616"),
             "Expired":  ("#F0F1F3", "#6B7280"),
+            "Superseded": ("#F0F1F3", "#6B7280"),
         }
         for _status_name, (_bg, _fg) in STATUS_STYLES.items():
             self.tree.tag_configure(
@@ -603,6 +604,7 @@ class QuotationHistory(tk.Toplevel):
 
         self._btn(left, "Open Word", self._open_docx).pack(side="left", pady=14)
         self._btn(left, "Open PDF", self._open_pdf).pack(side="left", padx=(8, 0), pady=14)
+        self._btn(left, "Revise", self._revise).pack(side="left", padx=(8, 0), pady=14)
         self._btn(left, "Send WhatsApp", self._send_whatsapp).pack(side="left", padx=(8, 0), pady=14)
         self._btn(left, "Show in folder", self._reveal).pack(side="left", padx=(8, 0), pady=14)
         self._btn(left, "Set Status", self._set_status).pack(side="left", padx=(8, 0), pady=14)
@@ -638,6 +640,58 @@ class QuotationHistory(tk.Toplevel):
     # --------------------------------------------------------
 
     def _reload(self):
+
+        # --- INSTANT CACHE LOAD (No Network) ---
+        try:
+            import json, os
+            from app.services.paths import get_active_module
+            cache_file = "data/cloud_cache.json"
+            if os.path.exists(cache_file):
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    cache = json.load(f)
+                active_mod = get_active_module()
+                cached_recs = cache.get(active_mod, [])
+                if cached_recs:
+                    print(f"[History] ⚡ Instant load from cache: {len(cached_recs)} records.")
+                    self._fill_rows(cached_recs)
+                    return
+        except Exception as e:
+            print(f"[History] Cache load error: {e}")
+        # ---------------------------------------
+
+
+
+        # --- INSTANT CACHE LOAD (No Network) ---
+        try:
+            import json, os
+            from app.services.paths import get_active_module
+            cache_file = "data/cloud_cache.json"
+            if os.path.exists(cache_file):
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    cache = json.load(f)
+                active_mod = get_active_module()
+                cached_recs = cache.get(active_mod, [])
+                if cached_recs:
+                    print(f"[History] ⚡ Instant load from cache: {len(cached_recs)} records.")
+                    # Try to populate the table with whatever method exists
+                    if hasattr(self, "_populate_table"):
+                        self._populate_table(cached_recs)
+                    elif hasattr(self, "_render_rows"):
+                        self._render_rows(cached_recs)
+                    elif hasattr(self, "_fill_tree"):
+                        self._fill_tree(cached_recs)
+                    # Load counters instantly too (if they exist)
+                    if hasattr(self, "_reload_counters_from_data"):
+                        self._reload_counters_from_data(cached_recs)
+                    # Return early so we don't wait for network
+                    return
+        except Exception as e:
+            print(f"[History] Cache load error: {e}")
+        # ---------------------------------------
+
+
+
+
 
         if list_quotations is None:
             self._fill_rows([])
@@ -1205,10 +1259,31 @@ class QuotationHistory(tk.Toplevel):
                                 parent=self)
             return
         path = rec.get("docx_path")
+        
+        # If file doesn't exist locally, try cloud
+        if not path or not os.path.isfile(path):
+            quote_num = str(rec.get("quotation_number", "")).replace("/", "_")
+            model = str(rec.get("model", "")).replace("/", "_")
+            cloud_filename = f"Quotation_{quote_num}_{model}.docx"
+            # Fallback to checking if the file is just in the root
+            if not path:
+                path = os.path.join("output", "VMM", cloud_filename)
+                
+            from app.services.cloud_sync import download_file_from_cloud
+            self.config(cursor="watch")
+            self.update_idletasks()
+            success = download_file_from_cloud(cloud_filename, path)
+            self.config(cursor="")
+            
+            if success:
+                _open_path(path)
+                self._reload()
+                return
+                
         if not _open_path(path):
             messagebox.showerror(
                 "File not found",
-                f"Word file is missing:\n{path}",
+                f"Word file is missing locally and could not be downloaded from the cloud:\n{path}",
                 parent=self,
             )
 
@@ -1230,6 +1305,22 @@ class QuotationHistory(tk.Toplevel):
                     f"PDF file is missing:\n{path}",
                     parent=self,
                 )
+            return
+            
+        # ---- case 2: PDF doesn't exist locally, try downloading ----
+        quote_num = str(rec.get("quotation_number", "")).replace("/", "_")
+        model = str(rec.get("model", "")).replace("/", "_")
+        cloud_filename = f"Quotation_{quote_num}_{model}.pdf"
+        
+        from app.services.cloud_sync import download_file_from_cloud
+        self.config(cursor="watch")
+        self.update_idletasks()
+        success = download_file_from_cloud(cloud_filename, path or os.path.join("output", "VMM", cloud_filename))
+        self.config(cursor="")
+        
+        if success:
+            _open_path(path)
+            self._reload()
             return
 
         # ---- case 2: no PDF -> ask ----
@@ -1359,6 +1450,57 @@ class QuotationHistory(tk.Toplevel):
                 "The file could not be located.",
                 parent=self,
             )
+
+
+    def _revise(self):
+        """Open a new Quotation form pre-filled from the selected record,
+        but with a new revision number (e.g., -R1) and supersede the old one."""
+        record = self._current_record()
+        if not record:
+            messagebox.showinfo("Revise", "Select a quotation first.", parent=self)
+            return
+
+        old_number = record.get("quotation_number", "")
+        if not old_number:
+            return
+
+        # Calculate new revision number
+        if "-R" in old_number:
+            base, rev = old_number.rsplit("-R", 1)
+            try:
+                new_rev = int(rev) + 1
+                new_number = f"{base}-R{new_rev}"
+            except ValueError:
+                new_number = f"{old_number}-R1"
+        else:
+            new_number = f"{old_number}-R1"
+
+        # 1. Supersede the original quote locally
+        try:
+            from app.services.quotation_history_service import update_quotation_status
+            update_quotation_status(old_number, "Superseded")
+        except Exception as e:
+            print(f"Failed to supersede locally: {e}")
+            
+        # 2. Supersede the original quote in the cloud
+        try:
+            from app.services.cloud_sync import update_quotation_status_in_cloud
+            update_quotation_status_in_cloud(old_number, "Superseded")
+        except Exception as e:
+            print(f"Failed to supersede in cloud: {e}")
+
+        # 3. Prepare the new revised record
+        revised_data = dict(record)
+        revised_data["quotation_number"] = new_number
+        revised_data["status"] = "Draft" 
+        
+        # 4. Open the form
+        try:
+            from ui.vmm.quotation_form import QuotationForm
+            QuotationForm(self.master, self, prefill=revised_data)
+            self._reload() # Refresh history to show "Superseded" status
+        except Exception as e:
+            messagebox.showerror("Revise", f"Could not open Quotation form:\n{e}", parent=self)
 
     def _delete(self):
         rec = self._current_record()

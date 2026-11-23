@@ -3833,6 +3833,12 @@ class QuotationForm(tk.Toplevel):
             "selected_terms":
                 selected_terms,
 
+            "quotation_number":
+                self._prefill.get("quotation_number") if self._prefill else None,
+
+            "quotation_number":
+                self._prefill.get("quotation_number") if self._prefill else None,
+
             "quotation_date":
                 date.today().isoformat(),
         }
@@ -4567,13 +4573,17 @@ class QuotationForm(tk.Toplevel):
 
     def _peek_offer_number(self, data):
         """
-        Read the NEXT offer number without incrementing the counter.
-        Also returns the quotation date string.
+        Read the NEXT offer number OR use the pre-filled revision number.
         """
+        # 1. Check if we are revising an existing quote
+        if self._prefill and self._prefill.get("quotation_number"):
+            qn = self._prefill.get("quotation_number")
+            qd = data.get("quotation_date") or self._prefill.get("date") or ""
+            return qn, qd
 
+        # 2. Otherwise, generate a new one as usual
         prefix = "AA/VMM"
         fy = "26-27"
-
         try:
             from app.company import QUOTATION
             prefix = QUOTATION.get("prefix", prefix)
@@ -4585,7 +4595,6 @@ class QuotationForm(tk.Toplevel):
         from pathlib import Path as _Path
 
         counter_file = _Path(PROJECT_ROOT) / "data" / "offer_counter.json"
-
         serial = 1
         try:
             if counter_file.is_file():
@@ -4595,19 +4604,47 @@ class QuotationForm(tk.Toplevel):
             pass
 
         qn = f"{prefix}/{fy}/{serial:03d}"
-
-        # Date — take from data or today
         qd = data.get("quotation_date") or ""
-
         try:
-            from datetime import date as _d, datetime as _dt
-            # If ISO, reformat to DD-MM-YYYY
+            from datetime import datetime
             if qd and "-" in qd and len(qd) == 10 and qd[4] == "-":
                 y, m, d = qd.split("-")
                 qd = f"{d}-{m}-{y}"
         except Exception:
             pass
+        return qn, qd
 
+        # 2. Otherwise, generate a new one as usual
+        prefix = "AA/VMM"
+        fy = "26-27"
+        try:
+            from app.company import QUOTATION
+            prefix = QUOTATION.get("prefix", prefix)
+            fy = QUOTATION.get("financial_year", fy)
+        except Exception:
+            pass
+
+        import json as _json
+        from pathlib import Path as _Path
+
+        counter_file = _Path(PROJECT_ROOT) / "data" / "offer_counter.json"
+        serial = 1
+        try:
+            if counter_file.is_file():
+                counter = _json.loads(counter_file.read_text(encoding="utf-8")) or {}
+                serial = int(counter.get(f"{prefix}/{fy}", 0)) + 1
+        except Exception:
+            pass
+
+        qn = f"{prefix}/{fy}/{serial:03d}"
+        qd = data.get("quotation_date") or ""
+        try:
+            from datetime import datetime
+            if qd and "-" in qd and len(qd) == 10 and qd[4] == "-":
+                y, m, d = qd.split("-")
+                qd = f"{d}-{m}-{y}"
+        except Exception:
+            pass
         return qn, qd
 
     # ========================================================

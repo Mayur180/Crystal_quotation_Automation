@@ -132,6 +132,19 @@ class QuotationsBrowser(tk.Toplevel):
         vsb.pack(side="right", fill="y")
         self.tree.bind("<Double-1>", self._on_double)
 
+        actions = tk.Frame(self, bg=self.CARD, height=60,
+                           highlightbackground=self.BORDER, highlightthickness=1)
+        actions.pack(side="bottom", fill="x", pady=(0, 1))
+        actions.pack_propagate(False)
+        inner_act = tk.Frame(actions, bg=self.CARD)
+        inner_act.pack(fill="x", padx=18, pady=12)
+
+        self._btn(inner_act, "Open PDF", self._open_pdf).pack(side="left", padx=(0, 8))
+        self._btn(inner_act, "Open Word", self._open_word).pack(side="left", padx=(0, 8))
+        self._btn(inner_act, "Revise", self._revise).pack(side="left", padx=(0, 8))
+        self._btn(inner_act, "Send WhatsApp", self._send_whatsapp).pack(side="left", padx=(0, 8))
+        self._btn(inner_act, "Set Status", self._set_status).pack(side="left")
+
         status = tk.Frame(self, bg=self.CARD, height=40,
                           highlightbackground=self.BORDER, highlightthickness=1)
         status.pack(side="bottom", fill="x"); status.pack_propagate(False)
@@ -194,6 +207,182 @@ class QuotationsBrowser(tk.Toplevel):
         self.status_var.set(
             "Last refreshed: %s  \u2022  %d row(s)" % (
                 datetime.now().strftime("%H:%M:%S"), len(self._rows)))
+
+    def _btn(self, parent, text, command, *, danger=False):
+        bg = "white"
+        fg = self.RED if danger else self.TEXT
+        active_bg = "#FFF3F3" if danger else "#F3F4F6"
+        return tk.Button(
+            parent, text=text, command=command,
+            bg=bg, fg=fg, activebackground=active_bg, activeforeground=fg,
+            relief="solid", bd=1, highlightthickness=0,
+            font=("Arial", 9, "bold"), cursor="hand2",
+            padx=14, pady=6)
+
+    def _current_record(self):
+        sel = self.tree.selection()
+        if not sel:
+            return None
+        vals = self.tree.item(sel[0], "values")
+        if not vals:
+            return None
+        # Map tree columns to a dict: date,user,quot,customer,company,model,total,status
+        return {
+            "quotation_number": vals[2],
+            "date": vals[0],
+            "user": vals[1],
+            "customer_name": vals[3],
+            "customer_company": vals[4],
+            "model": vals[5],
+            "grand_total": vals[6],
+            "status": vals[7],
+        }
+
+    def _open_pdf(self):
+        rec = self._current_record()
+        if not rec:
+            messagebox.showinfo("Open PDF", "Select a quotation first.", parent=self)
+            return
+        quote_num = str(rec["quotation_number"]).replace("/", "_")
+        model = str(rec["model"]).replace("/", "_")
+        cloud_filename = f"Quotation_{quote_num}_{model}.pdf"
+        
+        local_dir = os.path.join(PROJECT_ROOT, "output", "VMM")
+        local_path = os.path.join(local_dir, cloud_filename)
+        
+        if os.path.isfile(local_path):
+            self._launch(local_path)
+            return
+            
+        from app.services.cloud_sync import download_file_from_cloud
+        self.status_var.set("Downloading PDF from cloud...")
+        self.update_idletasks()
+        success = download_file_from_cloud(cloud_filename, local_path)
+        if success:
+            self._launch(local_path)
+            self.status_var.set("Downloaded and opened.")
+        else:
+            messagebox.showerror("Error", f"Could not download PDF from cloud:\n{cloud_filename}", parent=self)
+            self.status_var.set("Download failed.")
+
+    def _open_word(self):
+        rec = self._current_record()
+        if not rec:
+            messagebox.showinfo("Open Word", "Select a quotation first.", parent=self)
+            return
+        quote_num = str(rec["quotation_number"]).replace("/", "_")
+        model = str(rec["model"]).replace("/", "_")
+        cloud_filename = f"Quotation_{quote_num}_{model}.docx"
+        
+        local_dir = os.path.join(PROJECT_ROOT, "output", "VMM")
+        local_path = os.path.join(local_dir, cloud_filename)
+        
+        if os.path.isfile(local_path):
+            self._launch(local_path)
+            return
+            
+        from app.services.cloud_sync import download_file_from_cloud
+        self.status_var.set("Downloading Word from cloud...")
+        self.update_idletasks()
+        success = download_file_from_cloud(cloud_filename, local_path)
+        if success:
+            self._launch(local_path)
+            self.status_var.set("Downloaded and opened.")
+        else:
+            messagebox.showerror("Error", f"Could not download Word from cloud:\n{cloud_filename}", parent=self)
+            self.status_var.set("Download failed.")
+
+    def _launch(self, path):
+        try:
+            if sys.platform.startswith("win"):
+                os.startfile(path)
+            elif sys.platform == "darwin":
+                import subprocess; subprocess.Popen(["open", path])
+            else:
+                import subprocess; subprocess.Popen(["xdg-open", path])
+        except Exception as e:
+            messagebox.showerror("Error", f"Could not open file:\n{e}", parent=self)
+
+    def _revise(self):
+        rec = self._current_record()
+        if not rec:
+            messagebox.showinfo("Revise", "Select a quotation first.", parent=self)
+            return
+
+        old_number = rec.get("quotation_number", "")
+        if not old_number:
+            return
+
+        # Calculate new revision number
+        if "-R" in old_number:
+            base, rev = old_number.rsplit("-R", 1)
+            try:
+                new_number = f"{base}-R{int(rev) + 1}"
+            except ValueError:
+                new_number = f"{old_number}-R1"
+        else:
+            new_number = f"{old_number}-R1"
+
+        revised_data = dict(rec)
+        revised_data["quotation_number"] = new_number
+        revised_data["status"] = "Draft"
+
+        # Try to load full data from local history if available
+        try:
+            from app.services.quotation_history_service import get_quotation
+            full = get_quotation(old_number)
+            if full:
+                revised_data.update(full)
+                revised_data["quotation_number"] = new_number
+                revised_data["status"] = "Draft"
+        except Exception:
+            pass
+
+        try:
+            from ui.vmm.quotation_form import QuotationForm
+            QuotationForm(self.master, self, prefill=revised_data)
+        except Exception as e:
+            messagebox.showerror("Revise", f"Could not open form:\n{e}", parent=self)
+
+    def _send_whatsapp(self):
+        rec = self._current_record()
+        if not rec:
+            messagebox.showinfo("WhatsApp", "Select a quotation first.", parent=self)
+            return
+        msg = f"Quotation {rec['quotation_number']} for {rec['customer_name']} ({rec['model']}) - Total: {rec['grand_total']}"
+        try:
+            import webbrowser
+            from urllib.parse import quote
+            webbrowser.open_new_tab(f"https://wa.me/?text={quote(msg)}")
+        except Exception as e:
+            messagebox.showerror("WhatsApp", f"Could not open WhatsApp:\n{e}", parent=self)
+
+    def _set_status(self):
+        rec = self._current_record()
+        if not rec:
+            messagebox.showinfo("Status", "Select a quotation first.", parent=self)
+            return
+        # Simple prompt for new status
+        from tkinter import simpledialog
+        new_status = simpledialog.askstring(
+            "Set Status",
+            f"Current status: {rec['status']}\n\nEnter new status (Draft, Sent, Accepted, Rejected, Superseded):",
+            parent=self
+        )
+        if not new_status:
+            return
+        new_status = new_status.strip().title()
+        try:
+            from app.services.quotation_history_service import update_quotation_status
+            update_quotation_status(rec["quotation_number"], new_status)
+        except Exception:
+            pass
+        try:
+            from app.services.cloud_sync import update_quotation_status_in_cloud
+            update_quotation_status_in_cloud(rec["quotation_number"], new_status)
+        except Exception:
+            pass
+        self._refresh()
 
     def _on_double(self, _e):
         sel = self.tree.selection()

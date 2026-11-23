@@ -886,6 +886,83 @@ class Dashboard(tk.Tk):
     # RECENT QUOTATIONS — DATA LOADING
     # --------------------------------------------------------
 
+
+    def _load_cached_data(self):
+        """Loads data from local cache instantly on startup."""
+        try:
+            import json
+            import os
+            cache_file = "data/cloud_cache.json"
+            if os.path.exists(cache_file):
+                with open(cache_file, "r", encoding="utf-8") as f:
+                    cache = json.load(f)
+                records = cache.get(self._active_module, [])
+                if records:
+                    print(f"[Dashboard] ⚡ Instant load from cache: {len(records)} records.")
+                    self._populate_table(records)
+                    self._reload_counters_from_data(records)
+                    return
+        except Exception as e:
+            print(f"[Dashboard] Cache load error: {e}")
+
+    def _populate_table(self, records):
+        """Reusable function to fill the table."""
+        for row in self.recent_tree.get_children():
+            self.recent_tree.delete(row)
+            
+        for r in records:
+            total = r.get("grand_total", "0.00")
+            try:
+                clean_total = str(total).replace(",", "").replace("₹", "").strip()
+                total_str = f"₹ {Decimal(clean_total):,.2f}"
+            except Exception:
+                total_str = "₹ 0.00"
+            self.recent_tree.insert("", "end", values=(
+                r.get("quotation_number", "—"),
+                r.get("date", "—"),
+                r.get("customer_name", "—"),
+                r.get("customer_company", "—"),
+                r.get("model", "—"),
+                total_str
+            ))
+
+    def _reload_counters_from_data(self, records):
+        """Calculate counters from a list of records (no network)."""
+        total_count = len(records)
+        month_count = 0
+        total_value = 0.0
+        current_month = date.today().strftime("%m")
+        current_year = date.today().strftime("%Y")
+
+        for record in records:
+            try:
+                raw_total = record.get("grand_total", 0)
+                total_value += float(str(raw_total).replace(",", "").replace("₹", "").strip() or 0)
+            except Exception:
+                pass
+            raw_date = str(record.get("date", "")).strip()
+            parsed_date = None
+            for fmt in ("%d-%m-%Y", "%d/%m/%Y", "%Y-%m-%d", "%d %b %Y", "%d %B %Y"):
+                try:
+                    parsed_date = datetime.strptime(raw_date[:10], fmt)
+                    break
+                except ValueError:
+                    continue
+            if parsed_date and (parsed_date.strftime("%m") == current_month and parsed_date.strftime("%Y") == current_year):
+                month_count += 1
+
+        average_value = (total_value / total_count) if total_count else 0.0
+        accepted = sum(1 for r in records if str(r.get("status", "")).lower() == "accepted")
+        conv = (accepted / total_count * 100) if total_count else 0.0
+
+        if hasattr(self, "counter_labels"):
+            self.counter_labels["total"].configure(text=f"{total_count:,}")
+            self.counter_labels["month"].configure(text=f"{month_count:,}")
+            self.counter_labels["value"].configure(text=f"₹ {total_value:,.2f}")
+            self.counter_labels["average"].configure(text=f"₹ {average_value:,.2f}")
+        if "conversion" in self.counter_labels:
+            self.counter_labels["conversion"].config(text=f"{conv:.1f}%")
+
     def _reload_recent(self):
 
         if self.recent_tree is None:

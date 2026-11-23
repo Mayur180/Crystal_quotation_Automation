@@ -6,6 +6,7 @@ Creates required folders.
 import os
 import json
 import requests
+import threading
 from pathlib import Path
 
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwhhqEsHfFmh8Iv4ndlSbTcKiuDuDFMaee1k5dsPaXNmZpSked5adzzOCu-N6UxiO83ZQ/exec"
@@ -32,7 +33,9 @@ def download_catalog():
     
     print("⬇️  Downloading catalog from Google Sheets...")
     try:
-        response = requests.get(f"{WEBHOOK_URL}?action=get_catalog", timeout=15)
+        # OFFLINE MODE: Catalog download disabled
+        print("[bootstrap] ⚡ Using offline catalog (skipping download).")
+        response = None
         if response.status_code == 200:
             data = response.json()
             products = data.get("products", [])

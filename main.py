@@ -16,6 +16,15 @@ import sys
 import gc
 from pathlib import Path
 
+# Windows consoles often use a legacy code page (cp1252); the status
+# lines contain emoji, and an encoding error there must never kill the
+# app. Force UTF-8 with replacement on the console streams.
+for _stream in (getattr(sys, "stdout", None), getattr(sys, "stderr", None)):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 
 # ============================================================
 # PATH SETUP (frozen EXE + script)
@@ -275,9 +284,16 @@ def main():
         pass
 
     # ---- SYNC USERS FROM GOOGLE SHEETS ----
+    # Refresh in the background so the login window opens immediately. Only
+    # block when there is no local user file yet (fresh PC).
     try:
         from app.services.user_service import fetch_users_from_sheet
-        fetch_users_from_sheet()
+        from app.services.paths import get_data_root
+        if (get_data_root() / "Users.json").exists():
+            import threading
+            threading.Thread(target=fetch_users_from_sheet, daemon=True).start()
+        else:
+            fetch_users_from_sheet()
     except Exception as e:
         print(f"[startup] Could not sync users: {e}")
 
@@ -325,5 +341,59 @@ def main():
         return main()
 
 
+# ============================================================
+# RUNTIME GUARD
+# The app is sometimes started with a Python that does not have
+# the project's packages installed (Pillow, PyMuPDF, pywin32 ...).
+# Restart it under the project's virtualenv instead of failing
+# halfway through the UI.
+# ============================================================
+
+REQUIRED_MODULES = ("docx", "PIL", "fitz", "win32com", "docx2pdf")
+
+
+def _missing_modules(required=REQUIRED_MODULES):
+    import importlib.util
+    missing = []
+    for name in required:
+        try:
+            if importlib.util.find_spec(name) is None:
+                missing.append(name)
+        except (ImportError, ValueError):
+            missing.append(name)
+    return missing
+
+
+def _ensure_runtime(required=REQUIRED_MODULES):
+    if getattr(sys, "frozen", False):
+        return
+
+    missing = _missing_modules(required)
+    if not missing:
+        return
+
+    import os
+    import subprocess
+
+    if os.environ.get("CRYSTAL_VENV_RESTART") == "1":
+        print(f"[startup] Missing packages: {', '.join(missing)}")
+        print("[startup] Install them with: pip install -r requirements.txt")
+        return
+
+    venv_python = Path(__file__).resolve().parent / ".venv" / "Scripts" / "python.exe"
+    if venv_python.exists() and Path(sys.executable).resolve() != venv_python.resolve():
+        print(f"[startup] Missing {', '.join(missing)} — restarting with {venv_python}")
+        env = dict(os.environ, CRYSTAL_VENV_RESTART="1")
+        code = subprocess.call(
+            [str(venv_python), str(Path(__file__).resolve()), *sys.argv[1:]],
+            env=env,
+        )
+        raise SystemExit(code)
+
+    print(f"[startup] Missing packages: {', '.join(missing)}")
+    print("[startup] Install them with: pip install -r requirements.txt")
+
+
 if __name__ == "__main__":
+    _ensure_runtime()
     main()

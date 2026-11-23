@@ -36,10 +36,23 @@ def _catalog_file():
     # Final fallback to the root data folder
     return base / "catalog.json"
 
+_CATALOG_CACHE = {"path": None, "mtime": None, "data": None}
+
+
 def load_catalog():
     catalog_path = _catalog_file()
     if not catalog_path.exists():
         raise FileNotFoundError(f"Catalog file not found:\n{catalog_path}")
+
+    # catalog.json is several megabytes and is read on every product lookup,
+    # so keep the parsed result until the file changes on disk.
+    try:
+        mtime = catalog_path.stat().st_mtime
+    except OSError:
+        mtime = None
+    cache = _CATALOG_CACHE
+    if cache["data"] is not None and cache["path"] == str(catalog_path) and cache["mtime"] == mtime:
+        return cache["data"]
 
     with open(catalog_path, "r", encoding="utf-8") as f:
         raw = json.load(f)
@@ -59,7 +72,9 @@ def load_catalog():
         if isinstance(p, dict) and "price" not in p and "rate" in p:
             p["price"] = p["rate"]
 
-    return {"products": products, "accessories": accessories}
+    data = {"products": products, "accessories": accessories}
+    cache.update(path=str(catalog_path), mtime=mtime, data=data)
+    return data
 
 
 # ============================================================

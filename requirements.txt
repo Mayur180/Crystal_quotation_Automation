@@ -1,2 +1,7 @@
 python-docx
 Pillow
+pymupdf
+docx2pdf
+pywin32
+requests
+bcrypt

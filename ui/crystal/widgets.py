@@ -189,9 +189,10 @@ class StatCard(tk.Frame):
         body.pack(side="left", fill="both", expand=True, padx=20, pady=18)
 
         # Big value
-        tk.Label(body, text=value, bg=T.SURFACE,
+        self.value_label = tk.Label(body, text=value, bg=T.SURFACE,
                  fg=accent_color or T.TEXT,
-                 font=T.FONT_KPI, anchor="w").pack(anchor="w")
+                 font=T.FONT_KPI, anchor="w")
+        self.value_label.pack(anchor="w")
 
         # Label
         tk.Label(body, text=label, bg=T.SURFACE,

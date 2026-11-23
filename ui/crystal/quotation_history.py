@@ -9,8 +9,10 @@
 # ============================================================
 
 import os
+import queue
 import sys
 import subprocess
+import threading
 import tkinter as tk
 from urllib.parse import quote as _url_quote
 from tkinter import ttk, messagebox
@@ -37,13 +39,17 @@ if PROJECT_ROOT not in sys.path:
 try:
     from app.services.quotation_history_service import (
         list_quotations,
+        local_quotations,
         get_quotation,
         delete_quotation,
+        merge_quotation_records,
     )
 except Exception:
     list_quotations = None
+    local_quotations = None
     get_quotation = None
     delete_quotation = None
+    merge_quotation_records = None
 
 
 # ============================================================
@@ -163,10 +169,14 @@ class QuotationHistory(tk.Toplevel):
         self.status_var = tk.StringVar(value="All")
         self.selected_number = None
         self._all_records = []
+        self._fetching = False
+        self._filter_job = None
+        self._fetch_queue = queue.Queue()
 
         self._configure_style()
         self._build_interface()
         self._reload()
+        self.after(150, self._poll_fetch_queue)
 
         # ---- Keyboard shortcuts ----
         try:
@@ -291,7 +301,7 @@ class QuotationHistory(tk.Toplevel):
                 e.pack(side="left", fill="x", expand=True, ipady=6)
             else:
                 e.pack(side="left", ipady=6)
-            e.bind("<KeyRelease>", lambda _e: self._reload())
+            e.bind("<KeyRelease>", lambda _e: self._schedule_filter())
             return e
 
         _label(bar, "Search")
@@ -378,6 +388,12 @@ class QuotationHistory(tk.Toplevel):
         self._ctx_menu = tk.Menu(self, tearoff=0)
         self._ctx_menu.add_command(
             label="Open Word", command=self._open_docx,
+        )
+        self._ctx_menu.add_command(
+            label="View material / items", command=self._show_items,
+        )
+        self._ctx_menu.add_command(
+            label="Revise quotation", command=self._revise,
         )
         self._ctx_menu.add_command(
             label="Duplicate quotation", command=self._duplicate,
@@ -473,6 +489,8 @@ class QuotationHistory(tk.Toplevel):
     # --------------------------------------------------------
 
     def _build_actions(self):
+        # Force enable delete for now
+        self._force_delete = True
 
         bar = tk.Frame(self, bg=self.CARD, height=70,
                        highlightbackground=self.BORDER,
@@ -518,34 +536,99 @@ class QuotationHistory(tk.Toplevel):
 
     # --------------------------------------------------------
 
+    def _schedule_filter(self):
+        """Debounce keystrokes — filtering is local, no cloud round-trip."""
+        if self._filter_job is not None:
+            try:
+                self.after_cancel(self._filter_job)
+            except Exception:
+                pass
+        self._filter_job = self.after(250, self._reload)
+
     def _reload(self):
+        """Refilter the loaded records; fetch from the cloud only when needed."""
+        self._filter_job = None
 
         if list_quotations is None:
             self._fill_rows([])
             self.count_label.configure(text="Service unavailable")
             return
 
+        if not self._all_records:
+            self.count_label.configure(text="Loading…")
+            self._fill_rows([])
+            self._start_fetch()
+            return
+
+        self._apply_filters()
+
+    def _start_fetch(self):
+        """Download quotation records in the background, then refresh the table."""
+        if self._fetching:
+            return
+        self._fetching = True
+
+        def worker():
+            records = None
+            try:
+                from app.services.cloud_sync import fetch_quotations_from_cloud
+                from app.services.paths import get_active_module
+                cloud_records = fetch_quotations_from_cloud(
+                    limit=10000, module=get_active_module(), silent=True
+                )
+                records = [
+                    r for r in (cloud_records or [])
+                    if str(r.get("quotation_number", "")).upper().startswith("CRY")
+                ]
+            except Exception as e:
+                print(f"[History] Cloud load failed: {e}")
+            self._fetch_queue.put(records)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _poll_fetch_queue(self):
+        """Main-thread pump for results coming from the fetch worker."""
+        try:
+            while True:
+                records = self._fetch_queue.get_nowait()
+                self._fetching = False
+                local_records = []
+                if local_quotations is not None:
+                    try:
+                        local_records = [
+                            r for r in local_quotations()
+                            if str(r.get("quotation_number", "")).upper().startswith("CRY")
+                        ]
+                    except Exception:
+                        local_records = []
+                if records is not None:
+                    if merge_quotation_records is not None:
+                        self._all_records = merge_quotation_records(local_records, records)
+                    else:
+                        self._all_records = records
+                if not self._all_records and local_records:
+                    # Cloud unreachable or sheet empty — show saved records.
+                    self._all_records = local_records
+                self._apply_filters()
+        except queue.Empty:
+            pass
+        except Exception:
+            pass
+        try:
+            self.after(250, self._poll_fetch_queue)
+        except Exception:
+            pass
+
+    def _apply_filters(self):
         search = self.search_var.get().strip()
         from_text = self.from_date_var.get().strip()
         to_text = self.to_date_var.get().strip()
-
-        try:
-            records = list_quotations(status=self.status_var.get()) or []
-        except TypeError:
-            try:
-                records = list_quotations(search=None) or []
-            except Exception:
-                records = []
-        except Exception:
-            records = []
-
-        self._all_records = records
 
         from_date = _parse_date(from_text)
         to_date = _parse_date(to_text)
 
         filtered = []
-        for r in records:
+        for r in self._all_records:
             if not _record_matches_search(r, search):
                 continue
             if from_date or to_date:
@@ -662,7 +745,12 @@ class QuotationHistory(tk.Toplevel):
                 return
             dlg.destroy()
             if ok:
-                self._reload()
+                # Reflect the new status immediately, then confirm with the cloud.
+                for r in self._all_records:
+                    if _text(r.get("quotation_number")) == _text(number):
+                        r["status"] = new_status
+                self._apply_filters()
+                self._start_fetch()
             else:
                 messagebox.showwarning(
                     "Set Status",
@@ -686,6 +774,162 @@ class QuotationHistory(tk.Toplevel):
             font=("Arial", 9, "bold"), cursor="hand2",
             padx=14, pady=6,
         ).pack(side="right", padx=(0, 8))
+
+    def _record_with_items(self, record):
+        """Merge the locally stored line items into a (cloud) record."""
+        if not record:
+            return record
+        if record.get("items"):
+            return record
+        number = _text(record.get("quotation_number"))
+        try:
+            local = get_quotation(number) if get_quotation else None
+        except Exception:
+            local = None
+        if not local:
+            return record
+        merged = dict(record)
+        for key, value in local.items():
+            if value and not merged.get(key):
+                merged[key] = value
+        return merged
+
+    def _show_items(self):
+        """Show the materials (models, quantities, prices) of the selected quote."""
+        record = self._current_record()
+        if not record:
+            messagebox.showinfo("Items", "Select a quotation first.", parent=self)
+            return
+
+        record = self._record_with_items(record)
+        number = _text(record.get("quotation_number"))
+        items = [it for it in (record.get("items") or []) if isinstance(it, dict)]
+
+        def _qty(value):
+            try:
+                q = float(value)
+                return str(int(q)) if q.is_integer() else f"{q:g}"
+            except Exception:
+                return _text(value)
+
+        def _discount_text(it):
+            if it.get("disc_mode") == "Percentage (%)":
+                try:
+                    return f"{float(it.get('raw_discount') or 0):g}%"
+                except Exception:
+                    return _text(it.get("raw_discount"))
+            return _money(it.get("discount"))
+
+        popup = tk.Toplevel(self)
+        popup.title(f"Material — {number}")
+        popup.geometry("780x430")
+        popup.configure(bg=self.BG)
+        popup.transient(self)
+
+        tk.Label(
+            popup,
+            text=f"{number}  ·  {_text(record.get('customer_name'))}",
+            bg=self.BG, fg=self.TEXT, font=("Arial", 12, "bold"),
+        ).pack(anchor="w", padx=20, pady=(16, 8))
+
+        try:
+            from app.services.quotation_number_service import split_revision
+            _base, _rev = split_revision(number)
+        except Exception:
+            _base, _rev = number, 0
+        if _rev:
+            tk.Label(
+                popup, text=f"Revision R{_rev} of {_base}",
+                bg=self.BG, fg=self.MUTED, font=("Arial", 9, "italic"),
+            ).pack(anchor="w", padx=20)
+
+        if not items:
+            tk.Label(
+                popup,
+                text=(
+                    "No material details are stored for this quotation.\n\n"
+                    "Open it on the PC that created it, or wait until the "
+                    "quotation is re-saved with the updated cloud sync."
+                ),
+                bg=self.BG, fg=self.MUTED, font=("Arial", 10),
+                justify="left",
+            ).pack(anchor="w", padx=20, pady=16)
+            tk.Button(popup, text="Close", command=popup.destroy).pack(pady=10)
+            return
+
+        table = tk.Frame(popup, bg=self.BG)
+        table.pack(fill="both", expand=True, padx=20, pady=(10, 0))
+
+        cols = ("model", "hsn", "qty", "price", "discount", "total")
+        tree = ttk.Treeview(table, columns=cols, show="headings", height=9)
+        for col, title, width, anchor in (
+            ("model", "Model", 240, "w"),
+            ("hsn", "HSN", 90, "w"),
+            ("qty", "Qty", 60, "center"),
+            ("price", "Price", 110, "e"),
+            ("discount", "Discount", 110, "e"),
+            ("total", "Total", 120, "e"),
+        ):
+            tree.heading(col, text=title)
+            tree.column(col, width=width, anchor=anchor)
+
+        vsb = ttk.Scrollbar(table, orient="vertical", command=tree.yview)
+        tree.configure(yscrollcommand=vsb.set)
+        tree.pack(side="left", fill="both", expand=True)
+        vsb.pack(side="right", fill="y")
+
+        for it in items:
+            tree.insert("", "end", values=(
+                _text(it.get("model")),
+                _text(it.get("hsn")),
+                _qty(it.get("qty")),
+                _money(it.get("price")),
+                _discount_text(it),
+                _money(it.get("total")),
+            ))
+
+        tk.Label(
+            popup, text=f"Grand Total: {_money(record.get('grand_total'))}",
+            bg=self.BG, fg=self.TEXT, font=("Arial", 11, "bold"),
+        ).pack(anchor="e", padx=20, pady=(8, 4))
+        tk.Button(popup, text="Close", command=popup.destroy).pack(pady=(0, 12))
+
+    def _revise(self):
+        """Open a linked revision (…-R1) of the selected quotation."""
+        record = self._current_record()
+        if not record:
+            messagebox.showinfo("Revise", "Select a quotation first.", parent=self)
+            return
+
+        record = self._record_with_items(record)
+        number = _text(record.get("quotation_number"))
+
+        try:
+            from app.services.quotation_number_service import next_revision_number
+            numbers = [
+                r.get("quotation_number", "") for r in self._all_records
+            ]
+            if local_quotations:
+                numbers += [
+                    r.get("quotation_number", "") for r in local_quotations()
+                ]
+            revision_number = next_revision_number(number, numbers)
+        except Exception as e:
+            messagebox.showerror(
+                "Revise", f"Could not build revision number:\n{e}", parent=self
+            )
+            return
+
+        try:
+            from ui.crystal.quotation_form import QuotationForm
+            QuotationForm(
+                self.master, self, prefill=record,
+                revision_number=revision_number,
+            )
+        except Exception as e:
+            messagebox.showerror(
+                "Revise", f"Could not open Quotation form:\n{e}", parent=self
+            )
 
     def _duplicate(self):
         """Open a new Quotation form pre-filled from the selected record."""
@@ -1189,9 +1433,16 @@ class QuotationHistory(tk.Toplevel):
                 )
 
     def _current_record(self):
-        if not self.selected_number or get_quotation is None:
+        if not self.selected_number:
             return None
-        return get_quotation(self.selected_number)
+        rec = get_quotation(self.selected_number) if get_quotation else None
+        if rec:
+            return rec
+        # Records created on another PC exist only in the cloud list.
+        for r in self._all_records:
+            if str(r.get("quotation_number", "")).strip() == str(self.selected_number).strip():
+                return r
+        return None
 
     def _open_docx(self):
         rec = self._current_record()
@@ -1204,7 +1455,12 @@ class QuotationHistory(tk.Toplevel):
         if not _open_path(path):
             messagebox.showerror(
                 "File not found",
-                f"Word file is missing:\n{path}",
+                (
+                    f"Word file is missing:\n{path}\n\n"
+                    "It is stored on the PC that created this quotation.\n"
+                    "Right-click the row and choose "
+                    "'View material / items' to see its contents."
+                ),
                 parent=self,
             )
 
@@ -1374,9 +1630,16 @@ class QuotationHistory(tk.Toplevel):
         if not ok:
             return
 
-        if delete_quotation and delete_quotation(self.selected_number):
+        number = self.selected_number
+        if delete_quotation and delete_quotation(number):
             self.selected_number = None
-            self._reload()
+            # Drop the row locally right away, then re-sync in the background.
+            self._all_records = [
+                r for r in self._all_records
+                if _text(r.get("quotation_number")) != _text(number)
+            ]
+            self._apply_filters()
+            self._start_fetch()
 
 
 # ============================================================

@@ -34,6 +34,7 @@ import os
 import re
 import shutil
 import subprocess
+import time
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -50,7 +51,6 @@ from docx.enum.text import (
 )
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from docx.oxml import OxmlElement
 
 def _set_table_cell_padding(table, top=100, bottom=100, left=140, right=140):
     """Set cell margins/padding for all cells in a table (values in twips: 1/20th of a point)."""
@@ -420,12 +420,12 @@ def find_product_image(product):
     Resolve the product image path from the catalog.
 
     Handles:
-      - Absolute paths
-      - Legacy prefixes like /CRYSTAL_Quotation_Automation/assets/...
-      - Relative paths (assets/images/foo.png)
-      - Filenames with spaces or underscores
-      - Case-insensitive matching
-      - Fallback to [model].png / .jpg / .jpeg
+    - Absolute paths
+    - Legacy prefixes like /CRYSTAL_Quotation_Automation/assets/...
+    - Relative paths (assets/images/foo.png)
+    - Filenames with spaces or underscores
+    - Case-insensitive matching
+    - Fallback to [model].png / .jpg / .jpeg
     """
     root = _project_root()
 
@@ -1215,14 +1215,14 @@ def _normalize_accessories(
 # ============================================================
 
 def calculate_totals(machine_price=0, machine_qty=1, accessories=None,
-                     transportation=0, packing_percent=Decimal("3.5"),
-                     packing_mode="Percentage (%)",
-                     packing_value=None,
-                     cgst_percent=Decimal("9"), sgst_percent=Decimal("9"),
-                     gst_type="CGST + SGST",
-                     gst_rate=None,
-                     igst_percent=None,
-                     buyback=0):
+                    transportation=0, packing_percent=Decimal("3.5"),
+                    packing_mode="Percentage (%)",
+                    packing_value=None,
+                    cgst_percent=Decimal("9"), sgst_percent=Decimal("9"),
+                    gst_type="CGST + SGST",
+                    gst_rate=None,
+                    igst_percent=None,
+                    buyback=0):
     machine_price = _decimal(machine_price)
     machine_qty = _decimal(machine_qty, Decimal("1"))
     transportation = _decimal(transportation)
@@ -1575,6 +1575,30 @@ def _convert_docx_to_pdf(
     """
     Convert Word -> PDF.
 
+    Generation runs on a worker thread, so COM must be initialised
+    on that thread before Word automation can be used.
+    """
+
+    try:
+        import pythoncom
+    except ImportError:
+        pythoncom = None
+
+    if pythoncom is not None:
+        pythoncom.CoInitialize()
+    try:
+        return _convert_docx_to_pdf_impl(docx_path)
+    finally:
+        if pythoncom is not None:
+            pythoncom.CoUninitialize()
+
+
+def _convert_docx_to_pdf_impl(
+    docx_path: Path,
+):
+    """
+    Convert Word -> PDF.
+
     PDF is saved next to the input .docx (typically a local
     temp folder). Caller is responsible for copying it to the
     final destination.
@@ -1656,20 +1680,41 @@ def _convert_docx_to_pdf(
     # ---------- Attempt 2: docx2pdf (uses Word) ----------
     try:
         from docx2pdf import convert as _docx2pdf_convert
-        try:
-            _docx2pdf_convert(str(docx_path), str(pdf_path))
-        except Exception as e:
-            # docx2pdf sometimes raises on Word.Quit even when the PDF
-            # was actually created successfully. Check disk first.
-            if not pdf_path.exists():
-                print(f"[PDF] docx2pdf failed: {e}")
-                return None
-
-        if pdf_path.exists():
-            print(f"[PDF] docx2pdf -> {pdf_path}")
-            return pdf_path
     except ImportError:
+        _docx2pdf_convert = None
         print("[PDF] docx2pdf not installed")
+
+    if _docx2pdf_convert is not None:
+        # Word can be busy (open dialogs, previous instance quitting), so retry.
+        for attempt in range(1, 4):
+            try:
+                _docx2pdf_convert(str(docx_path), str(pdf_path))
+            except Exception as e:
+                print(f"[PDF] docx2pdf attempt {attempt} failed: {e}")
+            if pdf_path.exists():
+                print(f"[PDF] docx2pdf -> {pdf_path}")
+                return pdf_path
+            if attempt < 3:
+                time.sleep(2)
+
+    # ---------- Attempt 3: direct Word automation ----------
+    try:
+        import win32com.client
+        word = win32com.client.Dispatch("Word.Application")
+        word.Visible = False
+        word.DisplayAlerts = 0
+        try:
+            doc = word.Documents.Open(str(docx_path.resolve()))
+            doc.SaveAs(str(pdf_path.resolve()), FileFormat=17)
+            doc.Close(SaveChanges=False)
+        finally:
+            word.Quit()
+    except Exception as e:
+        print(f"[PDF] Word automation failed: {e}")
+
+    if pdf_path.exists():
+        print(f"[PDF] Word -> {pdf_path}")
+        return pdf_path
 
     print("[PDF] No PDF converter available")
     return None
@@ -1694,6 +1739,13 @@ def _crystal_divider(doc):
     run.font.color.rgb = RGBColor(0xDF, 0xE3, 0xE9)
 
 
+
+def _amount_in_words_helper(value):
+    try:
+        return amount_in_words(value)
+    except Exception:
+        return f"{float(value):,.2f} Rupees Only"
+
 def _crystal_page(
     doc,
     quotation_number,
@@ -1708,24 +1760,20 @@ def _crystal_page(
     items=None,
     **kwargs,
 ):
-    """Build the complete single-page Crystal quotation — Mark-Server format."""
+    """Build the complete single-page Crystal quotation with a single outer border."""
 
     from docx.shared import Pt, Mm, RGBColor
     from docx.enum.text import WD_ALIGN_PARAGRAPH
     from docx.enum.table import WD_TABLE_ALIGNMENT, WD_CELL_VERTICAL_ALIGNMENT
     from docx.oxml.ns import qn
 
-    # ─── Palette (uniform grey-green; logo image keeps its own red) ───
-    ACCENT  = RGBColor(0x6B, 0x78, 0x6B)   # muted olive
+    # ─── Palette ───
+    ACCENT  = RGBColor(0x6B, 0x78, 0x6B)
     TEXT    = RGBColor(0x0F, 0x17, 0x20)
-    MUTED   = RGBColor(0x7B, 0x85, 0x98)
     BLACK   = RGBColor(0x00, 0x00, 0x00)
     BG_HDR  = "C2CEC2"
-    RED     = "C8102E"
 
-    # ─── Helpers ───
-    def set_cell(cell, text, *, bold=False, size=9, color=TEXT,
-                 align=WD_ALIGN_PARAGRAPH.LEFT, bg=None):
+    def set_cell(cell, text, *, bold=False, size=9, color=TEXT, align=WD_ALIGN_PARAGRAPH.LEFT, bg=None):
         cell.text = ""
         p = cell.paragraphs[0]
         p.alignment = align
@@ -1753,8 +1801,7 @@ def _crystal_page(
                     row.cells[i].width = Mm(w)
         return t
 
-    def para(text="", *, size=9, bold=False, color=TEXT, align=WD_ALIGN_PARAGRAPH.LEFT,
-             space_after=2, space_before=0):
+    def para(text="", *, size=9, bold=False, color=TEXT, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=2, space_before=0):
         p = doc.add_paragraph()
         p.alignment = align
         p.paragraph_format.space_after = Pt(space_after)
@@ -1767,21 +1814,42 @@ def _crystal_page(
             r.font.name = FONT
         return p
 
-    # ═══════════════════════════════════════════════════════════
-    # 1. HEADER — Side-by-side using a 2-column table
-    # ═══════════════════════════════════════════════════════════
-
-    header_tbl = doc.add_table(rows=1, cols=2)
-    header_tbl.autofit = False
+    # ── 1. THE OUTER BOX (1x1 Table) ──
+    outer_box = doc.add_table(rows=1, cols=1)
+    outer_box.style = "Table Grid"
+    outer_cell = outer_box.cell(0, 0)
+    outer_cell.text = ""
     
-    # Set column widths (Left: 40mm for logo, Right: 130mm for text)
+    # Remove all borders from the outer box, we will add them back manually
+    tbl = outer_box._tbl
+    tblPr = tbl.tblPr
+    borders = OxmlElement('w:tblBorders')
+    for edge in ('top', 'left', 'bottom', 'right', 'insideH', 'insideV'):
+        el = OxmlElement(f'w:{edge}')
+        el.set(qn('w:val'), 'nil')
+        borders.append(el)
+    tblPr.append(borders)
+
+    # Add the outer border (single continuous box)
+    tblPr = outer_box._tbl.tblPr
+    tblBorders = OxmlElement('w:tblBorders')
+    for edge in ('top', 'left', 'bottom', 'right'):
+        el = OxmlElement(f'w:{edge}')
+        el.set(qn('w:val'), 'single')
+        el.set(qn('w:sz'), '6')
+        el.set(qn('w:color'), 'auto')
+        tblBorders.append(el)
+    tblPr.append(tblBorders)
+
+    # ── 2. HEADER (Inside the outer box) ──
+    header_tbl = outer_cell.add_table(rows=1, cols=2)
+    header_tbl.autofit = False
     header_tbl.columns[0].width = Mm(40)
     header_tbl.columns[1].width = Mm(130)
     
     left_cell = header_tbl.cell(0, 0)
     right_cell = header_tbl.cell(0, 1)
     
-    # ── Left Cell: Logo ──
     logo_path = None
     try:
         from quotation_generator_crystal import find_logo
@@ -1792,9 +1860,6 @@ def _crystal_page(
     left_cell.text = ""
     p_logo = left_cell.paragraphs[0]
     p_logo.alignment = WD_ALIGN_PARAGRAPH.LEFT
-    p_logo.paragraph_format.space_after = Pt(0)
-    p_logo.paragraph_format.space_before = Pt(0)
-    
     if logo_path:
         try:
             run = p_logo.add_run()
@@ -1806,441 +1871,474 @@ def _crystal_page(
         r = p_logo.add_run("CRYSTAL")
         r.font.size = Pt(20); r.font.bold = True; r.font.color.rgb = ACCENT
 
-    # ── Right Cell: Armatech Info ──
     right_cell.text = ""
-    
-    def add_right_text(text, *, size=9, bold=False, color=TEXT, space_after=1):
-        p = right_cell.add_paragraph()
-        p.alignment = WD_ALIGN_PARAGRAPH.LEFT
-        p.paragraph_format.space_after = Pt(space_after)
-        p.paragraph_format.space_before = Pt(0)
-        r = p.add_run(text)
-        r.font.size = Pt(size)
-        r.font.bold = bold
-        r.font.color.rgb = color
-        r.font.name = FONT
-
-    # Remove the default empty first paragraph
     p_first = right_cell.paragraphs[0]
     p_first._element.getparent().remove(p_first._element)
     
-    add_right_text("ARMATECH ASSOCIATES", size=14, bold=True, color=ACCENT, space_after=1)
-    add_right_text("A Name With Magnetic Fame", size=9, color=TEXT, space_after=1)
-    add_right_text("W-174A, 'S' BLOCK, BHOSARI", size=9, color=TEXT, space_after=1)
-    add_right_text("Mob No.: 7020991684 | Email: armatech@gmail.com", size=9, color=TEXT, space_after=4)
+    p = right_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.paragraph_format.space_after = Pt(2)
+    r = p.add_run("ARMATECH ASSOCIATES")
+    r.font.size = Pt(14); r.font.bold = True; r.font.color.rgb = ACCENT
+    
+    p = right_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run("A Name With Magnetic Fame")
+    r.font.size = Pt(9)
 
-    # ── QUOTATION centered bar ──
-    q_bar = new_table(1, 1)
-    set_cell(q_bar.cell(0, 0), "QUOTATION", bold=True, size=12,
-             color=BLACK,
-             align=WD_ALIGN_PARAGRAPH.CENTER, bg=BG_HDR)
+    p = right_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run("W-174A, 'S' BLOCK, BHOSARI, PUNE - 411026")
+    r.font.size = Pt(9)
 
-    # ═══════════════════════════════════════════════════════════
-    # ═══════════════════════════════════════════════════════════
-    # 2. CUSTOMER (full width) + META (full width, below)
-    # ═══════════════════════════════════════════════════════════
+    p = right_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.LEFT
+    p.paragraph_format.space_after = Pt(0)
+    r = p.add_run("Mob No.: 7020991684 | Email: armatech@gmail.com | Website: www.armatechassociates.com")
+    r.font.size = Pt(8)
+
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+    # ── GST / PAN Bar ──
+    p = outer_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    r = p.add_run("GSTIN : 27AACFA6934B1ZT W.E.F. 01/07/2017      PAN No. AACFA6934B      State Code : 27 Maharashtra")
+    r.font.size = Pt(8)
+
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+    # ── QUOTATION Bar ──
+    p = outer_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_after = Pt(2)
+    r = p.add_run("QUOTATION")
+    r.font.size = Pt(12); r.font.bold = True
+
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+    # ── CUSTOMER + META ──
     cust = customer or {}
+    inner_tbl = outer_cell.add_table(rows=1, cols=2)
+    inner_tbl.autofit = False
+    inner_tbl.columns[0].width = Mm(90)
+    inner_tbl.columns[1].width = Mm(80)
+    
+    left_c = inner_tbl.cell(0, 0)
+    right_c = inner_tbl.cell(0, 1)
+    
+    left_c.text = ""
+    p = left_c.paragraphs[0]
+    r = p.add_run("M/S :- " + (cust.get("company") or cust.get("name") or ""))
+    r.font.size = Pt(10); r.font.bold = True
 
-    # ── 2a. Customer box (full width, single column) ──
-    cust_tbl = new_table(1, 1)
-    cust_cell = cust_tbl.cell(0, 0)
-    cust_cell.text = ""
+    for key in ["address", "city", "state", "pincode"]:
+        if cust.get(key):
+            p = left_c.add_paragraph()
+            p.paragraph_format.space_after = Pt(1)
+            r = p.add_run(cust[key])
+            r.font.size = Pt(9)
 
-    # "To" heading
-    p = cust_cell.paragraphs[0]
-    p.paragraph_format.space_after = Pt(3)
-    r = p.add_run("To")
-    r.font.size = Pt(10); r.font.bold = True; r.font.color.rgb = BLACK
-
-    def cust_line(text, *, bold=False):
-        p = cust_cell.add_paragraph()
-        p.paragraph_format.space_after = Pt(1)
-        r = p.add_run(text)
-        r.font.size = Pt(9); r.font.bold = bold; r.font.color.rgb = TEXT
-
-    if cust.get("company"):
-        cust_line(cust["company"].upper(), bold=True)
-    if cust.get("customer_name") and cust.get("customer_name") != cust.get("company"):
-        cust_line(f"Attn: {cust['customer_name']}")
-    if cust.get("address"):
-        cust_line(cust["address"])
-    if cust.get("city"):
-        cust_line(cust["city"])
-    if cust.get("state"):
-        cust_line(cust["state"])
-    if cust.get("pincode"):
-        cust_line(f"PIN: {cust['pincode']}")
-    if cust.get("phone"):
-        cust_line(f"Phone: {cust['phone']}")
-    if cust.get("email"):
-        cust_line(f"Email: {cust['email']}")
     if cust.get("gstin"):
-        cust_line(f"GSTIN: {cust['gstin']}")
-    cust_line("State Code : 27 Maharashtra")
+        p = left_c.add_paragraph()
+        p.paragraph_format.space_after = Pt(1)
+        r = p.add_run(f"GST. No. : {cust['gstin']}")
+        r.font.size = Pt(9)
+        
+    p = left_c.add_paragraph()
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run("State Code : 27 Maharashtra (SC-GST (Local))")
+    r.font.size = Pt(9)
 
-    para("", size=2, space_after=0)
+    right_c.text = ""
+    p = right_c.paragraphs[0]
+    r = p.add_run(f"No :- {quotation_number}")
+    r.font.size = Pt(9); r.font.bold = True
+    
+    p = right_c.add_paragraph()
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run(f"Date:- {quotation_date}")
+    r.font.size = Pt(9)
 
-    # ── 2b. Meta box (full width, below customer) ──
-    meta_tbl = new_table(1, 1)
-    mc = meta_tbl.cell(0, 0)
-    mc.text = ""
+    p = right_c.add_paragraph()
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run("Ref.No :- BY MAIL")
+    r.font.size = Pt(9)
 
-    # Line 1: Quotation No + Date on the same line
-    p = mc.paragraphs[0]
-    p.paragraph_format.space_after = Pt(3)
-    r1 = p.add_run(f"Quotation No. {quotation_number}     ")
-    r1.font.size = Pt(9); r1.font.bold = True; r1.font.color.rgb = BLACK
-    r2 = p.add_run(f"Quotation Date: {quotation_date}")
-    r2.font.size = Pt(9); r2.font.color.rgb = TEXT
+    p = right_c.add_paragraph()
+    p.paragraph_format.space_after = Pt(1)
+    r = p.add_run(f"Date :- {quotation_date}")
+    r.font.size = Pt(9)
 
-    # Line 2: Ref. No + Ref. Date on the same line
-    p = mc.add_paragraph()
-    p.paragraph_format.space_after = Pt(3)
-    r1 = p.add_run("Ref. No.  BY MAIL         ")
-    r1.font.size = Pt(9); r1.font.bold = True; r1.font.color.rgb = BLACK
-    r2 = p.add_run(f"Ref. Date: {quotation_date}")
-    r2.font.size = Pt(9); r2.font.color.rgb = TEXT
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
 
-    # Line 3: Cr Days alone
-    p = mc.add_paragraph()
-    p.paragraph_format.space_after = Pt(3)
-    r = p.add_run("Cr Days     0")
-    r.font.size = Pt(9); r.font.color.rgb = TEXT
-
-    # Kind Attn is placed OUTSIDE the meta table — a plain line below it.
-
-    # ── Kind Attn line (outside meta box) ──
+    # ── KIND ATTN ──
     attn_name = (
         cust.get("contact_person")
-        or cust.get("customer_name")
         or cust.get("name")
+        or cust.get("customer_name")
         or "Sir/Madam"
     ).strip()
     attn_phone = (cust.get("phone") or "--").strip()
-    para("", size=2, space_after=0)
-    para(f"Kind Attn : {attn_name}     Mob.No. {attn_phone}",
-         size=9, bold=True, color=BLACK,
-         align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
+    
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(4)
+    r = p.add_run(f"Kind Attn : {attn_name}     Mob.No. {attn_phone}")
+    r.font.size = Pt(9); r.font.bold = True
 
-    # ═══════════════════════════════════════════════════════════
-    # 3. GREETING + ACKNOWLEDGEMENT
-    # ═══════════════════════════════════════════════════════════
-    para("Dear Sir/Madam", size=9, space_after=4)
-    para(
-        "We acknowledge with thanks the receipt of your enquiry and have "
-        "great pleasure in submitting our lowest quotation (Find Pdf Attachment).",
-        size=9, space_after=6,
-    )
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
 
-    # ═══════════════════════════════════════════════════════════
-    # 4. PRODUCT DETAILS — 9-column table
-    # ═══════════════════════════════════════════════════════════
-    pd_bar = new_table(1, 1)
-    set_cell(pd_bar.cell(0, 0), "PRODUCT DETAILS", bold=True, size=10,
-             color=BLACK,
-             align=WD_ALIGN_PARAGRAPH.CENTER, bg=BG_HDR)
+    # ── GREETING ──
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(2)
+    r = p.add_run("Dear Sir/Madam")
+    r.font.size = Pt(9)
 
-    # Product table
-    cols = ["Sr.", "Product Description", "HSN/SAC Code", "Tax %",
-            "Quantity", "Units", "Rate", "Dis %", "Amount"]
-    widths = [8, 58, 18, 10, 12, 10, 18, 10, 22]   # sum = 166mm (fits page)
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(0)
+    p.paragraph_format.space_after = Pt(6)
+    r = p.add_run("We acknowledge with thanks the receipt of your enquiry and have great pleasure in submitting our lowest quotation (Find Pdf Attachment).")
+    r.font.size = Pt(9)
 
-    tbl = new_table(2, len(cols), widths_mm=widths)
+    # ── PRODUCT TABLE ──
+    # Add empty paragraph for spacing
+    outer_cell.add_paragraph()
+    
+    cols = ["S.N.", "Description", "Hsn/Sac", "Tax%", "Quantity", "Unit", "Rate", "Dis%", "Amount"]
+    widths = [8, 58, 18, 10, 12, 10, 18, 10, 22]
 
-    # Header row
+    tbl = outer_cell.add_table(rows=2, cols=len(cols))
+    tbl.style = "Table Grid"
+    for i, w in enumerate(widths):
+        for row in tbl.rows:
+            row.cells[i].width = Mm(w)
+
+    def remove_vertical_borders(row):
+        for i, cell in enumerate(row.cells):
+            tcPr = cell._tc.get_or_add_tcPr()
+            tcBorders = tcPr.first_child_found_in("w:tcBorders")
+            if tcBorders is None:
+                tcBorders = OxmlElement("w:tcBorders")
+                tcPr.append(tcBorders)
+            
+            left = OxmlElement("w:left")
+            left.set(qn("w:val"), "nil")
+            tcBorders.append(left)
+            
+            right = OxmlElement("w:right")
+            right.set(qn("w:val"), "nil")
+            tcBorders.append(right)
+        
+        first_cell = row.cells[0]
+        tcPr = first_cell._tc.get_or_add_tcPr()
+        tcBorders = tcPr.first_child_found_in("w:tcBorders")
+        left = OxmlElement("w:left")
+        left.set(qn("w:val"), "single")
+        left.set(qn("w:sz"), "6")
+        left.set(qn("w:color"), "auto")
+        tcBorders.append(left)
+
+        last_cell = row.cells[-1]
+        tcPr = last_cell._tc.get_or_add_tcPr()
+        tcBorders = tcPr.first_child_found_in("w:tcBorders")
+        right = OxmlElement("w:right")
+        right.set(qn("w:val"), "single")
+        right.set(qn("w:sz"), "6")
+        right.set(qn("w:color"), "auto")
+        tcBorders.append(right)
+
+    def add_vertical_borders(row):
+        for cell in row.cells:
+            tcPr = cell._tc.get_or_add_tcPr()
+            tcBorders = tcPr.first_child_found_in("w:tcBorders")
+            if tcBorders is None:
+                tcBorders = OxmlElement("w:tcBorders")
+                tcPr.append(tcBorders)
+            
+            left = OxmlElement("w:left")
+            left.set(qn("w:val"), "single")
+            left.set(qn("w:sz"), "6")
+            left.set(qn("w:color"), "auto")
+            tcBorders.append(left)
+            
+            right = OxmlElement("w:right")
+            right.set(qn("w:val"), "single")
+            right.set(qn("w:sz"), "6")
+            right.set(qn("w:color"), "auto")
+            tcBorders.append(right)
+
+    # Header Row
     for i, (h, w) in enumerate(zip(cols, widths)):
-        align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (
-            WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT
-        )
-        set_cell(tbl.cell(0, i), h, bold=True, size=8,
-                 align=align, bg=BG_HDR)
+        align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT)
+        set_cell(tbl.cell(0, i), h, bold=True, size=8, align=align, bg=BG_HDR)
+    add_vertical_borders(tbl.rows[0])
 
-    # Product rows — loop through cart items if provided, otherwise single product
-    item_list = items if items else [{
-        "model": model,
-        "price": float(machine_price),
-        "qty": float(machine_qty),
-        "discount": 0.0,
-        "total": float(machine_price) * float(machine_qty)
-    }]
+    # Item Rows
+    if items:
+        item_list = []
+        for item in items:
+            qty = float(item.get("qty", 1))
+            price = float(item.get("price", 0))
+            raw_disc = float(item.get("raw_discount", 0))
+            disc_mode = item.get("disc_mode", "Amount (₹)")
+            
+            if disc_mode == "Percentage (%)":
+                disc_amt = (price * qty) * (raw_disc / 100.0)
+            else:
+                disc_amt = raw_disc
+            total = (price * qty) - disc_amt
+            
+            item_list.append({
+                "model": item.get("model", ""), "hsn": item.get("hsn", "85059000"),
+                "price": price, "qty": qty, "discount": disc_amt,
+                "raw_discount": raw_disc, "disc_mode": disc_mode, "total": total
+            })
+    else:
+        item_list = [{
+            "model": model, "price": float(machine_price), "qty": float(machine_qty),
+            "discount": 0.0, "raw_discount": 0, "disc_mode": "Amount (₹)", "total": float(machine_price) * float(machine_qty)
+        }]
 
-    # If the table only has 2 rows (header + 1 placeholder), we need to expand it
-    # to fit all items
-    if len(item_list) > 1:
-        # Add extra rows to the table
-        while len(tbl.rows) < len(item_list) + 1:
-            tbl.add_row()
+    while len(tbl.rows) < len(item_list) + 1:
+        tbl.add_row()
 
     for idx, item in enumerate(item_list, start=1):
+        add_vertical_borders(tbl.rows[idx])
+        
         item_model = item.get("model", "")
         item_qty = float(item.get("qty", 1))
         item_price = float(item.get("price", 0))
         item_disc = float(item.get("discount", 0))
         item_total = float(item.get("total", 0))
 
-        # Look up product details for THIS item
         try:
             item_prod = _resolve_product(item_model) or {}
         except Exception:
             item_prod = {}
 
-        # Use a clean, short description for the PDF table
         name = item_prod.get("name") or ""
-        # Fall back to a short snippet if name is empty
         if not name:
             desc = item_prod.get("description") or ""
-            # Take only the first line of the description
             name = desc.split("\n")[0].strip()
         
-        # Build a clean description: Name + Model
         full_desc = name.strip()
         if item_model and item_model not in full_desc:
             full_desc = f"{full_desc}\nModel: {item_model}"
 
         hsn = str(item.get("hsn") or item_prod.get("hsn") or "85059000")
-        tax_pct = item_prod.get("tax_percent", 18.0)
-        try:
-            tax_str = f"{float(tax_pct):.2f}"
-        except Exception:
-            tax_str = "18.00"
+        tax_str = f"{float(item_prod.get('tax_percent', 18.0)):.2f}"
         unit = str(item_prod.get("unit") or "NOS")
-        qty_str = f"{item_qty:g}"
-        rate_str = f"{item_price:,.2f}"
-        # Check if discount was entered as percentage or amount
         raw_disc = item.get("raw_discount", 0)
         disc_mode = item.get("disc_mode", "Amount (₹)")
-        
-        if disc_mode == "Percentage (%)":
-            disc_str = f"{raw_disc:g}%" if raw_disc else "0%"
-        else:
-            disc_str = f"{item_disc:,.2f}" if item_disc else "0"
-        amount_str = f"{item_total:,.2f}"
+        disc_str = f"{raw_disc:g}%" if disc_mode == "Percentage (%)" and raw_disc else f"{item_disc:,.2f}" if item_disc else ""
 
-        row_vals = [str(idx), full_desc, hsn, tax_str, qty_str, unit, rate_str, disc_str, amount_str]
+        row_vals = [str(idx), full_desc, hsn, tax_str, f"{item_qty:g}", unit, f"{item_price:,.2f}", disc_str, f"{item_total:,.2f}"]
         for i, v in enumerate(row_vals):
-            align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (
-                WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT
-            )
+            align = WD_ALIGN_PARAGRAPH.LEFT if i == 1 else (WD_ALIGN_PARAGRAPH.RIGHT if i in (2, 3, 4, 6, 7, 8) else WD_ALIGN_PARAGRAPH.LEFT)
             set_cell(tbl.cell(idx, i), v, size=8, align=align)
-            
-    # Apply padding to the Product Details table
-    _set_table_cell_padding(tbl, top=60, bottom=60, left=100, right=100)
 
-    # ═══════════════════════════════════════════════════════════
-    # 5. TOTALS BLOCK — right-aligned
-    # ═══════════════════════════════════════════════════════════
+    # Totals calculations
     t = totals or {}
-    
-    # Use the values the app already calculated (do NOT recalculate!)
-    total_amt = float(t.get("taxable") or t.get("subtotal") or 0.0)
-    cgst = float(t.get("cgst") or 0.0)
-    sgst = float(t.get("sgst") or 0.0)
-    igst = float(t.get("igst") or 0.0)
-    grand = float(t.get("grand_total") or t.get("grand") or 0.0)
-    
-    # Round to nearest integer
-    pre_round = grand
-    grand = round(pre_round)
-    rounding = grand - pre_round
-    
-    # Determine if IGST or CGST+SGST
-    gst_type = t.get("gst_type", "CGST + SGST")
-    is_igst = (gst_type == "IGST")
-    
-    # Calculate percentage labels
-    gst_rate = float(t.get("gst_rate") or 18.0)
-    
-    if is_igst:
-        tot_rows = [
-            ("Total", f"{total_amt:,.2f}"),
-            (f"IGST {gst_rate:g}%", f"{igst:,.2f}"),
-            ("Rounding (+/-)", f"{rounding:,.2f}"),
-            ("Grand Total", f"{grand:,.2f}"),
-        ]
-    else:
-        tot_rows = [
-            ("Total", f"{total_amt:,.2f}"),
-            (f"C-Gst {gst_rate/2:g}%", f"{cgst:,.2f}"),
-            (f"S-Gst {gst_rate/2:g}%", f"{sgst:,.2f}"),
-            ("Rounding (+/-)", f"{rounding:,.2f}"),
-            ("Grand Total", f"{grand:,.2f}"),
-        ]
+    packing_amt = float(t.get("packing") or 0.0)
+    transport_amt = float(t.get("transportation") or 0.0)
+    buyback_amt = float(t.get("buyback") or 0.0)
 
-    # ─── Totals Table (Compact & Fixed) ───
-    t = totals or {}
-    total_amt = float(t.get("taxable") or t.get("subtotal") or 0.0)
-    cgst = float(t.get("cgst") or 0.0)
-    sgst = float(t.get("sgst") or 0.0)
-    igst = float(t.get("igst") or 0.0)
-    grand = float(t.get("grand_total") or t.get("grand") or 0.0)
+    true_taxable = 0.0
+    for item in item_list:
+        true_taxable += float(item.get("total", 0))
+    true_taxable += packing_amt + transport_amt - buyback_amt
     
-    pre_round = grand
-    grand = round(pre_round)
-    rounding = grand - pre_round
-    
-    gst_type = t.get("gst_type", "CGST + SGST")
-    is_igst = (gst_type == "IGST")
-    gst_rate = float(t.get("gst_rate") or 18.0)
-    
-    if is_igst:
-        tot_rows = [
-            ("Total", f"{total_amt:,.2f}"),
-            (f"IGST {gst_rate:g}%", f"{igst:,.2f}"),
-            ("Rounding (+/-)", f"{rounding:,.2f}"),
-        ]
-    else:
-        tot_rows = [
-            ("Total", f"{total_amt:,.2f}"),
-            (f"C-Gst {gst_rate/2:g}%", f"{cgst:,.2f}"),
-            (f"S-Gst {gst_rate/2:g}%", f"{sgst:,.2f}"),
-            ("Rounding (+/-)", f"{rounding:,.2f}"),
-        ]
-    
-    # Create the table with enough rows for Amount in Words + Tax Rows + Grand Total
-    # ─── Totals Layout (Exact 2-Column Split) ───
-    # Outer table: Left (Amount in Words) | Right (Totals)
-    outer_tbl = new_table(1, 2, widths_mm=[110, 66])
-    
-    # --- Left Cell: Amount in Words ---
-    left_cell = outer_tbl.cell(0, 0)
-    set_cell(left_cell, f"Amount In Words : {_amount_in_words_helper(grand)}", bold=False, size=10, align=WD_ALIGN_PARAGRAPH.LEFT)
-    
-    # --- Right Cell: Nested Totals Table ---
-    right_cell = outer_tbl.cell(0, 1)
-    right_cell.text = "" # Clear default paragraph
-    
-    # Prepare the totals list
-    final_totals = [("Total", f"{total_amt:,.2f}")]
-    if is_igst:
-        final_totals.append((f"IGST {gst_rate:g}%", f"{igst:,.2f}"))
-    else:
-        final_totals.append((f"C-Gst 9%", f"{cgst:,.2f}"))
-        final_totals.append((f"S-Gst 9%", f"{sgst:,.2f}"))
-    final_totals.append(("Rounding (+/-)", f"{rounding:,.2f}"))
-    
-    # Create a nested table inside the right cell for the totals
-    nested_tbl = right_cell.add_table(rows=len(final_totals), cols=2)
-    nested_tbl.style = "Table Grid"
-    
-    # Set nested column widths (so labels fit on the left)
-    for row in nested_tbl.rows:
-        row.cells[0].width = Mm(45)
-        row.cells[1].width = Mm(21)
-        
-    # Fill nested table
-    for i, (label, value) in enumerate(final_totals):
-        set_cell(nested_tbl.cell(i, 0), label, size=8, align=WD_ALIGN_PARAGRAPH.LEFT)
-        set_cell(nested_tbl.cell(i, 1), value, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
-    
-    # --- Grand Total Row (Merged 2-Column Table below) ---
-    gt_tbl = new_table(1, 2, widths_mm=[150, 26])
-    gt_merged = gt_tbl.cell(0, 0).merge(gt_tbl.cell(0, 1))
-    set_cell(gt_merged, f"Grand Total    {grand:,.2f}", bold=True, size=9, align=WD_ALIGN_PARAGRAPH.RIGHT, bg=BG_HDR)
+    totals["taxable"] = true_taxable
+    totals["subtotal"] = true_taxable - packing_amt - transport_amt + buyback_amt
 
-    para('" Subject to Pune jurisdiction only "',
-         size=9, bold=True, align=WD_ALIGN_PARAGRAPH.LEFT, space_after=6)
+    total_amt = float(totals.get("taxable") or 0.0)
+    cgst = float(totals.get("cgst") or 0.0)
+    sgst = float(totals.get("sgst") or 0.0)
+    grand = round(float(totals.get("grand_total") or 0.0))
 
-    # ═══════════════════════════════════════════════════════════
-    # 7. TERMS & CONDITIONS — 2-column table
-    # ═══════════════════════════════════════════════════════════
-    # ── Terms & Conditions — outer box with green header + inner terms table ──
+    # Sub Total
+    r_sub = tbl.add_row()
+    remove_vertical_borders(r_sub)
+    for i, v in enumerate(["", "", "", "", "", "", "", "Sub Total", f"{total_amt:,.2f}"]):
+        set_cell(r_sub.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+
+    # C-Gst
+    r_cgst = tbl.add_row()
+    remove_vertical_borders(r_cgst)
+    for i, v in enumerate(["", "", "", "", "", "", "", "C-Gst 9%", f"{cgst:,.2f}"]):
+        set_cell(r_cgst.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+
+    # S-Gst
+    r_sgst = tbl.add_row()
+    remove_vertical_borders(r_sgst)
+    for i, v in enumerate(["", "", "", "", "", "", "", "S-Gst 9%", f"{sgst:,.2f}"]):
+        set_cell(r_sgst.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+
+    # Grand Total
+    r_grand = tbl.add_row()
+    remove_vertical_borders(r_grand)
+    merged_words = r_grand.cells[0].merge(r_grand.cells[4])
+    set_cell(merged_words, f"Amount In Words Rs.: {_amount_in_words_helper(grand)}", size=8, align=WD_ALIGN_PARAGRAPH.LEFT)
+    merged_label = r_grand.cells[5].merge(r_grand.cells[7])
+    set_cell(merged_label, "Grand Total", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT, bold=True)
+    set_cell(r_grand.cells[8], f"{grand:,.2f}", size=8, align=WD_ALIGN_PARAGRAPH.RIGHT, bold=True)
+
+    # Add empty paragraph for spacing after table
+    outer_cell.add_paragraph()
+
+    # Subject to Pune
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(4)
+    r = p.add_run('" Subject to Pune jurisdiction only "')
+    r.font.size = Pt(9); r.font.bold = True
+
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(2)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    bottom = OxmlElement('w:bottom')
+    bottom.set(qn('w:val'), 'single')
+    bottom.set(qn('w:sz'), '6')
+    bottom.set(qn('w:color'), 'auto')
+    pBdr.append(bottom)
+    pPr.append(pBdr)
+
+    # ── TERMS ──
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(4)
+    r = p.add_run("TERMS AND CONDITIONS :")
+    r.font.size = Pt(10); r.font.bold = True
+
     terms = selected_terms or [
-        {"title": "Delivery",          "value": "WITHIN 2-3 WEEKS"},
-        {"title": "Payment",           "value": "50% ADVANCE AND BALANCE AGAINST PROFORMA INVOICE"},
+        {"title": "Delivery", "value": "WITHIN 2-3 WEEKS"},
+        {"title": "Payment", "value": "50% ADVANCE AND BALANCE AGAINST PROFORMA INVOICE"},
         {"title": "Transport Charges", "value": "FREIGHT TO PAY BASIS"},
-        {"title": "Validity",          "value": "15 DAYS"},
-        {"title": "Warranty",          "value": "1 Year warranty from the date of purchase. Warranty applicable on manufacturing defects only."},
+        {"title": "Validity", "value": "15 DAYS"},
+        {"title": "Warranty", "value": "1 Year warranty from the date of purchase. Warranty applicable on manufacturing defects only."},
     ]
 
-    # Outer box (1 col, 2 rows) — row 0 = green header, row 1 = content box
-    outer = doc.add_table(rows=2, cols=1)
-    outer.style = "Table Grid"
+    for term in terms:
+        p = outer_cell.add_paragraph()
+        p.paragraph_format.space_after = Pt(2)
+        r1 = p.add_run(term.get("title", "") + "  ")
+        r1.font.size = Pt(9); r1.font.bold = True
+        r2 = p.add_run(term.get("value", ""))
+        r2.font.size = Pt(9)
 
-    # Green header row inside outer box
-    set_cell(outer.cell(0, 0), "Terms & Conditions",
-             bold=True, size=10, color=BLACK,
-             align=WD_ALIGN_PARAGRAPH.LEFT, bg=BG_HDR)
+    # Horizontal Line
+    p = outer_cell.add_paragraph()
+    p.paragraph_format.space_before = Pt(4)
+    p.paragraph_format.space_after = Pt(2)
+    pPr = p._p.get_or_add_pPr()
+    pBdr = OxmlElement('w:pBdr')
+    top = OxmlElement('w:top')
+    top.set(qn('w:val'), 'single')
+    top.set(qn('w:sz'), '6')
+    top.set(qn('w:color'), 'auto')
+    pBdr.append(top)
+    pPr.append(pBdr)
 
-    # Content cell — place the inner terms table inside it
-    content_cell = outer.cell(1, 0)
-    content_cell.text = ""
-
-    # Inner terms table (nested inside the outer content cell)
-    inner = content_cell.add_table(rows=len(terms), cols=2)
-    inner.style = "Table Grid"
-    for row in inner.rows:
-        row.cells[0].width = Mm(50)
-        row.cells[1].width = Mm(115)
-
-    for i, term in enumerate(terms):
-        title = term.get("title") or term.get("key") or ""
-        value = term.get("value") or ""
-        set_cell(inner.cell(i, 0), title, bold=True, size=8, bg=BG_HDR)
-        set_cell(inner.cell(i, 1), value, size=8)
-        
-    # Apply padding to the terms table
-    _set_table_cell_padding(inner, top=60, bottom=60, left=100, right=100)
+    # ── FOOTER ──
+    foot_tbl = outer_cell.add_table(rows=1, cols=2)
+    foot_tbl.autofit = False
+    foot_tbl.columns[0].width = Mm(100)
+    foot_tbl.columns[1].width = Mm(66)
     
-    # Add cell padding to the inner terms table
-    _set_table_cell_padding(inner, top=40, bottom=40, left=80, right=80)
-
-
-    # ═══════════════════════════════════════════════════════════
-    # 8. FOOTER — GST TIN (left) + Signatory (right)
-    # ═══════════════════════════════════════════════════════════
-    foot = new_table(1, 2, widths_mm=[100, 86])
-
-    set_cell(foot.cell(0, 0),
-             "GST. TIN NO. : 27AACFA6934B1ZT W.E.F. : 01-07-2017\nState Code : 27 Maharashtra",
-             bold=True, size=8)
-
-    sig_cell = foot.cell(0, 1)
-    sig_cell.text = ""
-    for line, bd, sz in [
-        ("For ARMATECH ASSOCIATES", True, 9),
-        ("", False, 8),
-        ("", False, 8),
-        ("Authorised Signatory", True, 8),
-        ("(Computer generated document no signature required)", False, 7),
-    ]:
-        p = sig_cell.add_paragraph() if sig_cell.paragraphs[0].text else sig_cell.paragraphs[0]
-        p.alignment = WD_ALIGN_PARAGRAPH.RIGHT
+    left_f = foot_tbl.cell(0, 0)
+    right_f = foot_tbl.cell(0, 1)
+    
+    left_f.text = ""
+    p = left_f.paragraphs[0]
+    r = p.add_run("Bank Details :")
+    r.font.size = Pt(9); r.font.bold = True
+    
+    for line in ["Name:HDFC BANK", "A/c.Name: ARMATECH ASSOCIATES", "A/c.No.: 01852320002300", "Branch: Nigdi", "IFSC: HDFC0000185"]:
+        p = left_f.add_paragraph()
         p.paragraph_format.space_after = Pt(1)
-        if line:
-            r = p.add_run(line)
-            r.font.size = Pt(sz); r.font.bold = bd; r.font.color.rgb = TEXT
+        r = p.add_run(line)
+        r.font.size = Pt(9)
 
-    # ═══════════════════════════════════════════════════════════
-    # 9. BANK DETAILS + PLEASE FIND ATTACHED
-    # ═══════════════════════════════════════════════════════════
-    bank_bar = new_table(1, 1)
-    set_cell(bank_bar.cell(0, 0), "Bank Account Details", bold=True, size=9,
-             color=BLACK,
-             align=WD_ALIGN_PARAGRAPH.LEFT, bg=BG_HDR)
+    right_f.text = ""
+    p = right_f.paragraphs[0]
+    r = p.add_run("We Thank you for your enquiry.")
+    r.font.size = Pt(9)
+    
+    p = right_f.add_paragraph()
+    r = p.add_run("For ARMATECH ASSOCIATES")
+    r.font.size = Pt(9); r.font.bold = True
+    
+    p = right_f.add_paragraph()
+    r = p.add_run("Authorised Signatory")
+    r.font.size = Pt(9)
 
-    bank_tbl = new_table(1, 1)
-    set_cell(bank_tbl.cell(0, 0),
-             "Bank Details:\n"
-             "Name:HDFC BANK\n"
-             "A/c.Name: ARMATECH ASSOCIATES\n"
-             "A/c.No.: 01852320002300\n"
-             "Branch: Nigdi\n"
-             "IFSC: HDFC0000185",
-             size=8)
-
-    attach = new_table(1, 1)
-    set_cell(attach.cell(0, 0),
-             "Please Find Attached :\n1. Pdf Copy",
-             size=8, align=WD_ALIGN_PARAGRAPH.CENTER, bg=BG_HDR)
-
-
-# ─── helper used above ───
-def _amount_in_words_helper(value):
-    try:
-        return amount_in_words(value)
-    except Exception:
-        return f"{float(value):,.2f} Rupees Only"
-
+    # Bottom Disclaimer
+    p = outer_cell.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(4)
+    r = p.add_run("As It is auto computer generated Quotation No Signature Is Required")
+    r.font.size = Pt(8); r.font.italic = True
 
 def generate_quotation(
     customer_name="",
@@ -2273,6 +2371,7 @@ def generate_quotation(
     gst_type="CGST + SGST",
 
     quotation_date=None,
+    quotation_number=None,
 
     generate_pdf=True,
 
@@ -2468,8 +2567,12 @@ def generate_quotation(
     # 5. QUOTATION NUMBER
     # ========================================================
 
+    # A revision arrives with its linked number (…-R1); only brand-new
+    # quotations consume the counter.
     quotation_number = (
-        get_next_quotation_number()
+        str(quotation_number).strip()
+        if quotation_number
+        else get_next_quotation_number()
     )
 
     # ========================================================
@@ -2572,7 +2675,7 @@ def generate_quotation(
     # keyword-argument errors (e.g. selected_terms arriving twice).
     call_kwargs = dict(kwargs)
     for k in ("selected_terms", "customer", "product", "model",
-              "quotation_number", "quotation_date"):
+            "quotation_number", "quotation_date"):
         call_kwargs.pop(k, None)
 
     _crystal_page(
@@ -2705,6 +2808,8 @@ def generate_quotation(
 
         "totals": totals,
         "items": kwargs.get("items", []),
+        "machine_price": str(machine_price),
+        "machine_qty": str(machine_qty),
     }
 
     if _save_quotation_history is not None:

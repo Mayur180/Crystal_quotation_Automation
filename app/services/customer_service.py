@@ -14,6 +14,7 @@ Storage:
 import json
 import os
 import re
+import threading
 import uuid
 from datetime import datetime
 from pathlib import Path
@@ -65,6 +66,45 @@ def _norm_key(value):
     s = re.sub(r"\s+", " ", s)
     s = re.sub(r"[^\w\s@.+-]", "", s)
     return s
+
+
+def _phone_key(value):
+    """Normalise a phone number to its last 10 digits for matching."""
+    digits = re.sub(r"\D", "", _text(value))
+    return digits[-10:] if len(digits) >= 10 else digits
+
+
+_CLOUD_FIELDS = (
+    "name", "company", "contact_person", "address", "city", "state",
+    "pincode", "country", "gstin", "phone", "email",
+)
+
+
+def _cloud_match(records, cloud):
+    """Find the local record matching a cloud customer, if any."""
+    phone = _phone_key(cloud.get("phone"))
+    if phone:
+        for r in records:
+            if _phone_key(r.get("phone")) == phone:
+                return r
+
+    email = _norm_key(cloud.get("email"))
+    if email:
+        for r in records:
+            if _norm_key(r.get("email")) == email:
+                return r
+
+    name = _norm_key(cloud.get("name"))
+    company = _norm_key(cloud.get("company"))
+    if name and company:
+        for r in records:
+            if (
+                _norm_key(r.get("name")) == name
+                and _norm_key(r.get("company")) == company
+            ):
+                return r
+
+    return None
 
 
 # ============================================================
@@ -244,7 +284,7 @@ def save_customer(data, customer_id=None):
         from app.services.google_sheet_service import send_to_sheet
         import os as _os
         _user = _os.environ.get('USERNAME') or 'user'
-        send_to_sheet({
+        payload = {
             'action':  'customer',
             'user':    _user,
             'name':    _text(record.get('name', '')),
@@ -256,10 +296,101 @@ def save_customer(data, customer_id=None):
             'state':   _text(record.get('state', '')),
             'pincode': _text(record.get('pincode', '')),
             'gstin':   _text(record.get('gstin', '')),
-        })
+        }
+        # Don't make the UI wait several seconds for the sheet round-trip.
+        threading.Thread(
+            target=send_to_sheet, args=(payload,), daemon=True
+        ).start()
     except Exception:
         pass
     return _result
+
+
+def sync_from_cloud(module=None):
+    """
+    Pull customers from the cloud and merge them into the local cache.
+
+    Additive only — local records are never deleted. Matches existing
+    customers by phone, then email, then (name + company), and fills/updates
+    their details with the values from the sheet.
+
+    Returns the resulting local customer count (0 if the cloud is empty).
+    """
+    try:
+        from app.services.cloud_sync import fetch_customers_from_cloud
+        cloud_records = fetch_customers_from_cloud(module=module) or []
+    except Exception as e:
+        print(f"[customers] Cloud sync failed: {e}")
+        return count()
+
+    if not cloud_records:
+        return count()
+
+    records = _load_raw()
+    existing_ids = {_text(r.get("id")) for r in records}
+    changed = False
+    now = datetime.now().isoformat(timespec="seconds")
+
+    for cloud in cloud_records:
+        if not isinstance(cloud, dict):
+            continue
+
+        name = _text(cloud.get("name"))
+        company = _text(cloud.get("company"))
+        if not name and not company:
+            continue
+
+        existing = _cloud_match(records, cloud)
+
+        if existing is None:
+            cloud_id = _text(cloud.get("id"))
+            if not cloud_id or cloud_id in existing_ids:
+                cloud_id = str(uuid.uuid4())[:8]
+
+            record = {
+                "id":             cloud_id,
+                "name":           name,
+                "company":        company,
+                "contact_person": _text(cloud.get("contact_person")),
+                "address":        _text(cloud.get("address")),
+                "city":           _text(cloud.get("city")),
+                "state":          _text(cloud.get("state")),
+                "pincode":        _text(cloud.get("pincode")),
+                "country":        _text(cloud.get("country")),
+                "gstin":          _text(cloud.get("gstin")).upper(),
+                "phone":          _text(cloud.get("phone")),
+                "email":          _text(cloud.get("email")),
+                "created_at":     _text(cloud.get("created_at")) or now,
+                "updated_at":     _text(cloud.get("updated_at")) or now,
+                "last_used":      "",
+            }
+            records.append(record)
+            existing_ids.add(cloud_id)
+            changed = True
+            continue
+
+        updates = {}
+        for field in _CLOUD_FIELDS:
+            value = _text(cloud.get(field))
+            if not value:
+                continue
+            if field == "gstin":
+                value = value.upper()
+            if _text(existing.get(field)) != value:
+                updates[field] = value
+
+        if updates:
+            existing.update(updates)
+            existing["updated_at"] = now
+            changed = True
+
+    if changed:
+        try:
+            _save_raw(records)
+        except Exception as e:
+            print(f"[customers] Could not save synced customers: {e}")
+
+    return len(records)
 
 
 def touch_last_used(customer_id):

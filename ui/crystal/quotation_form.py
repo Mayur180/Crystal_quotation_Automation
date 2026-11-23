@@ -24,6 +24,15 @@ from tkinter import ttk, messagebox
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
+# Pillow is optional: it is only used to scale the preview image.
+# Importing it lazily keeps the form usable on machines where it
+# is not installed.
+try:
+    from PIL import Image, ImageTk
+except ImportError:
+    Image = None
+    ImageTk = None
+
 
 # ============================================================
 # PROJECT ROOT
@@ -275,15 +284,29 @@ class QuotationForm(tk.Toplevel):
     # INITIALIZATION
     # ========================================================
 
-    def __init__(self, app=None, parent=None, prefill=None):
+    def __init__(self, app=None, parent=None, prefill=None, revision_number=None):
 
         super().__init__(parent or app)
 
         self.app = app
 
-        self.title(
-            "CRYSTAL | ARMATECH ASSOCIATES — New Quotation"
+        self._revision_number = (
+            str(revision_number).strip() if revision_number else None
         )
+
+        if self._revision_number:
+            try:
+                from app.services.quotation_number_service import split_revision
+                _base, _rev = split_revision(self._revision_number)
+            except Exception:
+                _base, _rev = self._revision_number, 1
+            self.title(
+                f"CRYSTAL | ARMATECH ASSOCIATES — Revise {_base} (R{_rev})"
+            )
+        else:
+            self.title(
+                "CRYSTAL | ARMATECH ASSOCIATES — New Quotation"
+            )
 
         # ---- Adaptive window size ----
         try:
@@ -799,13 +822,15 @@ class QuotationForm(tk.Toplevel):
             pady=17
         )
 
-        tk.Label(
+        self.header_sub_label = tk.Label(
             brand,
-            text="  /  New Quotation",
+            text=self._header_subtitle(),
             bg=self.CARD,
             fg=self.MUTED,
             font=("Arial", 11)
-        ).pack(
+        )
+
+        self.header_sub_label.pack(
             side="left",
             pady=21
         )
@@ -856,6 +881,18 @@ class QuotationForm(tk.Toplevel):
             side="bottom",
             fill="x"
         )
+
+
+    def _header_subtitle(self):
+        """Header strip text — shows the revision link when revising."""
+        if not self._revision_number:
+            return "  /  New Quotation"
+        try:
+            from app.services.quotation_number_service import split_revision
+            base, rev = split_revision(self._revision_number)
+        except Exception:
+            base, rev = self._revision_number, 1
+        return f"  /  Revising {base} → R{rev}"
 
 
     # ========================================================
@@ -2554,6 +2591,11 @@ class QuotationForm(tk.Toplevel):
     # LOAD STEP
     # ========================================================
 
+    
+    def _clear_content(self):
+        for widget in self.content_area.winfo_children():
+            widget.destroy()
+
     def _load_step(self, step):
 
         self.current_step = step
@@ -2944,8 +2986,22 @@ class QuotationForm(tk.Toplevel):
             gst_rate = 18.0
         grand_total = grand_total * (1 + gst_rate / 100.0)
         
+        # Ensure transportation is captured from the UI
+        transport_val = 0.0
+        if hasattr(self, "transport_var"):
+            try:
+                transport_val = float(self.transport_var.get() or "0")
+            except Exception:
+                pass
+        elif hasattr(self, "transportation"):
+            try:
+                transport_val = float(self.transportation.get() or "0")
+            except Exception:
+                pass
+
         return {
             "grand_total": grand_total,
+            "quotation_number": getattr(self, "_revision_number", None),
             "customer_name": self.customer_name.get().strip(),
             "company": self.company.get().strip(),
             "contact_person": self.contact_person.get().strip(),
@@ -2965,8 +3021,8 @@ class QuotationForm(tk.Toplevel):
             "packing_value": self.packing_value.get(),
             "gst_type": self.gst_type.get(),
             "gst_rate": self.gst_rate.get(),
-            "transportation": self.transportation.get(),
-            "buyback": self.buyback.get(),
+            "transportation": transport_val,
+            "buyback": self.buyback.get() if hasattr(self, "buyback") else 0,
             "terms": selected_terms,
             "accessories": []
         }
@@ -3016,9 +3072,103 @@ class QuotationForm(tk.Toplevel):
             except Exception:
                 pass
 
+        # ---- cart lines, discounts and commercial settings ----
+        self._restore_record_details(data)
+
         # ---- jump to Product page (Step 2) ----
         try:
             self._load_step(2)
+        except Exception:
+            pass
+
+    def _restore_record_details(self, data):
+        """Restore cart rows and totals when prefilling a saved quotation."""
+        def _num(value, default=0.0):
+            try:
+                text = str(value).replace(",", "").replace("₹", "").strip()
+                return float(text) if text else default
+            except Exception:
+                return default
+
+        items = []
+        for raw in (data.get("items") or []):
+            if not isinstance(raw, dict):
+                continue
+            model = str(raw.get("model") or "").strip()
+            if not model:
+                continue
+            price = _num(raw.get("price"))
+            qty = _num(raw.get("qty"), 1.0) or 1.0
+            discount = _num(raw.get("discount"))
+            total = _num(raw.get("total"), price * qty - discount)
+            items.append({
+                "model": model,
+                "hsn": str(raw.get("hsn") or "85059000").strip() or "85059000",
+                "price": price,
+                "qty": int(qty) if float(qty).is_integer() else qty,
+                "discount": discount,
+                "raw_discount": raw.get("raw_discount", discount),
+                "disc_mode": raw.get("disc_mode") or "Amount (₹)",
+                "total": total,
+            })
+
+        if items:
+            self.items = items
+            try:
+                self._refresh_cart_table()
+            except Exception:
+                pass
+            # The cart already holds these lines; clear the model inputs so
+            # "Continue" does not add the prefilled model a second time.
+            try:
+                self.model.set("")
+                self.machine_price.set("")
+                self.machine_qty.set("1")
+                self.disc_var.set("0")
+            except Exception:
+                pass
+
+        totals = data.get("totals") or {}
+
+        transportation = _num(
+            totals.get("transportation", data.get("transportation"))
+        )
+        if transportation:
+            self.transportation.set(f"{transportation:g}")
+
+        buyback = _num(totals.get("buyback"))
+        if buyback:
+            self.buyback.set(f"{buyback:g}")
+
+        gst_type = str(
+            totals.get("gst_type") or data.get("gst_type") or ""
+        ).strip()
+        if gst_type:
+            self.gst_type.set(gst_type)
+
+        gst_rate = _num(totals.get("gst_rate"))
+        if gst_rate > 0:
+            self.gst_rate.set(f"{gst_rate:g}")
+            half = gst_rate / 2
+            self.cgst_percent.set(f"{half:g}")
+            self.sgst_percent.set(f"{half:g}")
+
+        packing = _num(totals.get("packing"))
+        subtotal = _num(totals.get("subtotal")) or sum(
+            float(i.get("total", 0)) for i in items
+        )
+        if packing > 0 and subtotal > 0:
+            percent = round(packing / subtotal * 100, 2)
+            self.packing_mode.set("Percentage (%)")
+            self.packing_value.set(f"{percent:g}")
+            self.packing_percent.set(f"{percent:g}")
+        elif totals:
+            self.packing_mode.set("No Packing")
+            self.packing_value.set("0")
+            self.packing_percent.set("0")
+
+        try:
+            self._recalculate()
         except Exception:
             pass
 
@@ -3161,10 +3311,16 @@ class QuotationForm(tk.Toplevel):
         import tkinter as tk
         from tkinter import messagebox
         import os
+        import queue
         import threading
-        from PIL import Image, ImageTk
         
-        preview_win = tk.Toplevel(self)
+        # Parent the preview to the dashboard, not to this form: the form is
+        # dismissed once the quotation is generated and must not take the
+        # preview window down with it.
+        owner = getattr(self, "app", None)
+        if not isinstance(owner, (tk.Tk, tk.Toplevel)):
+            owner = self.master if isinstance(self.master, (tk.Tk, tk.Toplevel)) else self
+        preview_win = tk.Toplevel(owner)
         preview_win.title("Quotation Preview")
         preview_win.geometry("850x950")
         preview_win.configure(bg="#F4F6F8")
@@ -3187,48 +3343,123 @@ class QuotationForm(tk.Toplevel):
         btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
         btn_frame.grid(row=2, column=0, pady=10)
         
+        # Tk widgets must only be touched from the main thread, so the
+        # worker posts UI updates here and the main thread drains them.
+        ui_queue = queue.Queue()
+
+        def post_update(fn):
+            ui_queue.put(fn)
+
+        def poll_updates():
+            while True:
+                try:
+                    fn = ui_queue.get_nowait()
+                except queue.Empty:
+                    break
+                try:
+                    fn()
+                except Exception as e:
+                    print(f"[preview] UI update failed: {e}")
+            try:
+                if preview_win.winfo_exists():
+                    preview_win.after(60, poll_updates)
+            except Exception:
+                pass
+
+        poll_updates()
+
         def do_generate():
             try:
-                self._do_generate_final(data)
-                
-                home = os.path.expanduser("~")
-                downloads_folder = os.path.join(home, "Downloads", "CrystalQuotation")
-                latest_pdf = None
-                latest_mtime = 0
-                
-                if os.path.exists(downloads_folder):
-                    for root, dirs, files in os.walk(downloads_folder):
-                        if "pdf" in root:
-                            for f in files:
-                                if f.endswith(".pdf"):
-                                    full_path = os.path.join(root, f)
-                                    try:
-                                        mtime = os.path.getmtime(full_path)
-                                        if mtime > latest_mtime:
-                                            latest_mtime = mtime
-                                            latest_pdf = full_path
-                                    except Exception:
-                                        pass
-                
-                if not latest_pdf:
-                    preview_win.after(0, lambda: status_label.config(text="PDF not found in Downloads."))
+                result = self._do_generate_final(data)
+                if not result:
+                    post_update(lambda: status_label.config(text="Generation failed."))
                     return
                 
-                import fitz
+                latest_pdf = result.get("pdf_path")
+
+                if not latest_pdf or not os.path.exists(latest_pdf):
+                    # Word can be busy and fail transiently. Retry from the
+                    # Word file that was just saved before giving up.
+                    docx_path = result.get("docx_path")
+                    if docx_path and os.path.exists(docx_path):
+                        post_update(lambda: status_label.config(text="PDF conversion failed - retrying..."))
+                        try:
+                            from pathlib import Path
+                            import shutil
+                            from quotation_generator_crystal import _convert_docx_to_pdf
+                            try:
+                                from quotation_generator_crystal import get_pdf_dir
+                            except ImportError:
+                                get_pdf_dir = None
+
+                            retry_pdf = _convert_docx_to_pdf(Path(docx_path))
+                            if retry_pdf and retry_pdf.exists():
+                                try:
+                                    pdf_dir = get_pdf_dir() if get_pdf_dir else None
+                                    if pdf_dir is None:
+                                        pdf_dir = Path(docx_path).parent.parent / "pdf"
+                                        pdf_dir.mkdir(parents=True, exist_ok=True)
+                                    final_pdf = pdf_dir / retry_pdf.name
+                                    if str(final_pdf) != str(retry_pdf):
+                                        shutil.copy2(retry_pdf, final_pdf)
+                                        retry_pdf = final_pdf
+                                except Exception as e:
+                                    print(f"[preview] Could not move PDF: {e}")
+
+                                latest_pdf = str(retry_pdf)
+                                result["pdf_path"] = latest_pdf
+                                try:
+                                    from app.services.quotation_history_service import update_quotation_pdf_path
+                                    update_quotation_pdf_path(result.get("quotation_number"), latest_pdf)
+                                except Exception:
+                                    pass
+                        except Exception as e:
+                            print(f"[preview] PDF retry failed: {e}")
+
+                if not latest_pdf or not os.path.exists(latest_pdf):
+                    post_update(lambda: status_label.config(
+                        text="PDF could not be generated. The Word file was saved successfully."
+                    ))
+                    return
+                
+                try:
+                    import fitz
+                except ImportError:
+                    post_update(lambda: status_label.config(
+                        text="PDF saved, but the preview needs PyMuPDF "
+                             "(pip install pymupdf)."
+                    ))
+                    return
                 doc = fitz.open(latest_pdf)
                 page = doc[0]
-                pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-                img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                # Render close to the preview width; the Pillow-less
+                # fallback cannot scale smoothly, so avoid a 2x bitmap.
+                zoom = 2.0 if Image is not None else 1.35
+                pix = page.get_pixmap(matrix=fitz.Matrix(zoom, zoom))
+                img = (
+                    Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
+                    if Image is not None
+                    else None
+                )
+                ppm_data = None if img is not None else pix.tobytes("ppm")
                 doc.close()
                 
                 def show_image():
                     win_width = preview_win.winfo_width() - 40
                     if win_width < 100:
                         win_width = 760
-                    ratio = win_width / img.width
-                    new_height = int(img.height * ratio)
-                    resized_img = img.resize((win_width, new_height), Image.LANCZOS)
-                    photo = ImageTk.PhotoImage(resized_img)
+                    if img is not None:
+                        ratio = win_width / img.width
+                        new_height = int(img.height * ratio)
+                        resized_img = img.resize((win_width, new_height), Image.LANCZOS)
+                        photo = ImageTk.PhotoImage(resized_img)
+                    else:
+                        # Pillow is not installed: Tk can load PPM directly.
+                        # It only scales by whole factors, so shrink by the
+                        # smallest factor that fits the window.
+                        photo = tk.PhotoImage(data=ppm_data)
+                        while photo.width() > win_width and photo.width() // 2 > 100:
+                            photo = photo.subsample(2, 2)
                     
                     status_label.pack_forget()
                     canvas = tk.Canvas(image_frame, bg="#F4F6F8", highlightthickness=0)
@@ -3241,12 +3472,19 @@ class QuotationForm(tk.Toplevel):
                     canvas.configure(scrollregion=canvas.bbox("all"))
                     
                     gen_btn.config(state="normal", text="Generate Again")
+
+                    # The quotation is saved and previewed; take the editor
+                    # out of the way so only the preview stays on screen.
+                    try:
+                        self.withdraw()
+                    except Exception:
+                        pass
                 
-                preview_win.after(0, show_image)
+                post_update(show_image)
                 
             except Exception as e:
                 err_msg = str(e)
-                preview_win.after(0, lambda: status_label.config(text=f"Error: {err_msg}"))
+                post_update(lambda: status_label.config(text=f"Error: {err_msg}"))
         
         # Start generation in background
         threading.Thread(target=do_generate, daemon=True).start()
@@ -3254,7 +3492,18 @@ class QuotationForm(tk.Toplevel):
         gen_btn = tk.Button(btn_frame, text="Generate PDF", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=lambda: threading.Thread(target=do_generate, daemon=True).start(), padx=20, pady=5)
         gen_btn.pack(side="left", padx=10)
         
-        tk.Button(btn_frame, text="Close", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10), relief="flat", command=preview_win.destroy, padx=20, pady=5).pack(side="left", padx=10)
+        def close_preview():
+            try:
+                preview_win.destroy()
+            finally:
+                # Closing the preview finishes the whole flow.
+                try:
+                    self.destroy()
+                except Exception:
+                    pass
+
+        preview_win.protocol("WM_DELETE_WINDOW", close_preview)
+        tk.Button(btn_frame, text="Close", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10), relief="flat", command=close_preview, padx=20, pady=5).pack(side="left", padx=10)
 
 
     def _open_latest_pdf(self):
@@ -3291,111 +3540,7 @@ class QuotationForm(tk.Toplevel):
         else:
             messagebox.showwarning("Preview", "PDF generated but could not be found in Downloads.", parent=self)
 
-    def _do_generate_final(self, data):
-        """Actually generate the PDF and Word files."""
-        try:
-            generate_quotation(**{
-                "customer_name": data.get("customer_name", ""),
-                "company": data.get("company", ""),
-                "address": data.get("address", ""),
-                "phone": data.get("phone", ""),
-                "email": data.get("email", ""),
-                "contact_person": data.get("contact_person", ""),
-                "city": data.get("city", ""),
-                "state": data.get("state", ""),
-                "pincode": data.get("pincode", ""),
-                "country": data.get("country", ""),
-                "gstin": data.get("gstin", ""),
-                "model": data.get("model", ""),
-                "machine_price": data.get("machine_price", 0),
-                "machine_qty": data.get("machine_qty", 1),
-                "accessories": data.get("accessories", []),
-                "transportation": data.get("transportation", 0),
-                "packing_mode": data.get("packing_mode", "Percentage (%)"),
-                "packing_value": data.get("packing_value", 0),
-                "packing_percent": data.get("packing_percent", 3.5),
-                "cgst_percent": data.get("cgst_percent", 9),
-                "sgst_percent": data.get("sgst_percent", 9),
-                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
-                "gst_type": data.get("gst_type", "CGST + SGST"),
-                "gst_rate": data.get("gst_rate", 18),
-                "selected_terms": data.get("selected_terms", []),
-                "items": data.get("items", []),
-            })
-            return True
-        except Exception as e:
-            print(f"Generation Error: {e}")
-            return False
-    def _do_generate_final(self, data):
-        """Actually generate the PDF and Word files and return True on success."""
-        try:
-            generate_quotation(**{
-                "customer_name": data.get("customer_name", ""),
-                "company": data.get("company", ""),
-                "address": data.get("address", ""),
-                "phone": data.get("phone", ""),
-                "email": data.get("email", ""),
-                "contact_person": data.get("contact_person", ""),
-                "city": data.get("city", ""),
-                "state": data.get("state", ""),
-                "pincode": data.get("pincode", ""),
-                "country": data.get("country", ""),
-                "gstin": data.get("gstin", ""),
-                "model": data.get("model", ""),
-                "machine_price": data.get("machine_price", 0),
-                "machine_qty": data.get("machine_qty", 1),
-                "accessories": data.get("accessories", []),
-                "transportation": data.get("transportation", 0),
-                "packing_mode": data.get("packing_mode", "Percentage (%)"),
-                "packing_value": data.get("packing_value", 0),
-                "packing_percent": data.get("packing_percent", 3.5),
-                "cgst_percent": data.get("cgst_percent", 9),
-                "sgst_percent": data.get("sgst_percent", 9),
-                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
-                "gst_type": data.get("gst_type", "CGST + SGST"),
-                "gst_rate": data.get("gst_rate", 18),
-                "selected_terms": data.get("selected_terms", []),
-                "items": data.get("items", []),
-            })
-            return True
-        except Exception as e:
-            print(f"Generation Error: {e}")
-            return False
-    def _do_generate_final(self, data):
-        """Actually generate the PDF and Word files and return True on success."""
-        try:
-            result = generate_quotation(**{
-                "customer_name": data.get("customer_name", ""),
-                "company": data.get("company", ""),
-                "address": data.get("address", ""),
-                "phone": data.get("phone", ""),
-                "email": data.get("email", ""),
-                "contact_person": data.get("contact_person", ""),
-                "city": data.get("city", ""),
-                "state": data.get("state", ""),
-                "pincode": data.get("pincode", ""),
-                "country": data.get("country", ""),
-                "gstin": data.get("gstin", ""),
-                "model": data.get("model", ""),
-                "machine_price": data.get("machine_price", 0),
-                "machine_qty": data.get("machine_qty", 1),
-                "accessories": data.get("accessories", []),
-                "transportation": data.get("transportation", 0),
-                "packing_mode": data.get("packing_mode", "Percentage (%)"),
-                "packing_value": data.get("packing_value", 0),
-                "packing_percent": data.get("packing_percent", 3.5),
-                "cgst_percent": data.get("cgst_percent", 9),
-                "sgst_percent": data.get("sgst_percent", 9),
-                "igst_percent": data.get("gst_rate", 18) if data.get("gst_type") == "IGST" else None,
-                "gst_type": data.get("gst_type", "CGST + SGST"),
-                "gst_rate": data.get("gst_rate", 18),
-                "selected_terms": data.get("selected_terms", []),
-                "items": data.get("items", []),
-            })
-            return True
-        except Exception as e:
-            print(f"Generation Error: {e}")
-            return False
+
     def _do_generate_final(self, data):
         """Actually generate the PDF and Word files."""
         try:
@@ -3415,7 +3560,7 @@ class QuotationForm(tk.Toplevel):
                 "machine_price": data.get("machine_price", 0),
                 "machine_qty": data.get("machine_qty", 1),
                 "accessories": data.get("accessories", []),
-                "transportation": data.get("transportation", 0),
+                "transportation": float(data.get("transportation", 0)),
                 "packing_mode": data.get("packing_mode", "Percentage (%)"),
                 "packing_value": data.get("packing_value", 0),
                 "packing_percent": data.get("packing_percent", 3.5),
@@ -3426,44 +3571,125 @@ class QuotationForm(tk.Toplevel):
                 "gst_rate": data.get("gst_rate", 18),
                 "selected_terms": data.get("selected_terms", []),
                 "items": data.get("items", []),
+                "quotation_number": data.get("quotation_number"),
             })
+            return result  # Return the dict with paths!
         except Exception as e:
-            messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
+            print(f"Generation Error: {e}")
+            return None
 
     def _generate_quotation(self):
         """Generate the quotation from the Terms step."""
-        # We just call the preview, which handles generation and opening the PDF.
         try:
             data = self.get_form_data()
+            
+            # --- FORCE SAVE CUSTOMER TO CLOUD BEFORE QUOTATION ---
+            try:
+                from app.services.cloud_sync import upload_customer_to_cloud
+                from app.services.paths import get_active_module
+                
+                cust_data = {
+                    "name": data.get("customer_name", ""),
+                    "company": data.get("company", ""),
+                    "phone": data.get("phone", ""),
+                    "email": data.get("email", ""),
+                    "address": data.get("address", ""),
+                    "city": data.get("city", ""),
+                    "state": data.get("state", ""),
+                    "pincode": data.get("pincode", ""),
+                    "gstin": data.get("gstin", "")
+                }
+                
+                if cust_data["name"] or cust_data["company"]:
+                    print("[UI] Force saving customer to cloud...")
+                    upload_customer_to_cloud(cust_data, module=get_active_module())
+            except Exception as e:
+                print(f"[UI] Customer save failed: {e}")
+            
             self._auto_save_customer(data)
             self._show_preview(data)
+            
         except Exception as e:
             from tkinter import messagebox
             messagebox.showerror("Generation Error", f"Error: {e}", parent=self)
 
-    def _open_customer_lookup(self):
-        """Open a small picker; on selection, fill customer fields."""
-        try:
-            from app.services import customer_service
-
-            if hasattr(customer_service, "list_customers"):
-                records = customer_service.list_customers()
-            else:
-                records = customer_service.get_all_customers()
-
-            touch_last_used = getattr(
-                customer_service,
-                "touch_last_used",
-                None
-            )
-
-        except Exception as exc:
-            messagebox.showerror(
-                "Lookup unavailable",
-                f"{type(exc).__name__}: {exc}",
-                parent=self,
-            )
+    
+    def clear_form(self):
+        confirm = messagebox.askyesno("Clear quotation", "Clear the current quotation and start again?", parent=self)
+        if not confirm:
             return
+        self.customer_name.set("")
+        self.company.set("")
+        self.contact_person.set("")
+        self.address.set("")
+        self.city.set("")
+        self.state.set("")
+        self.pincode.set("")
+        self.country.set("India")
+        self.phone.set("")
+        self.email.set("")
+        self.gstin.set("")
+        categories = self._get_categories()
+        if categories:
+            self.category.set(categories[0])
+        models = self._get_models(self.category.get())
+        if models:
+            self.model.set(models[0])
+        else:
+            self.model.set("")
+        self.machine_price.set("")
+        self.machine_qty.set("1")
+        self.transportation.set("0")
+        self.packing_mode.set("Percentage (%)")
+        self.packing_value.set("3.5")
+        self.packing_percent.set("3.5")
+        self.gst_type.set("CGST + SGST")
+        self.gst_rate.set("18")
+        self.cgst_percent.set("9")
+        self.sgst_percent.set("9")
+        self.include_terms.set(False)
+        self.completed_steps.clear()
+        self.items = []
+        self.term_rows = []
+        self._revision_number = None
+        try:
+            self.header_sub_label.configure(text=self._header_subtitle())
+            self.title("CRYSTAL | ARMATECH ASSOCIATES — New Quotation")
+        except Exception:
+            pass
+        self._load_step(1)
+        try:
+            self.canvas.yview_moveto(0)
+        except Exception:
+            pass
+
+    def _open_customer_lookup(self):
+        import threading
+        from app.services import customer_service
+
+        self.config(cursor="watch")
+        self.update()
+
+        def fetch_and_show():
+            try:
+                if hasattr(customer_service, "list_customers"):
+                    records = customer_service.list_customers()
+                else:
+                    records = customer_service.get_all_customers()
+            except Exception:
+                records = []
+
+            self.after(0, lambda: self._show_customer_picker(records))
+            self.after(0, lambda: self.config(cursor=""))
+
+        threading.Thread(target=fetch_and_show, daemon=True).start()
+
+    def _show_customer_picker(self, records):
+        touch_last_used = getattr(
+            __import__('app.services.customer_service', fromlist=['touch_last_used']),
+            "touch_last_used",
+            None
+        )
 
         records = records or []
 
@@ -3476,7 +3702,6 @@ class QuotationForm(tk.Toplevel):
             )
             return
 
-        # Simple chooser dialog
         picker = tk.Toplevel(self)
         picker.title("Pick a saved customer")
         picker.geometry("620x480")
@@ -3510,8 +3735,8 @@ class QuotationForm(tk.Toplevel):
 
         for r in records:
             label = (
-                f"{customer_value(r, 'name', 'contact_person')}  —  "
-                f"{customer_value(r, 'company', 'company_name')}  —  "
+                f"{customer_value(r, 'name', 'contact_person')}  -  "
+                f"{customer_value(r, 'company', 'company_name')}  -  "
                 f"{customer_value(r, 'phone')}"
             )
             listbox.insert("end", label)
@@ -3522,39 +3747,17 @@ class QuotationForm(tk.Toplevel):
                 return
             record = records[sel[0]]
 
-            self.customer_name.set(
-                customer_value(record, 'name', 'contact_person')
-            )
-            self.company.set(
-                customer_value(record, 'company', 'company_name')
-            )
-            self.contact_person.set(
-                customer_value(record, 'contact_person')
-            )
-            self.address.set(
-                customer_value(record, 'address')
-            )
-            self.city.set(
-                customer_value(record, 'city')
-            )
-            self.state.set(
-                customer_value(record, 'state')
-            )
-            self.pincode.set(
-                customer_value(record, 'pincode', 'pin')
-            )
-            self.country.set(
-                customer_value(record, 'country') or "India"
-            )
-            self.gstin.set(
-                customer_value(record, 'gstin').upper()
-            )
-            self.phone.set(
-                customer_value(record, 'phone')
-            )
-            self.email.set(
-                customer_value(record, 'email')
-            )
+            self.customer_name.set(customer_value(record, 'name', 'contact_person'))
+            self.company.set(customer_value(record, 'company', 'company_name'))
+            self.contact_person.set(customer_value(record, 'contact_person'))
+            self.address.set(customer_value(record, 'address'))
+            self.city.set(customer_value(record, 'city'))
+            self.state.set(customer_value(record, 'state'))
+            self.pincode.set(customer_value(record, 'pincode', 'pin'))
+            self.country.set(customer_value(record, 'country') or "India")
+            self.gstin.set(customer_value(record, 'gstin').upper())
+            self.phone.set(customer_value(record, 'phone'))
+            self.email.set(customer_value(record, 'email'))
 
             try:
                 if touch_last_used:
@@ -3593,16 +3796,7 @@ class QuotationForm(tk.Toplevel):
 
         listbox.bind("<Double-Button-1>", lambda e: apply_selection())
 
-
-
-
     def _open_preview(self):
-        """
-        Compute the current quotation data and open the six-page preview.
-        Does NOT increment the offer counter — generation does that later.
-        """
-
-        # ---- 1. Validate everything (same checks as generate) ----
         if not self._validate_customer():
             self._load_step(1)
             return
@@ -3613,1179 +3807,28 @@ class QuotationForm(tk.Toplevel):
             self._load_step(4)
             return
 
-        # ---- 2. Build data ----
         data = self.get_form_data()
 
-        # ---- auto-save new customers ----
-        self._auto_save_customer(data)
-
-        # ---- 3. Resolve product from catalog ----
         try:
-            from quotation_generator_crystal import (
-                _resolve_product,
-                calculate_totals,
-            )
-        except Exception as exc:
-            messagebox.showerror(
-                "Preview unavailable",
-                f"Could not import quotation_generator_crystal.\n\n"
-                f"{type(exc).__name__}: {exc}",
-                parent=self,
-            )
-            return
-
-        product = _resolve_product(data["model"])
-
-        # ---- 4. Compute totals with the SAME engine the generator uses ----
-        # The current generator's calculation engine accepts CGST/SGST
-        # percentages. We feed it the effective percentages for the
-        # selected GST type, then normalize the returned totals so the
-        # preview can display IGST / No GST correctly.
-        preview_cgst = data["cgst_percent"]
-        preview_sgst = data["sgst_percent"]
-        preview_igst = None
+            from app.services.cloud_sync import upload_customer_to_cloud
+            from app.services.paths import get_active_module
+            
+            cust_data = {
+                "name": data.get("customer_name", ""),
+                "company": data.get("company", ""),
+                "phone": data.get("phone", ""),
+                "email": data.get("email", ""),
+                "address": data.get("address", ""),
+                "city": data.get("city", ""),
+                "state": data.get("state", ""),
+                "pincode": data.get("pincode", ""),
+                "gstin": data.get("gstin", "")
+            }
+            
+            if cust_data["name"] or cust_data["company"]:
+                upload_customer_to_cloud(cust_data, module=get_active_module())
+        except Exception:
+            pass
         
-        if data["gst_type"] == "IGST":
-            preview_cgst = 0.0
-            preview_sgst = 0.0
-            preview_igst = data.get("gst_rate", 18.0)  # Default to 18% if not set
-
-        elif data["gst_type"] == "No GST":
-            preview_cgst = 0.0
-            preview_sgst = 0.0
-
-        totals = calculate_totals(
-            machine_price=data["machine_price"],
-            machine_qty=data["machine_qty"],
-            accessories=data["accessories"],
-            transportation=data["transportation"],
-            packing_percent=data["packing_percent"],
-            packing_mode=data["packing_mode"],
-            packing_value=data["packing_value"],
-            cgst_percent=preview_cgst,
-            sgst_percent=preview_sgst,
-            igst_percent=preview_igst,
-            gst_type=data.get("gst_type", "CGST + SGST"),
-        )
-
-        if data["gst_type"] == "IGST":
-
-            taxable = totals.get("taxable", Decimal("0"))
-            igst_amount = (
-                taxable
-                * Decimal(str(data["gst_rate"]))
-                / Decimal("100")
-            )
-
-            totals["cgst"] = Decimal("0")
-            totals["sgst"] = Decimal("0")
-            totals["igst"] = igst_amount
-            totals["grand_total"] = taxable + igst_amount
-
-        elif data["gst_type"] == "No GST":
-
-            totals["cgst"] = Decimal("0")
-            totals["sgst"] = Decimal("0")
-            totals["igst"] = Decimal("0")
-            totals["grand_total"] = totals.get(
-                "taxable",
-                Decimal("0")
-            )
-
-        else:
-
-            totals["igst"] = Decimal("0")
-
-        totals["gst_type"] = data["gst_type"]
-        totals["gst_rate"] = Decimal(str(data["gst_rate"]))
-        totals["gst"] = (
-            totals.get("cgst", Decimal("0"))
-            + totals.get("sgst", Decimal("0"))
-            + totals.get("igst", Decimal("0"))
-        )
-
-        # ---- 5. Company ----
-        try:
-            from app.company import COMPANY
-        except Exception:
-            COMPANY = {
-                "name": "ARMATECH ASSOCIATES",
-                "brand": "CRYSTAL VMM",
-                "address": "",
-                "phone": "",
-                "email": "",
-                "website": "",
-            }
-
-        # ---- 6. Preview offer number (peek, do not increment) ----
-        quotation_number, quotation_date = self._peek_offer_number(data)
-
-        # ---- 7. Open the preview ----
-        try:
-            from ui.crystal.quotation_preview import QuotationPreview
-        except Exception as exc:
-            messagebox.showerror(
-                "Preview unavailable",
-                f"Could not import ui.crystal.quotation_preview.\n\n"
-                f"{type(exc).__name__}: {exc}",
-                parent=self,
-            )
-            return
-
-        QuotationPreview(
-            parent=self,
-            form_data=data,
-            totals=totals,
-            product=product,
-            quotation_number=quotation_number,
-            quotation_date=quotation_date,
-            company=COMPANY,
-            on_finalise=self._generate_quotation,
-        )
-
-    def _peek_offer_number(self, data):
-        """
-        Read the NEXT offer number without incrementing the counter.
-        Uses the module-aware quotation_number_service so Crystal gets
-        CRY/26-27/NNN and VMM gets AA/VMM/26-27/NNN.
-        """
-
-        import json as _json
-        from pathlib import Path as _Path
-
-        # ─── Resolve the NEXT number without incrementing ───
-        qn = None
-        try:
-            from app.services.quotation_number_service import (
-                get_next_quotation_number,
-                _get_quotation_prefix,
-            )
-            # get_next_quotation_number() increments, so we can't use it here.
-            # Instead, read the counter file directly, using the correct
-            # module-aware prefix and file location.
-            from app.services.paths import get_data_dir
-            counter_file = get_data_dir() / "quotation_counter.json"
-
-            prefix = _get_quotation_prefix()
-            fy = "26-27"
-
-            serial = 1
-            if counter_file.is_file():
-                counter = _json.loads(counter_file.read_text(encoding="utf-8")) or {}
-                last = int(counter.get("last_number", 0))
-                serial = last + 1
-
-            qn = f"{prefix}/{fy}/{serial:04d}"
-        except Exception:
-            # Fallback — try the old path just in case
-            try:
-                counter_file = _Path(PROJECT_ROOT) / "data" / "offer_counter.json"
-                serial = 1
-                if counter_file.is_file():
-                    counter = _json.loads(counter_file.read_text(encoding="utf-8")) or {}
-                    serial = int(counter.get("AA/VMM/26-27", 0)) + 1
-                qn = f"CRY/26-27/{serial:04d}"
-            except Exception:
-                qn = "CRY/26-27/0001"
-
-        # ─── Date — take from data or today ───
-        qd = data.get("quotation_date") or ""
-        try:
-            from datetime import date as _d, datetime as _dt
-            # If ISO, reformat to DD-MM-YYYY
-            if qd and "-" in qd and len(qd) == 10 and qd[4] == "-":
-                y, m, d = qd.split("-")
-                qd = f"{d}-{m}-{y}"
-        except Exception:
-            pass
-
-        if not qd:
-            try:
-                from datetime import datetime as _dt2
-                qd = _dt2.now().strftime("%d-%m-%Y")
-            except Exception:
-                qd = ""
-
-        return qn, qd
-
-    # ========================================================
-    # PHASE 3 — Refresh dashboard + close form cleanly
-    # ========================================================
-
-    def _refresh_parent_dashboard(self):
-        """Notify the dashboard (if present) to reload its recent list."""
-        try:
-            parent = getattr(self, "master", None)
-            if parent is None:
-                parent = getattr(self, "app", None)
-            if parent is None:
-                return
-            if hasattr(parent, "_reload_recent"):
-                parent._reload_recent()
-            try:
-                parent.focus_force()
-                parent.lift()
-            except Exception:
-                pass
-        except Exception:
-            pass
-
-    def _close_and_return_to_dashboard(self):
-        """Refresh dashboard, then destroy this form."""
-        try:
-            self._refresh_parent_dashboard()
-        finally:
-            try:
-                self.destroy()
-            except Exception:
-                pass
-
-
-# ========================================================
-    # CLEAR FORM
-    # ========================================================
-
-    def clear_form(self):
-
-        confirm = messagebox.askyesno(
-            "Clear quotation",
-            (
-                "Clear the current quotation "
-                "and start again?"
-            ),
-            parent=self
-        )
-
-        if not confirm:
-            return
-
-        self.customer_name.set("")
-        self.company.set("")
-        self.contact_person.set("")
-        self.address.set("")
-        self.city.set("")
-        self.state.set("")
-        self.pincode.set("")
-        self.country.set("India")
-        self.phone.set("")
-        self.email.set("")
-        self.gstin.set("")
-
-        categories = self._get_categories()
-
-        if categories:
-
-            self.category.set(
-                categories[0]
-            )
-
-        models = self._get_models(
-            self.category.get()
-        )
-
-        if models:
-
-            self.model.set(
-                models[0]
-            )
-
-        else:
-
-            self.model.set("")
-
-        self.machine_price.set("")
-
-        self.machine_qty.set(
-            "1"
-        )
-
-        self.transportation.set(
-            "0"
-        )
-
-        self.packing_mode.set(
-            "Percentage (%)"
-        )
-
-        self.packing_value.set(
-            "3.5"
-        )
-
-        self.packing_percent.set(
-            "3.5"
-        )
-
-        self.gst_type.set(
-            "CGST + SGST"
-        )
-
-        self.gst_rate.set(
-            "18"
-        )
-
-        self.cgst_percent.set(
-            "9"
-        )
-
-        self.sgst_percent.set(
-            "9"
-        )
-
-        self.include_terms.set(
-            False
-        )
-
-        self.completed_steps.clear()
-        self.term_rows = []
-
-        self._load_step(1)
-
-        try:
-            self.canvas.yview_moveto(0)
-        except Exception:
-            pass
-
-
-    # ========================================================
-    # CLEAR CONTENT
-    # ========================================================
-
-    def _clear_content(self):
-
-        for widget in self.content_area.winfo_children():
-
-            widget.destroy()
-
-
-# ============================================================
-# TERMS EDITOR DIALOG
-# ============================================================
-
-class TermsEditor(tk.Toplevel):
-    """
-    Modal dialog for editing the quotation terms list.
-    """
-
-    # Reuse palette
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    GREEN = "#16804B"
-    GREEN_LIGHT = "#ECF8F1"
-    SOFT = "#F8F9FA"
-
-    def __init__(self, parent, terms):
-
-        super().__init__(parent)
-
-        self.title("Edit Terms & Conditions")
-
-        self.geometry("820x680")
-        self.minsize(700, 520)
-
-        self.configure(bg=self.BG)
-
-        self.transient(parent)
-        self.grab_set()
-
-        # Working copy
-        self.working_terms = [
-            {"title": t, "value": v}
-            for t, v in terms
-        ]
-
-        self.result = None
-
-        self.selected_index = None
-        self.row_widgets = []
-
-        self._build_interface()
-
-        self._refresh_list()
-
-        self.protocol(
-            "WM_DELETE_WINDOW",
-            self._cancel
-        )
-
-
-    # ========================================================
-    # INTERFACE
-    # ========================================================
-
-    def _build_interface(self):
-
-        # Header
-        header = tk.Frame(
-            self,
-            bg=self.CARD,
-            height=70
-        )
-
-        header.pack(fill="x")
-        header.pack_propagate(False)
-
-        tk.Label(
-            header,
-            text="Terms & Conditions",
-            bg=self.CARD,
-            fg=self.TEXT,
-            font=("Arial", 16, "bold")
-        ).pack(anchor="w", padx=24, pady=(16, 0))
-
-        tk.Label(
-            header,
-            text=(
-                "Edit, reorder, add or remove the terms "
-                "that appear on your quotations."
-            ),
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 9)
-        ).pack(anchor="w", padx=24)
-
-        tk.Frame(
-            header,
-            bg=self.RED,
-            height=3
-        ).pack(side="bottom", fill="x")
-
-        # List
-        list_wrap = tk.Frame(self, bg=self.BG)
-
-        list_wrap.pack(
-            fill="both",
-            expand=True,
-            padx=18,
-            pady=(14, 0)
-        )
-
-        self.canvas = tk.Canvas(
-            list_wrap,
-            bg=self.BG,
-            highlightthickness=0,
-            bd=0
-        )
-
-        scrollbar = ttk.Scrollbar(
-            list_wrap,
-            orient="vertical",
-            command=self.canvas.yview
-        )
-
-        self.list_frame = tk.Frame(
-            self.canvas,
-            bg=self.BG
-        )
-
-        self.canvas_window = self.canvas.create_window(
-            (0, 0),
-            window=self.list_frame,
-            anchor="nw"
-        )
-
-        self.canvas.configure(
-            yscrollcommand=scrollbar.set
-        )
-
-        self.canvas.pack(
-            side="left",
-            fill="both",
-            expand=True
-        )
-
-        # Scrollbar intentionally hidden; mouse-wheel scrolling remains enabled.
-        self.canvas.bind_all(
-            "<MouseWheel>",
-            self._mousewheel,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Shift-MouseWheel>",
-            self._mousewheel,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Button-4>",
-            self._mousewheel_up,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Button-5>",
-            self._mousewheel_down,
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Prior>",
-            lambda e: self.canvas.yview_scroll(-8, "units"),
-            add="+"
-        )
-        self.canvas.bind_all(
-            "<Next>",
-            lambda e: self.canvas.yview_scroll(8, "units"),
-            add="+"
-        )
-
-        self.list_frame.bind(
-            "<Configure>",
-            lambda e: self.canvas.configure(
-                scrollregion=self.canvas.bbox("all")
-            )
-        )
-
-        self.canvas.bind(
-            "<Configure>",
-            lambda e: self.canvas.itemconfigure(
-                self.canvas_window,
-                width=e.width
-            )
-        )
-
-        # Editor
-        editor = tk.Frame(
-            self,
-            bg=self.CARD,
-            highlightbackground=self.BORDER,
-            highlightthickness=1
-        )
-
-        editor.pack(
-            fill="x",
-            padx=18,
-            pady=(14, 8)
-        )
-
-        tk.Label(
-            editor,
-            text="EDIT SELECTED TERM",
-            bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 8, "bold")
-        ).pack(anchor="w", padx=16, pady=(14, 4))
-
-        title_row = tk.Frame(editor, bg=self.CARD)
-        title_row.pack(fill="x", padx=16, pady=(0, 8))
-
-        tk.Label(
-            title_row,
-            text="Title",
-            bg=self.CARD,
-            fg=self.TEXT,
-            font=("Arial", 9, "bold"),
-            width=10,
-            anchor="w"
-        ).pack(side="left")
-
-        self.edit_title = tk.Entry(
-            title_row,
-            bg="white",
-            fg=self.TEXT,
-            relief="solid",
-            bd=1,
-            font=("Arial", 10),
-            insertbackground=self.RED
-        )
-
-        self.edit_title.pack(
-            side="left",
-            fill="x",
-            expand=True,
-            ipady=6
-        )
-
-        details_row = tk.Frame(editor, bg=self.CARD)
-        details_row.pack(fill="x", padx=16, pady=(0, 14))
-
-        tk.Label(
-            details_row,
-            text="Details",
-            bg=self.CARD,
-            fg=self.TEXT,
-            font=("Arial", 9, "bold"),
-            width=10,
-            anchor="w"
-        ).pack(side="left", anchor="n", pady=6)
-
-        self.edit_details = tk.Text(
-            details_row,
-            height=3,
-            bg="white",
-            fg=self.TEXT,
-            relief="solid",
-            bd=1,
-            font=("Arial", 10),
-            insertbackground=self.RED,
-            wrap="word"
-        )
-
-        self.edit_details.pack(
-            side="left",
-            fill="x",
-            expand=True,
-            ipady=4
-        )
-
-        # Action buttons
-        action_bar = tk.Frame(self, bg=self.BG)
-        action_bar.pack(fill="x", padx=18, pady=(4, 8))
-
-        self._make_action_button(
-            action_bar,
-            "＋  Add New",
-            self._add_new,
-            primary=True
-        ).pack(side="left")
-
-        self._make_action_button(
-            action_bar,
-            "🗑  Remove",
-            self._remove_selected
-        ).pack(side="left", padx=(8, 0))
-
-        self._make_action_button(
-            action_bar,
-            "▲  Up",
-            self._move_up
-        ).pack(side="left", padx=(8, 0))
-
-        self._make_action_button(
-            action_bar,
-            "▼  Down",
-            self._move_down
-        ).pack(side="left", padx=(8, 0))
-
-        self._make_action_button(
-            action_bar,
-            "✓  Apply Changes",
-            self._apply_edits,
-            primary=True
-        ).pack(side="right")
-
-        # Footer
-        footer = tk.Frame(
-            self,
-            bg="white",
-            height=66,
-            highlightbackground=self.BORDER,
-            highlightthickness=1
-        )
-
-        footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
-
-        self._make_footer_button(
-            footer,
-            "Restore Defaults",
-            self._restore_defaults
-        ).pack(side="left", padx=(22, 0), pady=14)
-
-        self._make_footer_button(
-            footer,
-            "Cancel",
-            self._cancel
-        ).pack(side="right", padx=(8, 22), pady=14)
-
-        self._make_footer_button(
-            footer,
-            "Save Terms",
-            self._save,
-            primary=True
-        ).pack(side="right", pady=14)
-
-
-    # ========================================================
-    # BUTTON HELPERS
-    # ========================================================
-
-    def _make_action_button(
-        self,
-        parent,
-        text,
-        command,
-        primary=False
-    ):
-
-        if primary:
-            bg = self.RED
-            fg = "white"
-            active_bg = self.RED_DARK
-            active_fg = "white"
-            relief = "flat"
-            bd = 0
-        else:
-            bg = "white"
-            fg = self.TEXT
-            active_bg = "#F3F4F6"
-            active_fg = self.TEXT
-            relief = "solid"
-            bd = 1
-
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=bg,
-            fg=fg,
-            activebackground=active_bg,
-            activeforeground=active_fg,
-            relief=relief,
-            bd=bd,
-            highlightthickness=0,
-            font=("Arial", 9, "bold"),
-            cursor="hand2",
-            padx=14,
-            pady=7
-        )
-
-
-    def _make_footer_button(
-        self,
-        parent,
-        text,
-        command,
-        primary=False
-    ):
-
-        if primary:
-            return tk.Button(
-                parent,
-                text=text,
-                command=command,
-                bg=self.RED,
-                fg="white",
-                activebackground=self.RED_DARK,
-                activeforeground="white",
-                relief="flat",
-                bd=0,
-                highlightthickness=0,
-                font=("Arial", 10, "bold"),
-                cursor="hand2",
-                width=16,
-                height=2
-            )
-
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg="white",
-            fg=self.TEXT,
-            activebackground="#F3F4F6",
-            activeforeground=self.TEXT,
-            relief="solid",
-            bd=1,
-            highlightthickness=0,
-            font=("Arial", 9),
-            cursor="hand2",
-            width=16,
-            height=2
-        )
-
-
-    # ========================================================
-    # LIST RENDERING
-    # ========================================================
-
-    def _mousewheel(self, event):
-        """Scroll Terms & Conditions with mouse wheel or precision touchpad."""
-        try:
-            if not self.winfo_exists() or not self.canvas.winfo_exists():
-                return
-
-            if event.widget.winfo_toplevel() is not self:
-                return
-
-            delta = getattr(event, "delta", 0)
-            if delta:
-                amount = -1 if delta > 0 else 1
-                magnitude = max(1, min(6, int(abs(delta) / 120)))
-                self.canvas.yview_scroll(amount * magnitude, "units")
-        except Exception:
-            pass
-
-    def _mousewheel_up(self, event):
-        try:
-            if event.widget.winfo_toplevel() is self:
-                self.canvas.yview_scroll(-3, "units")
-        except Exception:
-            pass
-
-    def _mousewheel_down(self, event):
-        try:
-            if event.widget.winfo_toplevel() is self:
-                self.canvas.yview_scroll(3, "units")
-        except Exception:
-            pass
-
-
-    def _refresh_list(self, keep_selection=True):
-
-        previous = self.selected_index
-
-        for widget in self.list_frame.winfo_children():
-            widget.destroy()
-
-        self.row_widgets = []
-
-        if not self.working_terms:
-
-            empty = tk.Frame(
-                self.list_frame,
-                bg=self.SOFT,
-                highlightbackground=self.BORDER,
-                highlightthickness=1
-            )
-
-            empty.pack(fill="x", pady=6)
-
-            tk.Label(
-                empty,
-                text=(
-                    "No terms yet. "
-                    "Click “Add New” to create one."
-                ),
-                bg=self.SOFT,
-                fg=self.MUTED,
-                font=("Arial", 9, "italic")
-            ).pack(anchor="w", padx=14, pady=16)
-
-            self.selected_index = None
-            self._load_editor()
-
-            return
-
-        for index, term in enumerate(self.working_terms):
-
-            row = tk.Frame(
-                self.list_frame,
-                bg=self.CARD,
-                highlightbackground=self.BORDER,
-                highlightthickness=1,
-                cursor="hand2"
-            )
-
-            row.pack(fill="x", pady=4)
-
-            is_selected = (index == self.selected_index)
-
-            if is_selected:
-                row.configure(
-                    highlightbackground=self.RED,
-                    highlightthickness=2
-                )
-
-            tk.Label(
-                row,
-                text=str(index + 1),
-                bg=(self.RED if is_selected else "#E9EBEE"),
-                fg=("white" if is_selected else self.MUTED),
-                width=3,
-                font=("Arial", 9, "bold")
-            ).pack(side="left", padx=(10, 10), pady=12)
-
-            text_box = tk.Frame(row, bg=self.CARD)
-            text_box.pack(
-                side="left",
-                fill="x",
-                expand=True,
-                pady=10
-            )
-
-            tk.Label(
-                text_box,
-                text=term["title"] or "(untitled)",
-                bg=self.CARD,
-                fg=self.TEXT,
-                font=("Arial", 10, "bold"),
-                anchor="w"
-            ).pack(anchor="w")
-
-            tk.Label(
-                text_box,
-                text=term["value"] or "(no details)",
-                bg=self.CARD,
-                fg=self.MUTED,
-                font=("Arial", 9),
-                anchor="w",
-                justify="left",
-                wraplength=560
-            ).pack(anchor="w", pady=(2, 0))
-
-            for widget in (row, text_box):
-                widget.bind(
-                    "<Button-1>",
-                    lambda e, i=index: self._select(i)
-                )
-
-            for child in text_box.winfo_children():
-                child.bind(
-                    "<Button-1>",
-                    lambda e, i=index: self._select(i)
-                )
-
-            self.row_widgets.append(row)
-
-        if keep_selection and previous is not None:
-
-            if 0 <= previous < len(self.working_terms):
-                self.selected_index = previous
-            else:
-                self.selected_index = None
-
-        self._load_editor()
-
-
-    def _select(self, index):
-
-        self.selected_index = index
-
-        self._refresh_list()
-
-
-    # ========================================================
-    # EDITOR LOAD
-    # ========================================================
-
-    def _load_editor(self):
-
-        self.edit_title.delete(0, "end")
-        self.edit_details.delete("1.0", "end")
-
-        if (
-            self.selected_index is None
-            or not (0 <= self.selected_index < len(self.working_terms))
-        ):
-
-            self.edit_title.configure(state="disabled")
-            self.edit_details.configure(state="disabled")
-
-            return
-
-        self.edit_title.configure(state="normal")
-        self.edit_details.configure(state="normal")
-
-        term = self.working_terms[self.selected_index]
-
-        self.edit_title.insert(0, term["title"])
-        self.edit_details.insert("1.0", term["value"])
-
-
-    # ========================================================
-    # EDITOR OPERATIONS
-    # ========================================================
-
-    def _apply_edits(self):
-
-        if self.selected_index is None:
-
-            messagebox.showinfo(
-                "No term selected",
-                "Please select a term from the list first.",
-                parent=self
-            )
-
-            return
-
-        title = self.edit_title.get().strip()
-        details = self.edit_details.get("1.0", "end").strip()
-
-        if not title or not details:
-
-            messagebox.showerror(
-                "Incomplete term",
-                "Both the title and the details are required.",
-                parent=self
-            )
-
-            return
-
-        self.working_terms[self.selected_index] = {
-            "title": title,
-            "value": details,
-        }
-
-        self._refresh_list()
-
-
-    def _add_new(self):
-
-        if (
-            self.selected_index is not None
-            and self.edit_title.cget("state") == "normal"
-        ):
-
-            title = self.edit_title.get().strip()
-            details = self.edit_details.get("1.0", "end").strip()
-
-            if title and details:
-                self.working_terms[self.selected_index] = {
-                    "title": title,
-                    "value": details,
-                }
-
-        self.working_terms.append(
-            {
-                "title": "NEW TERM",
-                "value": "Enter details here",
-            }
-        )
-
-        self.selected_index = len(self.working_terms) - 1
-
-        self._refresh_list()
-
-
-    def _remove_selected(self):
-
-        if self.selected_index is None:
-
-            messagebox.showinfo(
-                "No term selected",
-                "Select a term to remove.",
-                parent=self
-            )
-
-            return
-
-        term = self.working_terms[self.selected_index]
-
-        confirm = messagebox.askyesno(
-            "Remove term",
-            f"Remove this term?\n\n{term['title']}",
-            parent=self
-        )
-
-        if not confirm:
-            return
-
-        del self.working_terms[self.selected_index]
-
-        if not self.working_terms:
-            self.selected_index = None
-        elif self.selected_index >= len(self.working_terms):
-            self.selected_index = len(self.working_terms) - 1
-
-        self._refresh_list()
-
-
-    def _move_up(self):
-
-        index = self.selected_index
-
-        if index is None or index <= 0:
-            return
-
-        self.working_terms[index - 1], self.working_terms[index] = (
-            self.working_terms[index],
-            self.working_terms[index - 1],
-        )
-
-        self.selected_index = index - 1
-
-        self._refresh_list()
-
-
-    def _move_down(self):
-
-        index = self.selected_index
-
-        if index is None or index >= len(self.working_terms) - 1:
-            return
-
-        self.working_terms[index + 1], self.working_terms[index] = (
-            self.working_terms[index],
-            self.working_terms[index + 1],
-        )
-
-        self.selected_index = index + 1
-
-        self._refresh_list()
-
-
-    # ========================================================
-    # FOOTER ACTIONS
-    # ========================================================
-
-    def _restore_defaults(self):
-
-        confirm = messagebox.askyesno(
-            "Restore defaults",
-            "Discard your current edits and restore the standard terms?",
-            parent=self
-        )
-
-        if not confirm:
-            return
-
-        self.working_terms = [
-            {"title": t, "value": v}
-            for t, v in STANDARD_TERMS
-        ]
-
-        self.selected_index = None
-
-        self._refresh_list()
-
-
-    def _save(self):
-
-        if (
-            self.selected_index is not None
-            and self.edit_title.cget("state") == "normal"
-        ):
-
-            title = self.edit_title.get().strip()
-            details = self.edit_details.get("1.0", "end").strip()
-
-            if title and details:
-                self.working_terms[self.selected_index] = {
-                    "title": title,
-                    "value": details,
-                }
-
-        cleaned = []
-
-        for term in self.working_terms:
-
-            title = term["title"].strip()
-            value = term["value"].strip()
-
-            if not title or not value:
-                continue
-
-            cleaned.append((title, value))
-
-        if not cleaned:
-
-            messagebox.showerror(
-                "No valid terms",
-                (
-                    "Please provide at least one term "
-                    "with a title and details."
-                ),
-                parent=self
-            )
-
-            return
-
-        self.result = cleaned
-
-        self.destroy()
-
-
-    def _cancel(self):
-
-        self.result = None
-
-        self.destroy()
-
-
-# ============================================================
-# STANDALONE TEST
-# ============================================================
-
-
+        self._auto_save_customer(data)
+        self._show_preview(data)

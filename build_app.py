@@ -37,7 +37,9 @@ args = [
 ]
 
 # Add icon if it exists
-if os.path.exists('assets/crystal.ico'):
-    args.insert(4, '--icon=assets/crystal.ico')
+for icon_path in ('assets/crystal.ico', 'assets/logo/LOGO.ico'):
+    if os.path.exists(icon_path):
+        args.insert(4, f'--icon={icon_path}')
+        break
 
 PyInstaller.__main__.run(args)

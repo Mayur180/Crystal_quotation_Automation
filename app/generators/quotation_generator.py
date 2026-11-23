@@ -130,6 +130,18 @@ try:
 except Exception:
     _save_quotation_history = None
 
+# --- Cloud sync imports ---
+try:
+    from app.services.cloud_sync import (
+        upload_quotation_to_cloud,
+        upload_file_to_cloud,
+        update_quotation_status_in_cloud,
+    )
+except Exception:
+    upload_quotation_to_cloud = None
+    upload_file_to_cloud = None
+    update_quotation_status_in_cloud = None
+
 
 # ============================================================
 # BRAND / PAGE SETTINGS
@@ -3383,6 +3395,37 @@ def generate_quotation(
             _save_quotation_history(result)
         except Exception:
             pass
+
+    # ---- UPLOAD TO CLOUD ----
+    # 1. Upload the Word and PDF files to Supabase Storage
+    pdf_url = ""
+    word_url = ""
+
+    if upload_file_to_cloud is not None:
+        try:
+            if pdf_path and os.path.isfile(str(pdf_path)):
+                pdf_filename = os.path.basename(str(pdf_path))
+                pdf_url = upload_file_to_cloud(str(pdf_path), pdf_filename)
+                print(f"[cloud] ✅ Uploaded PDF: {pdf_filename}")
+
+            if os.path.isfile(str(final_docx)):
+                word_filename = os.path.basename(str(final_docx))
+                word_url = upload_file_to_cloud(str(final_docx), word_filename)
+                print(f"[cloud] ✅ Uploaded Word: {word_filename}")
+        except Exception as e:
+            print(f"[cloud] ❌ File upload failed: {e}")
+
+    # 2. Add the cloud URLs into the result
+    result["pdf_url"] = pdf_url
+    result["word_url"] = word_url
+
+    # 3. Upload the quotation record to Supabase
+    if upload_quotation_to_cloud is not None:
+        try:
+            upload_quotation_to_cloud(result)
+            print(f"[cloud] ✅ Uploaded quotation record: {quotation_number}")
+        except Exception as e:
+            print(f"[cloud] ❌ Quotation record upload failed: {e}")
 
     return result
 
