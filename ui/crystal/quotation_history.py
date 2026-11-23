@@ -571,9 +571,9 @@ class QuotationHistory(tk.Toplevel):
         def worker():
             records = None
             try:
-                from app.services.cloud_sync import fetch_quotations_from_cloud
+                from app.services.quotation_history_service import fetch_quotations_merged
                 from app.services.paths import get_active_module
-                cloud_records = fetch_quotations_from_cloud(
+                cloud_records = fetch_quotations_merged(
                     limit=10000, module=get_active_module(), silent=True
                 )
                 records = [

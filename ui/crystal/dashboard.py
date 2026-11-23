@@ -1,3 +1,15 @@
+
+def get_latest_quotation_number():
+    try:
+        from app.services.paths import get_data_dir
+        counter_file = get_data_dir() / "quotation_counter.json"
+        if counter_file.is_file():
+            data = json.loads(counter_file.read_text(encoding="utf-8"))
+            return data.get("last_number", 0)
+    except Exception:
+        pass
+    return 0
+
 """CRYSTAL — Dashboard (mockup C: sidebar + content)."""
 import os
 import queue
@@ -182,7 +194,7 @@ class Dashboard(tk.Tk):
         kpis = [
             ("📦", "products", summary.get("products"), "Products",     T.ACCENT),
             ("👥", "customers", summary.get("customers"), "Customers",   None),
-            ("📄", "quotes", summary.get("quotes"), "Quotations",  None),
+            ("📄", "quotes", get_latest_quotation_number() or summary.get("quotes"), "Quotations",  None),
             ("📈", "conversion_rate", summary.get("conversion_rate"), "Conversion %", "#27AE60"),
             ("⏰", "pending_followups", summary.get("pending_followups"), "Follow-ups", "#E67E22"),
         ]
@@ -455,8 +467,8 @@ class Dashboard(tk.Tk):
         # --- 1. CLOUD QUOTATIONS (cached for a few seconds by cloud_sync) ---
         cloud_quotes = []
         try:
-            from app.services.cloud_sync import fetch_quotations_from_cloud
-            cloud_quotes = fetch_quotations_from_cloud(
+            from app.services.quotation_history_service import fetch_quotations_merged
+            cloud_quotes = fetch_quotations_merged(
                 limit=10000, module=get_active_module(), silent=True, force=force
             ) or []
         except Exception as e:
@@ -558,9 +570,9 @@ class Dashboard(tk.Tk):
 
         if not quotation:
             try:
-                from app.services.cloud_sync import fetch_quotations_from_cloud
+                from app.services.quotation_history_service import fetch_quotations_merged
                 from app.services.paths import get_active_module
-                for rec in fetch_quotations_from_cloud(
+                for rec in fetch_quotations_merged(
                     limit=10000, module=get_active_module(), silent=True
                 ):
                     if str(rec.get("quotation_number", "")) == str(quotation_number):
@@ -833,9 +845,9 @@ class Dashboard(tk.Tk):
 
             all_records = []
             try:
-                from app.services.cloud_sync import fetch_quotations_from_cloud
+                from app.services.quotation_history_service import fetch_quotations_merged
                 from app.services.paths import get_active_module
-                all_records = fetch_quotations_from_cloud(
+                all_records = fetch_quotations_merged(
                     limit=10000, module=get_active_module(), silent=True
                 ) or []
             except Exception as e:

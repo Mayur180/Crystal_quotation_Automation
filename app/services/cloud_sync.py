@@ -48,7 +48,30 @@ _CACHE = {"data": [], "timestamp": 0}
 _QUOTES_CACHE = {"module": None, "data": [], "timestamp": 0.0}
 _QUOTES_CACHE_TTL = 20          # seconds
 _CUSTOMERS_CACHE = {"module": None, "data": [], "timestamp": 0.0}
-_CUSTOMERS_CACHE_TTL = 60       # seconds
+_CUSTOMERS_CACHE_TTL = 60
+
+
+# --- in-flight write tracking ------------------------------------
+_PENDING_WRITES = 0
+_PENDING_LOCK = threading.Lock()
+
+def _begin_write():
+    global _PENDING_WRITES
+    with _PENDING_LOCK:
+        _PENDING_WRITES += 1
+
+def _end_write():
+    global _PENDING_WRITES
+    with _PENDING_LOCK:
+        _PENDING_WRITES = max(0, _PENDING_WRITES - 1)
+        if _PENDING_WRITES == 0:
+            invalidate_quotes_cache()
+            invalidate_customers_cache()
+
+def has_pending_writes() -> bool:
+    with _PENDING_LOCK:
+        return _PENDING_WRITES > 0
+       # seconds
 
 
 def invalidate_quotes_cache():
@@ -212,6 +235,7 @@ def fetch_quotations_from_cloud(limit=100, module=None, silent=False, force=Fals
         not force
         and _QUOTES_CACHE["module"] == active_module
         and _QUOTES_CACHE["timestamp"]
+        and not has_pending_writes()
         and time.time() - _QUOTES_CACHE["timestamp"] < _QUOTES_CACHE_TTL
     ):
         if not silent: print(f"[cloud] ⚡ Cached {active_module} quotations ({len(cached)})")
@@ -330,6 +354,14 @@ def fetch_quotations_from_cloud(limit=100, module=None, silent=False, force=Fals
 
 def upload_quotation_to_cloud(quotation_data: dict, module: str = None) -> bool:
     """Save to Supabase (VMM only) and Google Sheets (Always)."""
+    _begin_write()
+    try:
+        return _upload_quotation_body(quotation_data, module)
+    finally:
+        _end_write()
+
+
+def _upload_quotation_body(quotation_data: dict, module: str = None) -> bool:
     active_module = _get_module(module)
     q_no = str(quotation_data.get("quotation_number", ""))
 
@@ -362,18 +394,29 @@ def upload_quotation_to_cloud(quotation_data: dict, module: str = None) -> bool:
 
     # --- WRITE TO GOOGLE SHEETS ---
     try:
+        # Bulletproof mapping: handles customer_name, name, or customer
+        c_name = quotation_data.get("customer_name") or quotation_data.get("name") or quotation_data.get("customer") or ""
+        c_comp = quotation_data.get("customer_company") or quotation_data.get("company") or ""
+        c_phone = quotation_data.get("customer_phone") or quotation_data.get("phone") or ""
+        c_email = quotation_data.get("customer_email") or quotation_data.get("email") or ""
+        c_addr = quotation_data.get("customer_address") or quotation_data.get("address") or ""
+        c_city = quotation_data.get("customer_city") or quotation_data.get("city") or ""
+        c_state = quotation_data.get("customer_state") or quotation_data.get("state") or ""
+        c_pin = quotation_data.get("customer_pincode") or quotation_data.get("pincode") or ""
+        c_gst = quotation_data.get("customer_gstin") or quotation_data.get("gstin") or ""
+        
         sheet_payload = {
             "action": "quotation",
             "quotation_number": q_no,
-            "customer": quotation_data.get("customer_name", ""),
-            "company": quotation_data.get("customer_company", ""),
-            "phone": quotation_data.get("customer_phone", ""),
-            "email": quotation_data.get("customer_email", ""),
-            "address": quotation_data.get("customer_address", ""),
-            "city": quotation_data.get("customer_city", ""),
-            "state": quotation_data.get("customer_state", ""),
-            "pincode": quotation_data.get("customer_pincode", ""),
-            "gstin": quotation_data.get("customer_gstin", ""),
+            "customer": c_name,
+            "company": c_comp,
+            "phone": c_phone,
+            "email": c_email,
+            "address": c_addr,
+            "city": c_city,
+            "state": c_state,
+            "pincode": c_pin,
+            "gstin": c_gst,
             "model": quotation_data.get("model", ""),
             "grand_total": grand_total,
             "status": quotation_data.get("status", "Draft"),
@@ -491,6 +534,14 @@ def delete_quotation_from_cloud(quotation_number: str) -> bool:
 
 def upload_customer_to_cloud(customer_data: dict, module: str = None) -> bool:
     """Save a customer to Google Sheets (and Supabase if VMM)."""
+    _begin_write()
+    try:
+        return _upload_customer_body(customer_data, module)
+    finally:
+        _end_write()
+
+
+def _upload_customer_body(customer_data: dict, module: str = None) -> bool:
     active_module = _get_module(module)
     
     # We only save to Google Sheets for now (since Crystal doesn't use Supabase)
@@ -536,6 +587,7 @@ def fetch_customers_from_cloud(module=None, force=False) -> list:
         not force
         and _CUSTOMERS_CACHE["module"] == active_module
         and _CUSTOMERS_CACHE["timestamp"]
+        and not has_pending_writes()
         and time.time() - _CUSTOMERS_CACHE["timestamp"] < _CUSTOMERS_CACHE_TTL
     ):
         return list(_CUSTOMERS_CACHE["data"])

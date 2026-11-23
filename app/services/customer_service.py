@@ -281,7 +281,7 @@ def save_customer(data, customer_id=None):
 
     # ---- Send to Google Sheet (fire and forget) ----
     try:
-        from app.services.google_sheet_service import send_to_sheet
+        from app.services.cloud_sync import upload_customer_to_cloud
         import os as _os
         _user = _os.environ.get('USERNAME') or 'user'
         payload = {
@@ -299,7 +299,8 @@ def save_customer(data, customer_id=None):
         }
         # Don't make the UI wait several seconds for the sheet round-trip.
         threading.Thread(
-            target=send_to_sheet, args=(payload,), daemon=True
+            target=lambda: upload_customer_to_cloud(payload, module="Crystal"),
+            daemon=True,
         ).start()
     except Exception:
         pass

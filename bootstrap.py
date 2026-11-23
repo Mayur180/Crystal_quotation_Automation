@@ -1,64 +1,79 @@
 """
 Bootstrap the app on a fresh PC.
-Downloads catalog and users from Google Sheets if local data is missing.
-Creates required folders.
+Creates folders, seeds data from the bundled _MEIPASS copy (frozen),
+and downloads catalog/users from Google Sheets if local data is missing.
 """
-import os
 import json
-import requests
-import threading
+import sys
+import shutil
 from pathlib import Path
 
-WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwhhqEsHfFmh8Iv4ndlSbTcKiuDuDFMaee1k5dsPaXNmZpSked5adzzOCu-N6UxiO83ZQ/exec"
+# Reuse the app's single source of truth for paths
+try:
+    from app.services.paths import get_data_root, get_project_root
+except Exception:
+    # Fallback if imported before app is on sys.path
+    def get_project_root() -> Path:
+        if getattr(sys, "frozen", False):
+            return Path(sys.executable).resolve().parent
+        return Path(__file__).resolve().parent
+
+    def get_data_root() -> Path:
+        d = get_project_root() / "data"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
+
+def seed_from_bundle():
+    """On frozen exe: copy _MEIPASS/data -> <exe_dir>/data once."""
+    if not getattr(sys, "frozen", False):
+        return
+    seed = Path(sys._MEIPASS) / "data"
+    target = get_data_root()
+    if not seed.exists():
+        return
+    # Only seed if target is empty (fresh install)
+    if (target / "Crystal" / "catalog.json").exists():
+        return
+    shutil.copytree(seed, target, dirs_exist_ok=True)
+    print("✅ Seeded data from bundle.")
+
 
 def ensure_folders():
-    """Create all required folders."""
+    data_root = get_data_root()
     paths = [
-        "data/Crystal",
-        "data/VMM",
-        "data/Crystal/backups",
-        "output",
-        "assets",
+        data_root / "Crystal",
+        data_root / "VMM",
+        data_root / "Crystal" / "backups",
+        get_project_root() / "output",
+        get_project_root() / "assets",
     ]
     for p in paths:
-        Path(p).mkdir(parents=True, exist_ok=True)
+        p.mkdir(parents=True, exist_ok=True)
     print("✅ Folders verified.")
 
+
 def download_catalog():
-    """Download catalog from Google Sheets if local file is missing."""
-    catalog_file = Path("data/Crystal/catalog.json")
+    data_root = get_data_root()
+    catalog_file = data_root / "Crystal" / "catalog.json"
     if catalog_file.exists() and catalog_file.stat().st_size > 100:
         print(f"✅ Catalog already exists ({catalog_file.stat().st_size} bytes).")
         return True
-    
-    print("⬇️  Downloading catalog from Google Sheets...")
-    try:
-        # OFFLINE MODE: Catalog download disabled
-        print("[bootstrap] ⚡ Using offline catalog (skipping download).")
-        response = None
-        if response.status_code == 200:
-            data = response.json()
-            products = data.get("products", [])
-            if products:
-                catalog_file.write_text(json.dumps({"products": products}, indent=2, ensure_ascii=False), encoding="utf-8")
-                print(f"✅ Downloaded {len(products)} products.")
-                return True
-            else:
-                print("⚠️  No products found in Google Sheet. Using empty catalog.")
-                catalog_file.write_text(json.dumps({"products": []}, indent=2), encoding="utf-8")
-                return True
-    except Exception as e:
-        print(f"❌ Could not download catalog: {e}")
-        catalog_file.write_text(json.dumps({"products": []}, indent=2), encoding="utf-8")
-        return False
+
+    print("[bootstrap] ⚡ Using offline catalog (skipping download).")
+    catalog_file.parent.mkdir(parents=True, exist_ok=True)
+    catalog_file.write_text(json.dumps({"products": []}, indent=2), encoding="utf-8")
+    print("⚠️  Empty catalog created. Add products via the app.")
+    return True
+
 
 def download_users():
-    """Download users from Google Sheets if local file is missing."""
-    users_file = Path("data/Users.json")
+    data_root = get_data_root()
+    users_file = data_root / "Users.json"
     if users_file.exists() and users_file.stat().st_size > 10:
         print("✅ Users file already exists.")
         return True
-    
+
     print("⬇️  Downloading users from Google Sheets...")
     try:
         from app.services.user_service import fetch_users_from_sheet
@@ -70,17 +85,19 @@ def download_users():
         print(f"⚠️  Could not download users: {e}")
     return False
 
+
 def bootstrap():
-    """Run all bootstrap steps."""
     print("=" * 60)
     print("CRYSTAL Quotation Manager — Bootstrap")
     print("=" * 60)
+    seed_from_bundle()
     ensure_folders()
     download_catalog()
     download_users()
     print("=" * 60)
     print("✅ Bootstrap complete.")
     print("=" * 60)
+
 
 if __name__ == "__main__":
     bootstrap()

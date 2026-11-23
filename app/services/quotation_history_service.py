@@ -60,6 +60,54 @@ DATA_DIR = _resolve_data_dir()
 _CLOUD_CACHE = None
 HISTORY_FILE = DATA_DIR / "quotations.json"
 
+
+def load_local_quotations() -> list:
+    try:
+        if HISTORY_FILE.is_file():
+            data = json.loads(HISTORY_FILE.read_text(encoding="utf-8"))
+            if isinstance(data, list):
+                return data
+    except Exception:
+        pass
+    return []
+
+
+def fetch_quotations_merged(force: bool = False, module: str = None, limit: int = None, silent: bool = False, **kwargs) -> list:
+    from app.services.cloud_sync import fetch_quotations_from_cloud
+    cloud = []
+    try:
+        cloud = fetch_quotations_from_cloud(force=force, module=module, silent=silent) or []
+    except Exception as e:
+        print(f"[quotation] cloud fetch failed: {e}")
+
+    local = load_local_quotations()
+    merged = {}
+    for rec in local:
+        q_no = str(rec.get("quotation_number") or "").strip()
+        if q_no:
+            merged[q_no] = rec
+    for rec in cloud:
+        q_no = str(rec.get("quotation_number") or "").strip()
+        if not q_no:
+            continue
+        existing = merged.get(q_no)
+        if existing is None:
+            merged[q_no] = rec
+        else:
+            for k, v in rec.items():
+                if not existing.get(k) and v:
+                    existing[k] = v
+
+    result = sorted(
+        merged.values(),
+        key=lambda x: str(x.get("quotation_number") or ""),
+        reverse=True,
+    )
+    if limit:
+        result = result[:int(limit)]
+    return result
+
+
 # ============================================================
 # HELPERS
 # ============================================================
@@ -204,25 +252,48 @@ def save_quotation(result):
         except Exception:
             _user = 'user'
 
+        # Aggressively find customer info from whatever structure the generator used
+        cust_name = record.get('customer_name') or record.get('customer') or record.get('name') or result.get('customer_name') or result.get('customer') or result.get('name') or ''
+        cust_comp = record.get('customer_company') or record.get('company') or result.get('customer_company') or result.get('company') or ''
+        cust_phone = record.get('customer_phone') or record.get('phone') or result.get('customer_phone') or result.get('phone') or ''
+        cust_email = record.get('customer_email') or record.get('email') or result.get('customer_email') or result.get('email') or ''
+        cust_addr = record.get('customer_address') or record.get('address') or result.get('customer_address') or result.get('address') or ''
+        cust_city = record.get('customer_city') or record.get('city') or result.get('customer_city') or result.get('city') or ''
+        cust_state = record.get('customer_state') or record.get('state') or result.get('customer_state') or result.get('state') or ''
+        cust_pin = record.get('customer_pincode') or record.get('pincode') or result.get('customer_pincode') or result.get('pincode') or ''
+        cust_gst = record.get('customer_gstin') or record.get('gstin') or result.get('customer_gstin') or result.get('gstin') or ''
+
         payload = {
             'action':           'quotation',
             'date':             record.get('date', ''),
             'user':             _user,
             'quotation_number': record.get('quotation_number', ''),
-            'customer':         record.get('customer_name', ''),
-            'company':          record.get('customer_company', ''),
-            'phone':            record.get('customer_phone', ''),
-            'email':            record.get('customer_email', ''),
-            'address':          record.get('customer_address', ''),
-            'city':             record.get('customer_city', ''),
-            'state':            record.get('customer_state', ''),
-            'pincode':          record.get('customer_pincode', ''),
-            'gstin':            record.get('customer_gstin', ''),
+            'customer_name':    cust_name,
+            'customer_company': cust_comp,
+            'customer_phone':   cust_phone,
+            'customer_email':   cust_email,
+            'customer_address': cust_addr,
+            'customer_city':    cust_city,
+            'customer_state':   cust_state,
+            'customer_pincode': cust_pin,
+            'customer_gstin':   cust_gst,
             'model':            record.get('model', ''),
             'grand_total':      record.get('grand_total', ''),
             'status':           record.get('status', 'Draft'),
             'items':            record.get('items') or [],
         }
+        # Auto-sync customer to the Customers tab
+        if cust_name or cust_comp:
+            try:
+                from app.services.customer_service import save_customer
+                save_customer({
+                    "name": cust_name, "company": cust_comp, "phone": cust_phone,
+                    "email": cust_email, "address": cust_addr, "city": cust_city,
+                    "state": cust_state, "pincode": cust_pin, "gstin": cust_gst
+                })
+            except Exception as e:
+                print(f"[quotation] customer auto-sync failed: {e}")
+
         # The sheet round-trip can take many seconds on a slow network; the
         # quotation is already saved locally, so don't block the UI on it.
         threading.Thread(
