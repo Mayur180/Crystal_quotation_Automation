@@ -215,6 +215,22 @@ def _parse_sheet_items(value) -> list:
     return items
 
 
+def _parse_sheet_totals(value) -> dict:
+    """Parse the totals breakdown stored in the sheet's Totals column."""
+    if isinstance(value, dict):
+        return value
+    if isinstance(value, str):
+        text = value.strip()
+        if not text:
+            return {}
+        try:
+            parsed = json.loads(text)
+        except Exception:
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return {}
+
+
 def _get_module(module: str = None) -> str:
     """Safely determines the active module."""
     if module:
@@ -280,16 +296,19 @@ def fetch_quotations_from_cloud(limit=100, module=None, silent=False, force=Fals
                     for row in data.get("rows", []):
                         q_no = str(row.get("Quotation No", ""))
                         if active_module == "VMM" and "VMM" not in q_no.upper(): continue
-                        if active_module == "CRYSTAL" and "CRY" not in q_no.upper(): continue
+                        # Crystal owns the CRY (quotation) and PI (proforma) series.
+                        if active_module == "CRYSTAL" and not q_no.upper().startswith(("CRY", "PI/")): continue
                         sheet_data.append({
                             "quotation_number": q_no,
                             "date": row.get("Date", ""),
                             "customer_name": row.get("Customer", ""),
                             "customer_company": row.get("Company", ""),
                             "model": row.get("Model", ""),
+                            "doc_type": "proforma" if ("prof" in str(row.get("Type", "")).lower() or q_no.upper().startswith("PI/")) else "quotation",
                             "grand_total": row.get("Grand Total", 0),
                             "status": row.get("Status", "Draft"),
                             "items": _parse_sheet_items(row.get("Items")),
+                            "totals": _parse_sheet_totals(row.get("Totals")),
                             "module": active_module,
                             "pdf_url": ""
                         })
@@ -418,6 +437,7 @@ def _upload_quotation_body(quotation_data: dict, module: str = None) -> bool:
             "pincode": c_pin,
             "gstin": c_gst,
             "model": quotation_data.get("model", ""),
+            "doc_type": quotation_data.get("doc_type", "quotation"),
             "grand_total": grand_total,
             "status": quotation_data.get("status", "Draft"),
             "date": quotation_data.get("date", ""),
@@ -578,6 +598,60 @@ def _upload_customer_body(customer_data: dict, module: str = None) -> bool:
             print(f"[cloud] ❌ SUPABASE customer save failed: {e}")
             
     return False
+
+def upload_customers_bulk_to_cloud(customers, chunk_size=200, progress=None):
+    """Upload many customers through the sheet's bulk endpoint.
+
+    The Apps Script handles de-duplication (phone, email, name+company)
+    and only fills blank cells on existing rows. Chunks keep each web
+    request short enough for the script execution limit.
+    """
+    records = [c for c in (customers or []) if isinstance(c, dict)]
+    totals = {"added": 0, "updated": 0, "skipped": 0}
+    if not records:
+        return {"supported": True, **totals}
+
+    chunk_size = max(1, int(chunk_size))
+    _begin_write()
+    try:
+        for start in range(0, len(records), chunk_size):
+            chunk = records[start:start + chunk_size]
+            payload = {
+                "action": "customers_bulk",
+                "user": os.environ.get("USERNAME") or "user",
+                "customers": chunk,
+            }
+            try:
+                res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=90)
+                data = res.json() if res.status_code == 200 else {}
+            except Exception as e:
+                print(f"[cloud] Customer bulk upload failed: {e}")
+                return {"supported": True, "error": str(e), **totals}
+
+            if isinstance(data, dict) and data.get("status") == "error":
+                message = str(data.get("message") or "")
+                if "Unknown action" in message:
+                    print("[cloud] Sheet script has no customers_bulk action "
+                          "(redeploy apps_script_cloud_sync.gs)")
+                    return {"supported": False, "error": message, **totals}
+                return {"supported": True, "error": message, **totals}
+
+            for key in totals:
+                try:
+                    totals[key] += int(data.get(key) or 0)
+                except (TypeError, ValueError):
+                    pass
+            if progress:
+                try:
+                    progress(min(start + len(chunk), len(records)))
+                except Exception:
+                    pass
+        invalidate_customers_cache()
+    finally:
+        _end_write()
+
+    return {"supported": True, **totals}
+
 
 def fetch_customers_from_cloud(module=None, force=False) -> list:
     """Fetch customers from Supabase (VMM) or Google Sheets (Crystal)."""

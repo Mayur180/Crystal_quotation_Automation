@@ -67,6 +67,9 @@ def _get_quotation_prefix() -> str:
 QUOTATION_PREFIX = _DEFAULT_PREFIX
 FINANCIAL_YEAR = "26-27"
 
+# Proforma invoices run their own independent series: PI/26-27/001, 002, ...
+PROFORMA_PREFIX = "PI"
+
 
 def _load_counter():
 
@@ -135,60 +138,80 @@ def _save_counter(data):
 # NEXT QUOTATION NUMBER
 # ============================================================
 
-def get_next_quotation_number():
+def _counter_block(data, key):
+    """Return the {financial_year, last_number} block for a counter key.
 
+    key=None is the legacy top-level quotation counter; any other key is a
+    nested block (e.g. "proforma") so each document type numbers on its own.
+    """
+    if key is None:
+        return {
+            "financial_year": data.get("financial_year", ""),
+            "last_number": data.get("last_number", 0),
+        }
+    block = data.get(key)
+    return block if isinstance(block, dict) else {}
+
+
+def _next_serial(key):
+    """Increment and persist the counter for ``key`` (None = quotations)."""
     data = _load_counter()
+    block = _counter_block(data, key)
 
-    stored_year = str(
-        data.get(
-            "financial_year",
-            "",
-        )
-    )
-
-    last_number = int(
-        data.get(
-            "last_number",
-            0,
-        )
-    )
-
-    # --------------------------------------------------------
-    # New financial year
-    # --------------------------------------------------------
-
-    if stored_year != FINANCIAL_YEAR:
-
+    try:
+        last_number = int(block.get("last_number", 0) or 0)
+    except (TypeError, ValueError):
         last_number = 0
 
-        data = {
-            "financial_year": FINANCIAL_YEAR,
-            "last_number": 0,
-        }
-
-    # --------------------------------------------------------
-    # Increment
-    # --------------------------------------------------------
+    # New financial year resets that counter only.
+    if str(block.get("financial_year", "")) != FINANCIAL_YEAR:
+        last_number = 0
 
     last_number += 1
+    new_block = {
+        "financial_year": FINANCIAL_YEAR,
+        "last_number": last_number,
+    }
 
-    data["financial_year"] = FINANCIAL_YEAR
+    if key is None:
+        data["financial_year"] = new_block["financial_year"]
+        data["last_number"] = new_block["last_number"]
+    else:
+        data[key] = new_block
 
-    data["last_number"] = last_number
+    _save_counter(data)
+    return last_number
 
-    _save_counter(
-        data
-    )
 
-    # --------------------------------------------------------
-    # Format
-    # --------------------------------------------------------
+def get_next_quotation_number():
+
+    last_number = _next_serial(None)
 
     return (
         f"{_get_quotation_prefix()}/"
         f"{FINANCIAL_YEAR}/"
         f"{last_number:03d}"
     )
+
+
+def get_next_proforma_number():
+    """Return the next PI number, e.g. PI/26-27/001."""
+
+    last_number = _next_serial("proforma")
+
+    return (
+        f"{PROFORMA_PREFIX}/"
+        f"{FINANCIAL_YEAR}/"
+        f"{last_number:03d}"
+    )
+
+
+def get_next_document_number(doc_type="quotation"):
+    """Allocate a number for the document type: quotation or proforma."""
+
+    if str(doc_type or "").strip().lower().startswith("prof"):
+        return get_next_proforma_number()
+    return get_next_quotation_number()
 
 
 # ============================================================

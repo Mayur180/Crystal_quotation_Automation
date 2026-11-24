@@ -195,6 +195,7 @@ class Dashboard(tk.Tk):
             ("📦", "products", summary.get("products"), "Products",     T.ACCENT),
             ("👥", "customers", summary.get("customers"), "Customers",   None),
             ("📄", "quotes", get_latest_quotation_number() or summary.get("quotes"), "Quotations",  None),
+            ("🧾", "proformas", summary.get("proformas"), "Proformas",  "#8E44AD"),
             ("📈", "conversion_rate", summary.get("conversion_rate"), "Conversion %", "#27AE60"),
             ("⏰", "pending_followups", summary.get("pending_followups"), "Follow-ups", "#E67E22"),
         ]
@@ -319,6 +320,7 @@ class Dashboard(tk.Tk):
             "products": self._catalog_count(),
             "customers": self._local_customer_count(),
             "quotes": None,
+            "proformas": None,
             "conversion_rate": None,
             "pending_followups": None,
             "recent": None,
@@ -474,10 +476,10 @@ class Dashboard(tk.Tk):
         except Exception as e:
             print(f"[Dashboard] Cloud load failed: {e}")
 
-        # --- FILTER: ONLY CRYSTAL QUOTES (CRY prefix) ---
+        # --- FILTER: ONLY CRYSTAL DOCUMENTS (CRY quotes, PI proformas) ---
         cloud_quotes = [
             q for q in cloud_quotes
-            if str(q.get("quotation_number", "")).upper().startswith("CRY")
+            if str(q.get("quotation_number", "")).upper().startswith(("CRY", "PI/"))
         ]
 
         # Merge with the locally saved records so quotations that exist
@@ -489,22 +491,54 @@ class Dashboard(tk.Tk):
             )
             local_quotes = [
                 q for q in local_quotations()
-                if str(q.get("quotation_number", "")).upper().startswith("CRY")
+                if str(q.get("quotation_number", "")).upper().startswith(("CRY", "PI/"))
             ]
             cloud_quotes = merge_quotation_records(local_quotes, cloud_quotes)
         except Exception as e:
             print(f"[Dashboard] Local merge failed: {e}")
 
+        def _is_proforma(q):
+            return (
+                "prof" in str(q.get("doc_type", "")).lower()
+                or str(q.get("quotation_number", "")).upper().startswith("PI/")
+            )
+
         # --- 3. CALCULATE COUNTS ---
-        q_count = len(cloud_quotes)
+        pi_count = sum(1 for q in cloud_quotes if _is_proforma(q))
+        q_count = len(cloud_quotes) - pi_count
         accepted_count = sum(1 for q in cloud_quotes if str(q.get("status", "")).strip().lower() == "accepted")
         conversion_rate = (accepted_count / q_count * 100) if q_count > 0 else 0.0
 
         # --- 4. RECENT QUOTATIONS (LAST 5) ---
         recent = []
         try:
-            # Sort by date and take last 5
-            sorted_quotes = sorted(cloud_quotes, key=lambda x: str(x.get("date", "")), reverse=True)[:5]
+            from datetime import datetime as _dt
+
+            def _date_key(q):
+                raw = str(q.get("date") or "").strip()
+                for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"):
+                    try:
+                        return _dt.strptime(raw, fmt)
+                    except ValueError:
+                        pass
+                return _dt.min
+
+            def _revision_key(q):
+                number = str(q.get("quotation_number") or "").strip().upper()
+                try:
+                    from app.services.quotation_number_service import split_revision
+                    base, rev = split_revision(number)
+                    return (base, rev)
+                except Exception:
+                    return (number, 0)
+
+            # Newest date first; same-date quotes order by number and revision
+            # so …/075-R2 ranks above …/075-R1 above …/075.
+            sorted_quotes = sorted(
+                cloud_quotes,
+                key=lambda x: (_date_key(x), _revision_key(x)),
+                reverse=True,
+            )[:5]
             for q in sorted_quotes:
                 recent.append({
                     "number": q.get("quotation_number", ""),
@@ -531,6 +565,7 @@ class Dashboard(tk.Tk):
             "products": p_count,
             "customers": c_count,
             "quotes": q_count,
+            "proformas": pi_count,
             "accepted": accepted_count,
             "conversion_rate": conversion_rate,
             "pending_followups": pending_followups,
@@ -636,6 +671,26 @@ class Dashboard(tk.Tk):
         base_total = sum(i["amount"] for i in line_items)
         overhead = max(grand_total - base_total, 0.0)
 
+        # Newer records keep the full totals breakdown; then packing and
+        # transportation are listed as their own rows instead of being
+        # silently folded into the line totals.
+        has_breakdown = any(
+            totals.get(key) not in (None, "")
+            for key in ("packing", "transportation")
+        )
+
+        def _money2(value):
+            # Half-up so a 202.545 packing charge shows 202.55 like the PDF.
+            from decimal import Decimal, ROUND_HALF_UP
+            try:
+                return float(Decimal(str(value)).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP))
+            except Exception:
+                return 0.0
+
+        packing = _money2(totals.get("packing"))
+        transport = _money2(totals.get("transportation"))
+
         popup = tk.Toplevel(self)
         popup.title(f"Quotation {quotation_number}")
         popup.geometry("760x420")
@@ -645,7 +700,9 @@ class Dashboard(tk.Tk):
 
         header = tk.Frame(popup, bg=T.SURFACE)
         header.pack(fill="x")
-        tk.Label(header, text=f"Quotation: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 14, "bold")).pack(side="left", padx=20, pady=15)
+        _doc_label = ("Proforma Invoice" if str(quotation_number).upper().startswith("PI/")
+                      else "Quotation")
+        tk.Label(header, text=f"{_doc_label}: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 14, "bold")).pack(side="left", padx=20, pady=15)
         try:
             from app.services.quotation_number_service import split_revision
             _base, _rev = split_revision(quotation_number)
@@ -666,7 +723,7 @@ class Dashboard(tk.Tk):
         tree.heading("qty", text="Qty")
         tree.heading("price", text="Price")
         tree.heading("discount", text="Discount")
-        tree.heading("total", text="Total (incl. GST)")
+        tree.heading("total", text="Total (excl. GST)" if has_breakdown else "Total (incl. GST)")
 
         tree.column("model", width=240)
         tree.column("qty", width=55, anchor="center")
@@ -698,8 +755,25 @@ class Dashboard(tk.Tk):
                 _qty_text(it["qty"]),
                 f"₹{it['price']:,.2f}",
                 _discount_text(it),
-                f"₹{total_with_gst:,.2f}",
+                f"₹{it['amount']:,.2f}" if has_breakdown else f"₹{total_with_gst:,.2f}",
             ))
+
+        if has_breakdown:
+            tree.insert("", "end", values=(
+                "Packing", "", "", "", f"₹{packing:,.2f}",
+            ))
+            tree.insert("", "end", values=(
+                "Transportation", "", "", "", f"₹{transport:,.2f}",
+            ))
+            stored_round_off = totals.get("round_off")
+            if stored_round_off not in (None, ""):
+                round_off = _money2(stored_round_off)
+            else:
+                round_off = round(float(round(grand_total)) - grand_total, 2)
+            if abs(round_off) >= 0.005:
+                tree.insert("", "end", values=(
+                    "Round Off", "", "", "", f"{round_off:+,.2f}",
+                ))
 
         footer = tk.Frame(popup, bg=T.SURFACE)
         footer.pack(fill="x", side="bottom")
@@ -707,11 +781,35 @@ class Dashboard(tk.Tk):
 
         tk.Label(footer, text=f"Discount: ₹{total_discount:,.2f}", bg=T.SURFACE, fg="#E67E22", font=("Arial", 11, "bold")).pack(side="left", padx=20, pady=15)
 
-        tk.Label(footer, text=f"Grand Total: ₹{grand_total:,.2f}", bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
-        tk.Button(
-            footer, text="Revise", bg=T.ACCENT, fg="white", relief="flat",
-            command=lambda: (popup.destroy(), self._revise_quotation(quotation_number)),
-        ).pack(side="left", padx=10, pady=15)
+        if has_breakdown:
+            parts = []
+            taxable = _num(totals.get("taxable"))
+            if taxable:
+                parts.append(f"Sub Total ₹{taxable:,.2f}")
+            cgst = _num(totals.get("cgst"))
+            sgst = _num(totals.get("sgst"))
+            igst = _num(totals.get("igst"))
+            gst_type = str(totals.get("gst_type") or "").upper()
+            if "IGST" in gst_type:
+                if igst:
+                    parts.append(f"IGST ₹{igst:,.2f}")
+            else:
+                if cgst:
+                    parts.append(f"CGST ₹{cgst:,.2f}")
+                if sgst:
+                    parts.append(f"SGST ₹{sgst:,.2f}")
+            if parts:
+                tk.Label(footer, text="    ".join(parts), bg=T.SURFACE,
+                         fg=T.TEXT_MUTED, font=("Arial", 9)
+                         ).pack(side="right", padx=(0, 4), pady=15)
+
+        display_grand = float(round(grand_total)) if has_breakdown else grand_total
+        tk.Label(footer, text=f"Grand Total: ₹{display_grand:,.2f}", bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
+        if not str(quotation_number).upper().startswith("PI/"):
+            tk.Button(
+                footer, text="Revise", bg=T.ACCENT, fg="white", relief="flat",
+                command=lambda: (popup.destroy(), self._revise_quotation(quotation_number)),
+            ).pack(side="left", padx=10, pady=15)
         tk.Button(footer, text="Close", bg=T.BG, fg=T.TEXT, relief="flat", command=popup.destroy).pack(side="left", padx=20, pady=15)
 
     def _items_from_generated_docx(self, quotation):
@@ -822,7 +920,12 @@ class Dashboard(tk.Tk):
     def _show_context_menu(self, event, q_no):
         """Right-click menu for Crystal Dashboard."""
         menu = tk.Menu(self, tearoff=0)
-        menu.add_command(label="✎ Revise Quotation", command=lambda: self._revise_quotation(q_no))
+        is_pi = str(q_no).upper().startswith("PI/")
+        menu.add_command(
+            label="✎ Revise Quotation",
+            command=lambda: self._revise_quotation(q_no),
+            state=("disabled" if is_pi else "normal"),
+        )
         menu.add_separator()
         menu.add_command(label="Mark as Sent", command=lambda: self._update_quote_status(q_no, "Sent"))
         menu.add_command(label="Mark as Accepted", command=lambda: self._update_quote_status(q_no, "Accepted"))
@@ -834,6 +937,14 @@ class Dashboard(tk.Tk):
 
     def _revise_quotation(self, q_no):
         """Open the form pre-filled from a saved quotation, linked as a revision."""
+        if str(q_no).upper().startswith("PI/"):
+            messagebox.showinfo(
+                "Proforma Invoice",
+                "Proforma invoices are not revised.\n\n"
+                "Create a new proforma or quotation instead.",
+                parent=self,
+            )
+            return
         try:
             from app.services.quotation_history_service import (
                 get_quotation,

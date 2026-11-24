@@ -578,7 +578,7 @@ class QuotationHistory(tk.Toplevel):
                 )
                 records = [
                     r for r in (cloud_records or [])
-                    if str(r.get("quotation_number", "")).upper().startswith("CRY")
+                    if str(r.get("quotation_number", "")).upper().startswith(("CRY", "PI/"))
                 ]
             except Exception as e:
                 print(f"[History] Cloud load failed: {e}")
@@ -597,7 +597,7 @@ class QuotationHistory(tk.Toplevel):
                     try:
                         local_records = [
                             r for r in local_quotations()
-                            if str(r.get("quotation_number", "")).upper().startswith("CRY")
+                            if str(r.get("quotation_number", "")).upper().startswith(("CRY", "PI/"))
                         ]
                     except Exception:
                         local_records = []
@@ -888,8 +888,41 @@ class QuotationHistory(tk.Toplevel):
                 _money(it.get("total")),
             ))
 
+        totals = record.get("totals") or {}
+        has_breakdown = any(
+            totals.get(k) not in (None, "") for k in ("packing", "transportation")
+        )
+        grand_total = 0.0
+        try:
+            grand_total = float(
+                str(record.get("grand_total") or totals.get("grand_total") or 0)
+                .replace(",", "").replace("₹", "").strip()
+            )
+        except (TypeError, ValueError):
+            grand_total = 0.0
+        if has_breakdown:
+            tree.insert("", "end", values=(
+                "Packing", "", "", "", "", _money(totals.get("packing")),
+            ))
+            tree.insert("", "end", values=(
+                "Transportation", "", "", "", "", _money(totals.get("transportation")),
+            ))
+            stored_round_off = totals.get("round_off")
+            if stored_round_off not in (None, ""):
+                try:
+                    round_off = float(stored_round_off)
+                except (TypeError, ValueError):
+                    round_off = 0.0
+            else:
+                round_off = round(float(round(grand_total)) - grand_total, 2)
+            if abs(round_off) >= 0.005:
+                tree.insert("", "end", values=(
+                    "Round Off", "", "", "", "", f"{round_off:+,.2f}",
+                ))
+            grand_total = float(round(grand_total))
+
         tk.Label(
-            popup, text=f"Grand Total: {_money(record.get('grand_total'))}",
+            popup, text=f"Grand Total: {_money(grand_total)}",
             bg=self.BG, fg=self.TEXT, font=("Arial", 11, "bold"),
         ).pack(anchor="e", padx=20, pady=(8, 4))
         tk.Button(popup, text="Close", command=popup.destroy).pack(pady=(0, 12))
@@ -903,6 +936,15 @@ class QuotationHistory(tk.Toplevel):
 
         record = self._record_with_items(record)
         number = _text(record.get("quotation_number"))
+
+        if number.upper().startswith("PI/"):
+            messagebox.showinfo(
+                "Proforma Invoice",
+                "Proforma invoices are not revised.\n\n"
+                "Create a new proforma or quotation instead.",
+                parent=self,
+            )
+            return
 
         try:
             from app.services.quotation_number_service import next_revision_number

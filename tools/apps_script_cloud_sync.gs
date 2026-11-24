@@ -28,7 +28,7 @@
 var QUOTATIONS_HEADERS = [
   "Date", "User", "Quotation No", "Customer", "Company", "Phone", "Email",
   "Address", "City", "State", "Pincode", "GSTIN", "Model", "Grand Total",
-  "Status", "PDF Link", "Word Link", "Updated"
+  "Status", "PDF Link", "Word Link", "Updated", "Totals", "Type"
 ];
 
 // Line items live in their own sheet so every PC can see the materials
@@ -100,21 +100,33 @@ function ensureSheet(name, headers) {
     return sheet;
   }
 
-  var existingWidth = Math.max(sheet.getLastColumn(), headers.length);
-  var currentHeaders = sheet.getRange(1, 1, 1, existingWidth).getValues()[0];
+  var width = Math.max(sheet.getLastColumn(), 1);
+  var currentHeaders = sheet.getRange(1, 1, 1, width).getValues()[0];
 
+  // Existing columns must match in place; blank trailing cells are filled
+  // with new headers (e.g. "Totals") so old sheets migrate instead of failing.
+  var blanks = [];
   for (var i = 0; i < headers.length; i++) {
-    if (String(currentHeaders[i] || "").trim() !== headers[i]) {
-      throw new Error(
-        'Header mismatch in sheet "' + name + '" at column ' + (i + 1) +
-        '. Expected "' + headers[i] + '" but found "' +
-        String(currentHeaders[i] || "") +
-        '". No existing data was changed. Correct the header manually or run a migration.'
-      );
+    var current = String(currentHeaders[i] || "").trim();
+    if (current === headers[i]) continue;
+    if (current === "") {
+      blanks.push(i);
+      continue;
     }
+    throw new Error(
+      'Header mismatch in sheet "' + name + '" at column ' + (i + 1) +
+      '. Expected "' + headers[i] + '" but found "' +
+      current +
+      '". No existing data was changed. Correct the header manually or run a migration.'
+    );
   }
 
-  // If extra columns exist, leave them untouched.
+  for (var b = 0; b < blanks.length; b++) {
+    sheet.getRange(1, blanks[b] + 1).setValue(headers[blanks[b]]);
+  }
+  if (blanks.length) {
+    sheet.getRange(1, 1, 1, headers.length).setFontWeight("bold");
+  }
   sheet.setFrozenRows(1);
   return sheet;
 }
@@ -142,6 +154,18 @@ function withScriptLock_(callback) {
 
 function cleanString_(value) {
   return value === null || value === undefined ? "" : String(value).trim();
+}
+
+// Accept both key styles ("customer" and "customer_name") so no client
+// version can ever write a quotation row with blank contact columns.
+function pick_(data, keys) {
+  for (var i = 0; i < keys.length; i++) {
+    var value = data[keys[i]];
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+  return "";
 }
 
 function dateForSheet_(value) {
@@ -426,12 +450,14 @@ function handleQuotation(data) {
     var rowIdx = -1;
     var oldPdfCell = "";
     var oldWordCell = "";
+    var oldTotalsCell = "";
 
     for (var i = 1; i < rows.length; i++) {
       if (cleanString_(rows[i][2]) === quotationNumber) {
         rowIdx = i + 1;
         oldPdfCell = rows[i][15] || "";
         oldWordCell = rows[i][16] || "";
+        oldTotalsCell = rows[i][18] || "";
         break;
       }
     }
@@ -444,27 +470,48 @@ function handleQuotation(data) {
       ? '=HYPERLINK("' + docxUrl.replace(/"/g, '""') + '","View Word")'
       : oldWordCell;
 
+    // Keep an existing breakdown when an old client omits it.
+    var totalsCell = oldTotalsCell;
+    if (data.totals !== undefined && data.totals !== null) {
+      try {
+        totalsCell = typeof data.totals === "string"
+          ? data.totals
+          : JSON.stringify(data.totals);
+      } catch (totalsErr) {
+        totalsCell = oldTotalsCell;
+      }
+    }
+
+    // Document type: "quotation" unless the client says proforma.
+    var docType = String(pick_(data, ["doc_type", "type"]) || "").toLowerCase()
+      .indexOf("prof") >= 0
+      ? "proforma"
+      : "quotation";
+    if (quotationNumber.toUpperCase().indexOf("PI/") === 0) docType = "proforma";
+
     var row = [
       dateForSheet_(data.date) || new Date(),
       cleanString_(data.user),
       quotationNumber,
-      cleanString_(data.customer),
-      cleanString_(data.company),
-      cleanString_(data.phone),
-      cleanString_(data.email),
-      cleanString_(data.address),
-      cleanString_(data.city),
-      cleanString_(data.state),
-      cleanString_(data.pincode),
-      cleanString_(data.gstin),
-      cleanString_(data.model),
+      cleanString_(pick_(data, ["customer", "customer_name", "name"])),
+      cleanString_(pick_(data, ["company", "customer_company", "company_name"])),
+      cleanString_(pick_(data, ["phone", "customer_phone", "mobile"])),
+      cleanString_(pick_(data, ["email", "customer_email"])),
+      cleanString_(pick_(data, ["address", "customer_address"])),
+      cleanString_(pick_(data, ["city", "customer_city"])),
+      cleanString_(pick_(data, ["state", "customer_state"])),
+      cleanString_(pick_(data, ["pincode", "customer_pincode"])),
+      cleanString_(pick_(data, ["gstin", "customer_gstin"])),
+      cleanString_(pick_(data, ["model"])),
       data.grand_total === undefined || data.grand_total === null
         ? ""
         : data.grand_total,
-      cleanString_(data.status),
+      cleanString_(pick_(data, ["status"])),
       pdfCell,
       docxCell,
-      new Date()
+      new Date(),
+      totalsCell,
+      docType
     ];
 
     // Only replace materials when the client actually sent them; old clients
@@ -526,6 +573,7 @@ function handleListQuotations(params) {
       if (user && user !== "All" && rowUser !== user) continue;
 
       obj["Items"] = itemsByQuote[cleanString_(obj["Quotation No"])] || [];
+      obj["Totals"] = _parseTotalsCell_(obj["Totals"]);
       rowsOut.push(obj);
     }
 
@@ -539,6 +587,17 @@ function _cellNumber_(value) {
   if (value === null || value === undefined || value === "") return "";
   var n = Number(String(value).replace(/[₹,]/g, "").trim());
   return isNaN(n) ? "" : n;
+}
+
+function _parseTotalsCell_(value) {
+  var text = cleanString_(value);
+  if (!text) return {};
+  try {
+    var parsed = JSON.parse(text);
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (err) {
+    return {};
+  }
 }
 
 function _writeQuotationItems_(quotationNumber, items) {
@@ -730,6 +789,126 @@ function handleCustomer(data) {
 }
 
 
+function handleCustomersBulk(data) {
+  return withScriptLock_(function () {
+    var sheet = ensureSheet("Customers", CUSTOMERS_HEADERS);
+    var values = sheet.getDataRange().getValues();
+
+    var iName = CUSTOMERS_HEADERS.indexOf("Name");
+    var iCompany = CUSTOMERS_HEADERS.indexOf("Company");
+    var iPhone = CUSTOMERS_HEADERS.indexOf("Phone");
+    var iEmail = CUSTOMERS_HEADERS.indexOf("Email");
+    var iAddress = CUSTOMERS_HEADERS.indexOf("Address");
+    var iCity = CUSTOMERS_HEADERS.indexOf("City");
+    var iState = CUSTOMERS_HEADERS.indexOf("State");
+    var iPincode = CUSTOMERS_HEADERS.indexOf("Pincode");
+    var iGstin = CUSTOMERS_HEADERS.indexOf("GSTIN");
+
+    function phoneKey_(value) {
+      var digits = cleanString_(value).replace(/\D/g, "");
+      return digits.length >= 10 ? digits.slice(-10) : digits;
+    }
+    function pairKey_(name, company) {
+      var n = cleanString_(name).toLowerCase().replace(/\s+/g, " ");
+      var c = cleanString_(company).toLowerCase().replace(/\s+/g, " ");
+      return n && c ? n + "|" + c : "";
+    }
+
+    var byPhone = {}, byEmail = {}, byPair = {};
+    for (var i = 1; i < values.length; i++) {
+      var row = values[i];
+      var pk = phoneKey_(row[iPhone]);
+      if (pk && !byPhone[pk]) byPhone[pk] = i + 1;
+      var ek = cleanString_(row[iEmail]).toLowerCase();
+      if (ek && !byEmail[ek]) byEmail[ek] = i + 1;
+      var nk = pairKey_(row[iName], row[iCompany]);
+      if (nk && !byPair[nk]) byPair[nk] = i + 1;
+    }
+
+    var incoming = (data.customers || []).slice(0, 500);
+    var user = cleanString_(data.user) || "import";
+    var added = 0, updated = 0, skipped = 0;
+    var newRows = [];
+
+    for (var j = 0; j < incoming.length; j++) {
+      var item = incoming[j] || {};
+      var name = cleanString_(item.name);
+      var company = cleanString_(item.company);
+      var phone = cleanString_(item.phone);
+      var email = cleanString_(item.email);
+      if (!name && !company && !phone && !email) { skipped++; continue; }
+
+      var pk2 = phoneKey_(phone);
+      var ek2 = email.toLowerCase();
+      var nk2 = pairKey_(name, company);
+
+      var rowIndex =
+        (pk2 && byPhone[pk2]) ||
+        (ek2 && byEmail[ek2]) ||
+        (nk2 && byPair[nk2]) || 0;
+
+      if (rowIndex) {
+        var existing = values[rowIndex - 1];
+        var blankFills = [
+          [iName, name], [iCompany, company], [iPhone, phone], [iEmail, email],
+          [iAddress, item.address], [iCity, item.city], [iState, item.state],
+          [iPincode, item.pincode], [iGstin, item.gstin]
+        ];
+        var changed = false;
+        for (var f = 0; f < blankFills.length; f++) {
+          var colIdx = blankFills[f][0];
+          var value = cleanString_(blankFills[f][1]);
+          if (colIdx >= 0 && value && !cleanString_(existing[colIdx])) {
+            sheet.getRange(rowIndex, colIdx + 1).setValue(value);
+            existing[colIdx] = value;
+            changed = true;
+          }
+        }
+        if (changed) updated++; else skipped++;
+        continue;
+      }
+
+      var now = new Date();
+      var newRow = [];
+      newRow[0] = now;
+      newRow[1] = user;
+      newRow[iName] = name;
+      newRow[iCompany] = company;
+      newRow[iPhone] = phone;
+      newRow[iEmail] = email;
+      newRow[iAddress] = cleanString_(item.address);
+      newRow[iCity] = cleanString_(item.city);
+      newRow[iState] = cleanString_(item.state);
+      newRow[iPincode] = cleanString_(item.pincode);
+      newRow[iGstin] = cleanString_(item.gstin);
+      newRow[CUSTOMERS_HEADERS.indexOf("Updated")] = now;
+      for (var k = 0; k < CUSTOMERS_HEADERS.length; k++) {
+        if (newRow[k] === undefined) newRow[k] = "";
+      }
+      newRows.push(newRow);
+      if (pk2) byPhone[pk2] = -1;
+      if (ek2) byEmail[ek2] = -1;
+      if (nk2) byPair[nk2] = -1;
+      added++;
+    }
+
+    if (newRows.length) {
+      sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, CUSTOMERS_HEADERS.length)
+        .setValues(newRows);
+      SpreadsheetApp.flush();
+    }
+
+    return respond({
+      status: "ok",
+      added: added,
+      updated: updated,
+      skipped: skipped,
+      total: sheet.getLastRow() - 1
+    });
+  });
+}
+
+
 function handleGetCustomers() {
   try {
     var sheet = ensureSheet("Customers", CUSTOMERS_HEADERS);
@@ -847,6 +1026,7 @@ function doPost(e) {
     var action = cleanString_(data.action) || "quotation";
 
     if (action === "customer") return handleCustomer(data);
+    if (action === "customers_bulk") return handleCustomersBulk(data);
     if (action === "quotation") return handleQuotation(data);
     if (action === "delete_quotation") return handleDeleteQuotation(data);
     if (action === "update_status") return handleUpdateStatus(data);

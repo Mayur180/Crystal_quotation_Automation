@@ -201,6 +201,7 @@ def save_quotation(result):
         "customer_gstin":   _text(result.get("customer_gstin")),
         "contact_person":   _text(result.get("contact_person")),
         "model":            _text(result.get("model")),
+        "doc_type":         "proforma" if str(result.get("doc_type") or "").strip().lower().startswith("prof") else "quotation",
         "grand_total":      _decimal_str(grand),
         "docx_path":        _text(result.get("docx_path") or result.get("path")),
         "pdf_path":         _text(result.get("pdf_path")),
@@ -278,9 +279,11 @@ def save_quotation(result):
             'customer_pincode': cust_pin,
             'customer_gstin':   cust_gst,
             'model':            record.get('model', ''),
+            'doc_type':         record.get('doc_type', 'quotation'),
             'grand_total':      record.get('grand_total', ''),
             'status':           record.get('status', 'Draft'),
             'items':            record.get('items') or [],
+            'totals':           record.get('totals') or {},
         }
         # Auto-sync customer to the Customers tab
         if cust_name or cust_comp:
@@ -415,7 +418,29 @@ def merge_quotation_records(local_records, cloud_records):
     for record in cloud_records or ():
         _add(record, overwrite=True)
 
-    return [merged[number] for number in order]
+    def _date_key(record):
+        raw = _text(record.get("date"))
+        for fmt in ("%d-%m-%Y", "%Y-%m-%d", "%m/%d/%Y", "%d/%m/%Y"):
+            try:
+                return datetime.strptime(raw, fmt)
+            except ValueError:
+                pass
+        return datetime.min
+
+    def _number_key(record):
+        number = _text(record.get("quotation_number")).upper()
+        try:
+            from app.services.quotation_number_service import split_revision
+            return split_revision(number)
+        except Exception:
+            return (number, 0)
+
+    # Newest first everywhere; same-date revisions rank R2 > R1 > base.
+    return sorted(
+        (merged[number] for number in order),
+        key=lambda r: (_date_key(r), _number_key(r)),
+        reverse=True,
+    )
 
 
 def update_quotation_status(quotation_number, status):

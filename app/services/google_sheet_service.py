@@ -15,6 +15,33 @@ import urllib.error
 WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbwhhqEsHfFmh8Iv4ndlSbTcKiuDuDFMaee1k5dsPaXNmZpSked5adzzOCu-N6UxiO83ZQ/exec"
 
 
+# The sheet handler reads customer/company/phone/... but Crystal callers
+# send customer_name/customer_company/... — mirror them before posting.
+_CUSTOMER_ALIASES = (
+    ("customer", "customer_name"),
+    ("company", "customer_company"),
+    ("phone", "customer_phone"),
+    ("email", "customer_email"),
+    ("address", "customer_address"),
+    ("city", "customer_city"),
+    ("state", "customer_state"),
+    ("pincode", "customer_pincode"),
+    ("gstin", "customer_gstin"),
+)
+
+
+def _with_customer_keys(data):
+    if not isinstance(data, dict):
+        return data
+    if not any(key in data for key in ("customer_name", "customer_company")):
+        return data
+    out = dict(data)
+    for target, source in _CUSTOMER_ALIASES:
+        if not out.get(target) and out.get(source):
+            out[target] = out[source]
+    return out
+
+
 def send_to_sheet(data):
     """POST a dict to the webhook. Returns True on success, False on failure.
 
@@ -25,7 +52,7 @@ def send_to_sheet(data):
         return False
 
     try:
-        payload = json.dumps(data, ensure_ascii=False).encode("utf-8")
+        payload = json.dumps(_with_customer_keys(data), ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
             WEBHOOK_URL,
             data=payload,

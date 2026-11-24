@@ -128,13 +128,13 @@ def list_customers(search=None):
                 return needle in haystack
             records = [r for r in records if matches(r)]
 
-    def sort_key(r):
-        return (
-            _text(r.get("last_used")) or "0",
-            _text(r.get("name")).lower(),
-        )
+    # Name A-Z first, then most-recently-used on top (stable sort).
+    records.sort(key=lambda r: (
+        _text(r.get("name")).lower() or _text(r.get("company")).lower(),
+    ))
+    records.sort(key=lambda r: _text(r.get("last_used")) or "0", reverse=True)
 
-    return sorted(records, key=sort_key, reverse=True)
+    return records
 
 
 def get_customer(customer_id):
@@ -305,6 +305,112 @@ def save_customer(data, customer_id=None):
     except Exception:
         pass
     return _result
+
+
+def bulk_import_customers(records):
+    """Import many customer records at once (local only, one file write).
+
+    Duplicate detection matches phone, then email, then name+company.
+    Existing records are only enriched where they have blank fields.
+
+    Returns a stats dict: added / updated / skipped / total.
+    """
+    incoming = [r for r in (records or []) if isinstance(r, dict)]
+    existing = _load_raw()
+    now = datetime.now().isoformat(timespec="seconds")
+
+    phones = {}
+    emails = {}
+    pairs = {}
+
+    def _register(index, record):
+        ph = _phone_key(record.get("phone"))
+        if ph:
+            phones.setdefault(ph, index)
+        em = _norm_key(record.get("email"))
+        if em:
+            emails.setdefault(em, index)
+        name_key = _norm_key(record.get("name"))
+        company_key = _norm_key(record.get("company"))
+        if name_key and company_key:
+            pairs.setdefault((name_key, company_key), index)
+
+    for i, record in enumerate(existing):
+        _register(i, record)
+
+    added = updated = skipped = 0
+    fields = (
+        "name", "company", "contact_person", "address", "city", "state",
+        "pincode", "country", "gstin", "phone", "email",
+    )
+
+    for record in incoming:
+        name = _text(record.get("name"))
+        company = _text(record.get("company"))
+        if not name and not company:
+            skipped += 1
+            continue
+
+        phone_key = _phone_key(record.get("phone"))
+        email_key = _norm_key(record.get("email"))
+        name_key = _norm_key(name)
+        company_key = _norm_key(company)
+
+        hit = None
+        if phone_key and phone_key in phones:
+            hit = phones[phone_key]
+        elif email_key and email_key in emails:
+            hit = emails[email_key]
+        elif name_key and company_key and (name_key, company_key) in pairs:
+            hit = pairs[(name_key, company_key)]
+
+        if hit is not None:
+            target = existing[hit]
+            changed = False
+            for field in fields:
+                value = _text(record.get(field))
+                if field == "gstin":
+                    value = value.upper()
+                if value and not _text(target.get(field)):
+                    target[field] = value
+                    changed = True
+            if changed:
+                target["updated_at"] = now
+                updated += 1
+            else:
+                skipped += 1
+            continue
+
+        new_record = {
+            "id":             str(uuid.uuid4())[:8],
+            "name":           name,
+            "company":        company,
+            "contact_person": _text(record.get("contact_person")),
+            "address":        _text(record.get("address")),
+            "city":           _text(record.get("city")),
+            "state":          _text(record.get("state")),
+            "pincode":        _text(record.get("pincode")),
+            "country":        _text(record.get("country")),
+            "gstin":          _text(record.get("gstin")).upper(),
+            "phone":          _text(record.get("phone")),
+            "email":          _text(record.get("email")),
+            "created_at":     now,
+            "updated_at":     now,
+            "last_used":      "",
+        }
+        existing.append(new_record)
+        _register(len(existing) - 1, new_record)
+        added += 1
+
+    if added or updated:
+        _save_raw(existing)
+
+    return {
+        "added": added,
+        "updated": updated,
+        "skipped": skipped,
+        "total": len(existing),
+    }
 
 
 def sync_from_cloud(module=None):

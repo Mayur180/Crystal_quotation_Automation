@@ -8,6 +8,8 @@
 
 import os
 import sys
+import queue
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -287,6 +289,7 @@ class CustomerDatabase(tk.Toplevel):
 
         self.search_var = tk.StringVar()
         self.selected_id = None
+        self._import_queue = queue.Queue()
 
         self._configure_style()
         self._build_interface()
@@ -411,6 +414,10 @@ class CustomerDatabase(tk.Toplevel):
             label="New Quotation",
             command=self._open_quotation_for_selected,
         )
+        self._ctx_menu.add_command(
+            label="New Proforma Invoice",
+            command=lambda: self._open_quotation_for_selected("proforma"),
+        )
         self._ctx_menu.add_separator()
         self._ctx_menu.add_command(
             label="Edit",
@@ -452,6 +459,8 @@ class CustomerDatabase(tk.Toplevel):
 
         self._btn(left, "+  New Customer", self._new, primary=True).pack(
             side="left", pady=14)
+        self._btn(left, "⬆ Import Excel…", self._import_excel).pack(
+            side="left", padx=(8, 0), pady=14)
         self._btn(left, "Edit", self._edit).pack(side="left",
                                                   padx=(8, 0), pady=14)
         self._btn(left, "📋 View History", self._view_history).pack(
@@ -462,7 +471,11 @@ class CustomerDatabase(tk.Toplevel):
         right = tk.Frame(bar, bg=self.CARD)
         right.pack(side="right", padx=22)
 
-        self._btn(right, "New Quotation", self._open_quotation_for_selected).pack(side="right", padx=(0, 8), pady=14)
+        self._btn(right, "New Quotation", self._open_quotation_for_selected).pack(
+            side="right", padx=(0, 8), pady=14)
+        self._btn(right, "New Proforma Invoice",
+                  lambda: self._open_quotation_for_selected("proforma")).pack(
+            side="right", padx=(0, 8), pady=14)
         self._btn(right, "Close", self.destroy).pack(side="right", pady=14)
 
     def _btn(self, parent, text, command, *, primary=False, danger=False):
@@ -523,11 +536,100 @@ class CustomerDatabase(tk.Toplevel):
         if dialog.result:
             self._reload()
 
-    def _open_quotation_for_selected(self):
-        """Open a New Quotation form pre-filled from the selected customer."""
+    def _import_excel(self):
+        from tkinter import filedialog
+
+        path = filedialog.askopenfilename(
+            parent=self,
+            title="Import customers from Excel",
+            filetypes=[("Excel workbook", "*.xlsx"), ("All files", "*.*")],
+        )
+        if not path:
+            return
+
+        busy = tk.Toplevel(self)
+        busy.title("Importing customers")
+        busy.geometry("440x160")
+        busy.configure(bg=self.CARD)
+        busy.transient(self)
+        busy.grab_set()
+
+        tk.Label(busy, text="Importing customers…", bg=self.CARD, fg=self.TEXT,
+                 font=("Arial", 12, "bold")).pack(pady=(22, 6))
+        status = tk.Label(busy, text="Reading workbook and saving records…",
+                          bg=self.CARD, fg=self.MUTED, font=("Arial", 9))
+        status.pack()
+
+        bar = ttk.Progressbar(busy, mode="indeterminate", length=340)
+        bar.pack(pady=16)
+        bar.start(12)
+
+        def worker():
+            try:
+                from app.services.customer_import_service import (
+                    import_customers_from_excel,
+                )
+                result = import_customers_from_excel(path, upload_cloud=True)
+            except Exception as e:
+                result = {"error": str(e)}
+            self._import_queue.put(result)
+
+        threading.Thread(target=worker, daemon=True).start()
+
+        def poll():
+            try:
+                result = self._import_queue.get_nowait()
+            except queue.Empty:
+                self.after(120, poll)
+                return
+
+            try:
+                bar.stop()
+                busy.destroy()
+            except Exception:
+                pass
+
+            if "error" in result:
+                messagebox.showerror("Import failed", result["error"], parent=self)
+                return
+
+            self._reload()
+            local = result.get("local") or {}
+            cloud = result.get("cloud") or {}
+
+            if cloud.get("error"):
+                cloud_line = f"Google Sheet: failed ({cloud['error']})"
+            elif cloud.get("supported") is False:
+                cloud_line = ("Google Sheet: saved locally only — redeploy the "
+                              "Apps Script to enable bulk upload.")
+            else:
+                cloud_line = (
+                    f"Google Sheet: +{cloud.get('added', 0):,} new, "
+                    f"{cloud.get('updated', 0):,} updated"
+                )
+
+            messagebox.showinfo(
+                "Customers imported",
+                "\n".join([
+                    f"Rows found: {result.get('parsed', 0):,}",
+                    f"New customers: {local.get('added', 0):,}",
+                    f"Enriched: {local.get('updated', 0):,}",
+                    f"Duplicates skipped: {local.get('skipped', 0):,}",
+                    f"Total in database: {local.get('total', 0):,}",
+                    "",
+                    cloud_line,
+                ]),
+                parent=self,
+            )
+
+        poll()
+
+    def _open_quotation_for_selected(self, doc_type="quotation"):
+        """Open a New Quotation or Proforma form pre-filled from the selected customer."""
+        doc_label = "Proforma Invoice" if str(doc_type).lower().startswith("prof") else "Quotation"
         if not self.selected_id:
             messagebox.showinfo(
-                "New Quotation",
+                f"New {doc_label}",
                 "Select a customer first.",
                 parent=self,
             )
@@ -542,7 +644,7 @@ class CustomerDatabase(tk.Toplevel):
 
         if not customer:
             messagebox.showerror(
-                "New Quotation",
+                f"New {doc_label}",
                 "Could not load the selected customer.",
                 parent=self,
             )
@@ -552,17 +654,17 @@ class CustomerDatabase(tk.Toplevel):
             from ui.crystal.quotation_form import QuotationForm
         except Exception as e:
             messagebox.showerror(
-                "New Quotation",
+                f"New {doc_label}",
                 f"Could not open Quotation form:\\n{e}",
                 parent=self,
             )
             return
 
         try:
-            QuotationForm(self.master, self, prefill=customer)
+            QuotationForm(self.master, self, prefill=customer, doc_type=doc_type)
         except Exception as e:
             messagebox.showerror(
-                "New Quotation",
+                f"New {doc_label}",
                 f"Could not open Quotation form:\\n{e}",
                 parent=self,
             )

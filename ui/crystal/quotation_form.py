@@ -284,7 +284,8 @@ class QuotationForm(tk.Toplevel):
     # INITIALIZATION
     # ========================================================
 
-    def __init__(self, app=None, parent=None, prefill=None, revision_number=None):
+    def __init__(self, app=None, parent=None, prefill=None, revision_number=None,
+                 doc_type="quotation"):
 
         super().__init__(parent or app)
 
@@ -292,6 +293,12 @@ class QuotationForm(tk.Toplevel):
 
         self._revision_number = (
             str(revision_number).strip() if revision_number else None
+        )
+
+        self._initial_doc_type = (
+            "proforma"
+            if str(doc_type or "").strip().lower().startswith("prof")
+            else "quotation"
         )
 
         if self._revision_number:
@@ -305,7 +312,9 @@ class QuotationForm(tk.Toplevel):
             )
         else:
             self.title(
-                "CRYSTAL | ARMATECH ASSOCIATES — New Quotation"
+                "CRYSTAL | ARMATECH ASSOCIATES — New "
+                + ("Proforma Invoice" if self._initial_doc_type == "proforma"
+                   else "Quotation")
             )
 
         # ---- Adaptive window size ----
@@ -353,6 +362,12 @@ class QuotationForm(tk.Toplevel):
             self._apply_prefill(getattr(self, "_prefill", {}))
         except Exception:
             pass
+
+        if self._initial_doc_type == "proforma":
+            try:
+                self._set_doc_type("proforma")
+            except Exception:
+                pass
 
 
     # ========================================================
@@ -484,6 +499,9 @@ class QuotationForm(tk.Toplevel):
     # ========================================================
 
     def _create_variables(self):
+
+        # Document type: quotation or proforma invoice (own PI/26-27/NNN series)
+        self.doc_type = tk.StringVar(value="quotation")
 
         # Customer
         self.customer_name = tk.StringVar()
@@ -886,13 +904,52 @@ class QuotationForm(tk.Toplevel):
     def _header_subtitle(self):
         """Header strip text — shows the revision link when revising."""
         if not self._revision_number:
-            return "  /  New Quotation"
+            return f"  /  New {self._doc_label()}"
         try:
             from app.services.quotation_number_service import split_revision
             base, rev = split_revision(self._revision_number)
         except Exception:
             base, rev = self._revision_number, 1
         return f"  /  Revising {base} → R{rev}"
+
+    def _doc_label(self):
+        """Human label for the current document type."""
+        try:
+            is_pi = self.doc_type.get() == "proforma"
+        except Exception:
+            is_pi = False
+        return "Proforma Invoice" if is_pi else "Quotation"
+
+    def _set_doc_type(self, value):
+        """Switch between Quotation and Proforma Invoice on step 1."""
+        if self._revision_number:
+            # Revisions always remain quotations.
+            value = "quotation"
+        self.doc_type.set("proforma" if value == "proforma" else "quotation")
+        self._refresh_doc_type_buttons()
+        try:
+            self.title(
+                f"CRYSTAL | ARMATECH ASSOCIATES — New {self._doc_label()}"
+            )
+        except Exception:
+            pass
+        try:
+            self.header_sub_label.configure(text=self._header_subtitle())
+        except Exception:
+            pass
+
+    def _refresh_doc_type_buttons(self):
+        current = self.doc_type.get() if hasattr(self, "doc_type") else "quotation"
+        for value, btn in getattr(self, "_doc_type_buttons", {}).items():
+            try:
+                if value == current:
+                    btn.configure(bg=self.RED, fg="white",
+                                  activebackground=self.RED, activeforeground="white")
+                else:
+                    btn.configure(bg=self.SOFT, fg=self.TEXT,
+                                  activebackground="#ECEEF1", activeforeground=self.TEXT)
+            except Exception:
+                pass
 
 
     # ========================================================
@@ -1184,6 +1241,30 @@ class QuotationForm(tk.Toplevel):
         card = self._create_card(
             self.content_area
         )
+
+        # ---- Document type: Quotation or Proforma Invoice ----
+        type_bar = tk.Frame(card, bg=self.CARD)
+        type_bar.pack(fill="x", pady=(0, 12))
+
+        tk.Label(
+            type_bar, text="Document type",
+            bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")
+        ).pack(side="left", padx=(0, 10))
+
+        self._doc_type_buttons = {}
+        for value, label in (("quotation", "Quotation"),
+                             ("proforma", "Proforma Invoice")):
+            btn = tk.Button(
+                type_bar, text=label,
+                font=("Arial", 9, "bold"), relief="solid", bd=1,
+                highlightthickness=0, cursor="hand2", padx=14, pady=3,
+                command=lambda v=value: self._set_doc_type(v),
+            )
+            if self._revision_number and value == "proforma":
+                btn.configure(state="disabled")
+            btn.pack(side="left", padx=(0, 8))
+            self._doc_type_buttons[value] = btn
+        self._refresh_doc_type_buttons()
 
         self._section_header(
             card,
@@ -2638,7 +2719,7 @@ class QuotationForm(tk.Toplevel):
 
             3: "Continue to Terms  →",
 
-            4: "Review Quotation  →",
+            4: f"Review {self._doc_label()}  →",
         }
 
         self.generate_button.configure(
@@ -3002,6 +3083,7 @@ class QuotationForm(tk.Toplevel):
         return {
             "grand_total": grand_total,
             "quotation_number": getattr(self, "_revision_number", None),
+            "doc_type": self.doc_type.get() if hasattr(self, "doc_type") else "quotation",
             "customer_name": self.customer_name.get().strip(),
             "company": self.company.get().strip(),
             "contact_person": self.contact_person.get().strip(),
@@ -3321,7 +3403,12 @@ class QuotationForm(tk.Toplevel):
         if not isinstance(owner, (tk.Tk, tk.Toplevel)):
             owner = self.master if isinstance(self.master, (tk.Tk, tk.Toplevel)) else self
         preview_win = tk.Toplevel(owner)
-        preview_win.title("Quotation Preview")
+        doc_label = (
+            "Proforma Invoice"
+            if str(data.get("doc_type", "")).lower().startswith("prof")
+            else "Quotation"
+        )
+        preview_win.title(f"{doc_label} Preview")
         preview_win.geometry("850x950")
         preview_win.configure(bg="#F4F6F8")
         
@@ -3330,7 +3417,7 @@ class QuotationForm(tk.Toplevel):
         preview_win.grid_columnconfigure(0, weight=1)
         
         # Header
-        tk.Label(preview_win, text="Quotation Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).grid(row=0, column=0, pady=10)
+        tk.Label(preview_win, text=f"{doc_label} Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).grid(row=0, column=0, pady=10)
         
         # Image Frame
         image_frame = tk.Frame(preview_win, bg="#F4F6F8")
@@ -3572,6 +3659,7 @@ class QuotationForm(tk.Toplevel):
                 "selected_terms": data.get("selected_terms", []),
                 "items": data.get("items", []),
                 "quotation_number": data.get("quotation_number"),
+                "doc_type": data.get("doc_type", "quotation"),
             })
             return result  # Return the dict with paths!
         except Exception as e:
@@ -3653,8 +3741,12 @@ class QuotationForm(tk.Toplevel):
         self.term_rows = []
         self._revision_number = None
         try:
+            self.doc_type.set("quotation")
+        except Exception:
+            pass
+        try:
             self.header_sub_label.configure(text=self._header_subtitle())
-            self.title("CRYSTAL | ARMATECH ASSOCIATES — New Quotation")
+            self.title(f"CRYSTAL | ARMATECH ASSOCIATES — New {self._doc_label()}")
         except Exception:
             pass
         self._load_step(1)

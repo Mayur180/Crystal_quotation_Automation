@@ -36,7 +36,7 @@ import shutil
 import subprocess
 import time
 from datetime import date, datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from pathlib import Path
 from typing import Any
 
@@ -135,6 +135,7 @@ except Exception:
 
 try:
     from app.services.quotation_number_service import (
+        get_next_document_number,
         get_next_quotation_number,
     )
 except Exception:
@@ -147,6 +148,14 @@ except Exception:
         _quotation_counter += 1
 
         return f"AA/VMM/26-27/{_quotation_counter:03d}"
+
+    def get_next_document_number(doc_type="quotation"):
+        global _quotation_counter
+
+        if str(doc_type or "").strip().lower().startswith("prof"):
+            _quotation_counter += 1
+            return f"PI/26-27/{_quotation_counter:03d}"
+        return get_next_quotation_number()
 
 
 try:
@@ -1932,10 +1941,11 @@ def _crystal_page(
     pPr.append(pBdr)
 
     # ── QUOTATION Bar ──
+    is_proforma = str(kwargs.get("doc_type") or "quotation").strip().lower().startswith("prof")
     p = outer_cell.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_after = Pt(2)
-    r = p.add_run("QUOTATION")
+    r = p.add_run("PROFORMA INVOICE" if is_proforma else "QUOTATION")
     r.font.size = Pt(12); r.font.bold = True
 
     # Horizontal Line
@@ -2055,7 +2065,13 @@ def _crystal_page(
     p = outer_cell.add_paragraph()
     p.paragraph_format.space_before = Pt(0)
     p.paragraph_format.space_after = Pt(6)
-    r = p.add_run("We acknowledge with thanks the receipt of your enquiry and have great pleasure in submitting our lowest quotation (Find Pdf Attachment).")
+    r = p.add_run(
+        "We acknowledge with thanks the receipt of your enquiry and have great "
+        "pleasure in submitting our lowest proforma invoice (Find Pdf Attachment)."
+        if is_proforma else
+        "We acknowledge with thanks the receipt of your enquiry and have great "
+        "pleasure in submitting our lowest quotation (Find Pdf Attachment)."
+    )
     r.font.size = Pt(9)
 
     # ── PRODUCT TABLE ──
@@ -2184,7 +2200,12 @@ def _crystal_page(
             full_desc = f"{full_desc}\nModel: {item_model}"
 
         hsn = str(item.get("hsn") or item_prod.get("hsn") or "85059000")
-        tax_str = f"{float(item_prod.get('tax_percent', 18.0)):.2f}"
+        try:
+            item_rate = float(item_prod.get("tax_percent") or 18.0)
+        except (TypeError, ValueError):
+            item_rate = 18.0
+        item["tax_rate"] = item_rate
+        tax_str = f"{item_rate:.2f}"
         unit = str(item_prod.get("unit") or "NOS")
         raw_disc = item.get("raw_discount", 0)
         disc_mode = item.get("disc_mode", "Amount (₹)")
@@ -2212,25 +2233,54 @@ def _crystal_page(
     total_amt = float(totals.get("taxable") or 0.0)
     cgst = float(totals.get("cgst") or 0.0)
     sgst = float(totals.get("sgst") or 0.0)
-    grand = round(float(totals.get("grand_total") or 0.0))
+    igst = float(totals.get("igst") or 0.0)
+    gst_type = str(totals.get("gst_type") or "CGST + SGST").upper()
+
+    def _money2(value):
+        return Decimal(str(value)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    # Round the printed components first, then derive the round off from them,
+    # so every figure on the page adds up to the paisa.
+    total_amt = float(_money2(total_amt))
+    cgst = float(_money2(cgst))
+    sgst = float(_money2(sgst))
+    igst = float(_money2(igst))
+    tax_amt = igst if "IGST" in gst_type else cgst + sgst
+    base_total = _money2(total_amt + tax_amt)
+    grand = int(base_total.to_integral_value(rounding=ROUND_HALF_UP))
+    round_off = float(_money2(Decimal(grand) - base_total))
+
+    # Persist the rounded grand total so lists, sheets and the PDF agree.
+    totals["grand_total"] = float(grand)
+    totals["round_off"] = round_off
+
+    def _pct(value, default):
+        try:
+            return f"{float(value):g}"
+        except (TypeError, ValueError):
+            return f"{default:g}"
+
+    def _totals_row(label, amount):
+        # Merge Unit/Rate/Dis% so labels like "Round Off" don't wrap.
+        row = tbl.add_row()
+        remove_vertical_borders(row)
+        merged = row.cells[5].merge(row.cells[7])
+        set_cell(merged, label, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        set_cell(row.cells[8], amount, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+        return row
 
     # Sub Total
-    r_sub = tbl.add_row()
-    remove_vertical_borders(r_sub)
-    for i, v in enumerate(["", "", "", "", "", "", "", "Sub Total", f"{total_amt:,.2f}"]):
-        set_cell(r_sub.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    _totals_row("Sub Total", f"{total_amt:,.2f}")
 
-    # C-Gst
-    r_cgst = tbl.add_row()
-    remove_vertical_borders(r_cgst)
-    for i, v in enumerate(["", "", "", "", "", "", "", "C-Gst 9%", f"{cgst:,.2f}"]):
-        set_cell(r_cgst.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    if "IGST" in gst_type:
+        _totals_row(f"I-Gst {_pct(totals.get('igst_percent'), 18)}%", f"{igst:,.2f}")
+    else:
+        _totals_row(f"C-Gst {_pct(totals.get('cgst_percent'), 9)}%", f"{cgst:,.2f}")
+        _totals_row(f"S-Gst {_pct(totals.get('sgst_percent'), 9)}%", f"{sgst:,.2f}")
 
-    # S-Gst
-    r_sgst = tbl.add_row()
-    remove_vertical_borders(r_sgst)
-    for i, v in enumerate(["", "", "", "", "", "", "", "S-Gst 9%", f"{sgst:,.2f}"]):
-        set_cell(r_sgst.cells[i], v, size=8, align=WD_ALIGN_PARAGRAPH.RIGHT)
+    # Round Off (shows the paise adjustment that makes the grand total whole)
+    if abs(round_off) >= 0.005:
+        _totals_row("Round Off", f"{round_off:+,.2f}")
 
     # Grand Total
     r_grand = tbl.add_row()
@@ -2243,6 +2293,61 @@ def _crystal_page(
 
     # Add empty paragraph for spacing after table
     outer_cell.add_paragraph()
+
+    # ── HSN / SAC-WISE TAX SUMMARY ──
+    try:
+        groups = {}
+        base_items = 0.0
+        for item in item_list:
+            base_val = float(item.get("total", 0))
+            base_items += base_val
+            key = (str(item.get("hsn") or "85059000"), float(item.get("tax_rate", 18.0)))
+            groups[key] = groups.get(key, 0.0) + base_val
+
+        if groups:
+            overhead_amt = packing_amt + transport_amt - buyback_amt
+            p = outer_cell.add_paragraph()
+            p.paragraph_format.space_before = Pt(2)
+            p.paragraph_format.space_after = Pt(2)
+            r = p.add_run("HSN / SAC-wise Tax Summary :")
+            r.font.size = Pt(8); r.font.bold = True
+
+            if "IGST" in gst_type:
+                hdr = ["HSN/SAC", "Taxable Value", "GST Rate", "IGST", "Total Tax"]
+                col_w = [30, 47, 26, 42, 42]
+            else:
+                hdr = ["HSN/SAC", "Taxable Value", "GST Rate", "CGST", "SGST", "Total Tax"]
+                col_w = [25, 38, 20, 34, 34, 36]
+
+            sum_tbl = outer_cell.add_table(rows=1 + len(groups), cols=len(hdr))
+            sum_tbl.style = "Table Grid"
+            sum_tbl.autofit = False
+            for ci, cw in enumerate(col_w):
+                sum_tbl.columns[ci].width = Mm(cw)
+                for row in sum_tbl.rows:
+                    row.cells[ci].width = Mm(cw)
+
+            for ci, h in enumerate(hdr):
+                set_cell(sum_tbl.cell(0, ci), h, bold=True, size=7,
+                         align=WD_ALIGN_PARAGRAPH.RIGHT if ci else WD_ALIGN_PARAGRAPH.LEFT,
+                         bg=BG_HDR)
+
+            for ridx, ((hsn, rate), base_val) in enumerate(sorted(groups.items()), start=1):
+                share = (base_val / base_items) if base_items else 0.0
+                taxable = base_val + overhead_amt * share
+                tax_amt = _money2(taxable * rate / 100.0)
+                vals = [hsn, f"{_money2(taxable):,.2f}", f"{rate:g}%"]
+                if "IGST" in gst_type:
+                    vals += [f"{tax_amt:,.2f}", f"{tax_amt:,.2f}"]
+                else:
+                    half_tax = _money2(tax_amt / 2)
+                    vals += [f"{half_tax:,.2f}", f"{half_tax:,.2f}",
+                             f"{_money2(half_tax * 2):,.2f}"]
+                for ci, v in enumerate(vals):
+                    set_cell(sum_tbl.cell(ridx, ci), v, size=7,
+                             align=WD_ALIGN_PARAGRAPH.RIGHT if ci else WD_ALIGN_PARAGRAPH.LEFT)
+    except Exception as _e:
+        print(f"[quotation] HSN summary skipped: {_e}")
 
     # Subject to Pune
     p = outer_cell.add_paragraph()
@@ -2337,7 +2442,11 @@ def _crystal_page(
     p = outer_cell.add_paragraph()
     p.alignment = WD_ALIGN_PARAGRAPH.CENTER
     p.paragraph_format.space_before = Pt(4)
-    r = p.add_run("As It is auto computer generated Quotation No Signature Is Required")
+    r = p.add_run(
+        "As It is auto computer generated Proforma Invoice No Signature Is Required"
+        if is_proforma else
+        "As It is auto computer generated Quotation No Signature Is Required"
+    )
     r.font.size = Pt(8); r.font.italic = True
 
 def generate_quotation(
@@ -2372,6 +2481,7 @@ def generate_quotation(
 
     quotation_date=None,
     quotation_number=None,
+    doc_type="quotation",
 
     generate_pdf=True,
 
@@ -2545,34 +2655,31 @@ def generate_quotation(
         sgst_percent
     )
 
-    gst_type = str(
-        kwargs.get(
-            "gst_type",
-            "CGST + SGST",
-        )
-        or "CGST + SGST"
-    ).strip()
+    gst_type = str(gst_type or "CGST + SGST").strip()
 
+    # gst_rate is supplied through **kwargs (the UI sends 18 for both modes).
     gst_rate = kwargs.get(
         "gst_rate",
         None,
-    )
-
-    igst_percent = kwargs.get(
-        "igst_percent",
-        0,
     )
 
     # ========================================================
     # 5. QUOTATION NUMBER
     # ========================================================
 
+    # Proforma invoices run their own PI/26-27/NNN series.
+    doc_type = (
+        "proforma"
+        if str(doc_type or "").strip().lower().startswith("prof")
+        else "quotation"
+    )
+
     # A revision arrives with its linked number (…-R1); only brand-new
     # quotations consume the counter.
     quotation_number = (
         str(quotation_number).strip()
         if quotation_number
-        else get_next_quotation_number()
+        else get_next_document_number(doc_type)
     )
 
     # ========================================================
@@ -2689,6 +2796,7 @@ def generate_quotation(
         machine_qty,
         totals,
         selected_terms=selected_terms,
+        doc_type=doc_type,
         **call_kwargs,
     )
 
@@ -2730,7 +2838,7 @@ def generate_quotation(
     # ========================================================
 
     filename = (
-        f"Quotation_"
+        f"{'Proforma' if doc_type == 'proforma' else 'Quotation'}_"
         f"{_safe_filename(quotation_number)}_"
         f"{_safe_filename(model)}.docx"
     )
@@ -2790,6 +2898,7 @@ def generate_quotation(
         "pdf_path": (str(pdf_path) if pdf_path else None),
         "quotation_number": quotation_number,
         "quotation_date": quotation_date,
+        "doc_type": doc_type,
         "model": model,
 
         # ---- customer summary ----
