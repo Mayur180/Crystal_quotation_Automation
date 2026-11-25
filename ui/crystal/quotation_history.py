@@ -478,6 +478,9 @@ class QuotationHistory(tk.Toplevel):
             left, "Open Word", self._open_docx, padx=12, pady=7,
         ).pack(side="left", padx=(8, 0))
         W.GhostButton(
+            left, "View items", self._show_items, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
             left, "Show in folder", self._reveal, padx=12, pady=7,
         ).pack(side="left", padx=(8, 0))
         W.GhostButton(

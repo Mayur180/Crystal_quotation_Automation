@@ -321,9 +321,14 @@ class Dashboard(tk.Tk):
         left = tk.Frame(two_col, bg=T.BG)
         left.grid(row=0, column=0, sticky="nsew")
         
-        tk.Label(left, text="Recent Quotations", bg=T.BG, fg=T.TEXT,
-                 font=T.FONT_H2).pack(anchor="w")
-        tk.Label(left, text="Your last 5 generated quotes", bg=T.BG, fg=T.TEXT_BODY,
+        head = tk.Frame(left, bg=T.BG)
+        head.pack(fill="x")
+        tk.Label(head, text="Recent Quotations", bg=T.BG, fg=T.TEXT,
+                 font=T.FONT_H2).pack(side="left")
+        W.GhostButton(head, "View all quotations →", self._open_history,
+                      padx=10, pady=4).pack(side="right")
+        tk.Label(left, text="Your last 5 generated quotes — click any row to see its items",
+                 bg=T.BG, fg=T.TEXT_BODY,
                  font=T.FONT_BODY).pack(anchor="w", pady=(2, 12))
         
         self._recent_box = tk.Frame(left, bg=T.BG)
