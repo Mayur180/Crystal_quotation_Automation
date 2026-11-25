@@ -88,11 +88,10 @@ class LeadsManager(tk.Toplevel):
 
     def _build_footer(self):
         bar = tk.Frame(
-            self, bg=T.SURFACE, height=68,
+            self, bg=T.SURFACE,
             highlightbackground=T.BORDER, highlightthickness=1,
         )
         bar.pack(side="bottom", fill="x")
-        bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=T.SURFACE)
         left.pack(side="left", padx=22, pady=15)
@@ -155,6 +154,12 @@ class LeadsManager(tk.Toplevel):
             )
             return
 
+        def clean(value):
+            text = "" if value is None else str(value)
+            if text.strip().upper() in ("#ERROR!", "#N/A", "#REF!", "#VALUE!"):
+                return ""
+            return " ".join(text.split())
+
         for idx, lead in enumerate(leads):
             lead_id = lead.get("leadid") or lead.get("id") or ""
             if not lead_id or lead_id in self.tree.get_children():
@@ -163,9 +168,10 @@ class LeadsManager(tk.Toplevel):
             qty = lead.get("qty") or lead.get("quantity") or ""
 
             self.tree.insert("", "end", iid=lead_id, values=(
-                lead.get("date", ""), lead.get("customer", ""), lead.get("phone", ""),
-                lead.get("email", ""), qty, lead.get("source", ""),
-                lead.get("notes", ""), lead.get("status", "")
+                clean(lead.get("date")), clean(lead.get("customer")),
+                clean(lead.get("phone")), clean(lead.get("email")),
+                clean(qty), clean(lead.get("source")),
+                clean(lead.get("notes")), clean(lead.get("status")),
             ), tags=("evenrow" if idx % 2 else "oddrow",))
 
         count = len(leads)
@@ -233,22 +239,19 @@ class LeadDialog(tk.Toplevel):
     def __init__(self, parent, on_save=None):
         super().__init__(parent)
         self.title("Log New Lead")
-        self.geometry("620x640")
+        self.withdraw()
         self.configure(bg=T.SURFACE)
         self.resizable(False, False)
         self.transient(parent)
-        self.grab_set()
         W.set_window_icon(self)
         self._on_save = on_save
 
-        # Center the window on screen
-        self.update_idletasks()
-        x = (self.winfo_screenwidth() // 2) - (620 // 2)
-        y = (self.winfo_screenheight() // 2) - (640 // 2)
-        self.geometry(f"+{x}+{y}")
-
         W.apply_ttk_theme(self)
         self._build()
+
+        W.fit_toplevel(self, 620, min_height=560)
+        self.deiconify()
+        self.grab_set()
 
     def _build(self):
         head = tk.Frame(self, bg=T.SURFACE)
@@ -332,10 +335,9 @@ class LeadDialog(tk.Toplevel):
         customer_entry.entry.focus_set()
 
     def _build_footer(self):
-        bar = tk.Frame(self, bg=T.SURFACE, height=64,
+        bar = tk.Frame(self, bg=T.SURFACE,
                        highlightbackground=T.BORDER, highlightthickness=1)
         bar.pack(side="bottom", fill="x")
-        bar.pack_propagate(False)
 
         W.GhostButton(
             bar, "Cancel", self.destroy, padx=16, pady=7,

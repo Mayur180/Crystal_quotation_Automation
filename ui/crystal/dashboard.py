@@ -16,7 +16,7 @@ import queue
 import sys
 import threading
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, ttk
 
 # project root on path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -131,7 +131,7 @@ class Dashboard(tk.Tk):
         body_wrap.grid(row=1, column=0, sticky="nsew")
 
         self._canvas = tk.Canvas(body_wrap, bg=T.BG, highlightthickness=0)
-        vscroll = tk.Scrollbar(body_wrap, orient="vertical",
+        vscroll = ttk.Scrollbar(body_wrap, orient="vertical",
                                 command=self._canvas.yview)
         self._canvas.configure(yscrollcommand=vscroll.set)
         vscroll.pack(side="right", fill="y")
@@ -174,7 +174,7 @@ class Dashboard(tk.Tk):
             placeholder="Search quotes, customers, products…",
             on_submit=self._do_global_search, bg=T.SURFACE_ALT,
         )
-        self._search_box.pack(side="left", padx=(20, 0), pady=13)
+        self._search_box.pack(side="left", padx=(20, 0), pady=8)
 
         right = tk.Frame(bar, bg=T.SURFACE)
         right.pack(side="right", fill="y", padx=(0, 16))
@@ -193,7 +193,7 @@ class Dashboard(tk.Tk):
 
         refresh = W.GhostButton(right, "Refresh", self._refresh_dashboard,
                                 icon="🔄", padx=12, pady=7)
-        refresh.pack(side="right", padx=(0, 8), pady=12)
+        refresh.pack(side="right", padx=(0, 8), pady=4)
 
         # Pending sheet-sync indicator (only visible while pushes are queued)
         self._sync_chip = tk.Label(
@@ -562,14 +562,6 @@ class Dashboard(tk.Tk):
                                font=T.FONT_BODY_B, width=16, anchor="w")
             lbl_num.pack(side="left", padx=(14, 8), pady=10)
 
-            customer = r["customer"] or "—"
-            if len(customer) > 30:
-                customer = customer[:29].rstrip() + "…"
-            lbl_cust = tk.Label(row, text=customer, bg=T.SURFACE,
-                                fg=T.TEXT_BODY, font=T.FONT_BODY,
-                                anchor="w", width=30)
-            lbl_cust.pack(side="left", fill="x", expand=True)
-
             try:
                 amount = f"₹ {float(r.get('total') or 0):,.2f}"
             except (TypeError, ValueError):
@@ -581,6 +573,14 @@ class Dashboard(tk.Tk):
             lbl_date = tk.Label(row, text=r.get("date") or "", bg=T.SURFACE,
                                 fg=T.TEXT_MUTED, font=T.FONT_SMALL, anchor="e")
             lbl_date.pack(side="right", padx=(8, 12))
+
+            customer = r["customer"] or "—"
+            if len(customer) > 22:
+                customer = customer[:21].rstrip() + "…"
+            lbl_cust = tk.Label(row, text=customer, bg=T.SURFACE,
+                                fg=T.TEXT_BODY, font=T.FONT_BODY,
+                                anchor="w", width=22)
+            lbl_cust.pack(side="left", fill="x", expand=True)
 
             widgets_in_row = (row, lbl_num, lbl_cust, lbl_amt, lbl_date)
 
@@ -847,24 +847,31 @@ class Dashboard(tk.Tk):
 
         popup = tk.Toplevel(self)
         popup.title(f"Quotation {quotation_number}")
-        popup.geometry("760x420")
+        popup.geometry("800x520")
+        popup.minsize(620, 400)
         popup.configure(bg=T.BG)
         popup.transient(self)
         popup.grab_set()
+        try:
+            W.set_window_icon(popup)
+        except Exception:
+            pass
+        W.apply_ttk_theme(popup)
+        popup.bind("<Escape>", lambda _e: popup.destroy())
 
         header = tk.Frame(popup, bg=T.SURFACE)
         header.pack(fill="x")
         _doc_label = ("Proforma Invoice" if str(quotation_number).upper().startswith("PI/")
                       else "Quotation")
-        tk.Label(header, text=f"{_doc_label}: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 14, "bold")).pack(side="left", padx=20, pady=15)
+        tk.Label(header, text=f"{_doc_label}: {quotation_number}", bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H3).pack(side="left", padx=20, pady=15)
         try:
             from app.services.quotation_number_service import split_revision
             _base, _rev = split_revision(quotation_number)
         except Exception:
             _base, _rev = quotation_number, 0
         if _rev:
-            tk.Label(header, text=f"Revision R{_rev} of {_base}", bg=T.SURFACE, fg=T.TEXT_MUTED, font=("Arial", 9, "italic")).pack(side="left", padx=6, pady=15)
-        tk.Label(header, text=f"Customer: {quotation.get('customer_name', '—')}", bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 9)).pack(side="right", padx=20, pady=15)
+            tk.Label(header, text=f"Revision R{_rev} of {_base}", bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_TINY).pack(side="left", padx=6, pady=15)
+        tk.Label(header, text=f"Customer: {quotation.get('customer_name', '—')}", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_SMALL).pack(side="right", padx=20, pady=15)
 
         tk.Frame(popup, bg=T.BORDER, height=1).pack(fill="x")
 
@@ -929,11 +936,33 @@ class Dashboard(tk.Tk):
                     "Round Off", "", "", "", f"{round_off:+,.2f}",
                 ))
 
-        footer = tk.Frame(popup, bg=T.SURFACE)
-        footer.pack(fill="x", side="bottom")
+        footer = tk.Frame(popup, bg=T.SURFACE,
+                          highlightbackground=T.BORDER, highlightthickness=1)
+        footer.pack(fill="x", side="bottom", before=table_frame)
         tk.Frame(footer, bg=T.BORDER, height=1).pack(fill="x")
 
-        tk.Label(footer, text=f"Discount: ₹{total_discount:,.2f}", bg=T.SURFACE, fg="#E67E22", font=("Arial", 11, "bold")).pack(side="left", padx=20, pady=15)
+        row1 = tk.Frame(footer, bg=T.SURFACE)
+        row1.pack(fill="x", padx=20, pady=(10, 0))
+        tk.Label(row1, text=f"Discount: ₹{total_discount:,.2f}",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL).pack(side="left")
+
+        display_grand = float(round(grand_total)) if has_breakdown else grand_total
+        tk.Label(row1, text=f"Grand Total: ₹{display_grand:,.2f}",
+                 bg=T.SURFACE, fg=T.ACCENT,
+                 font=T.FONT_H3).pack(side="right")
+
+        row2 = tk.Frame(footer, bg=T.SURFACE)
+        row2.pack(fill="x", padx=20, pady=(2, 10))
+        W.GhostButton(
+            row2, "Close", popup.destroy, padx=18, pady=7,
+        ).pack(side="right")
+        if not str(quotation_number).upper().startswith("PI/"):
+            W.PrimaryButton(
+                row2, "Revise",
+                lambda: (popup.destroy(), self._revise_quotation(quotation_number)),
+                padx=14, pady=7,
+            ).pack(side="right", padx=(0, 8))
 
         if has_breakdown:
             parts = []
@@ -953,18 +982,9 @@ class Dashboard(tk.Tk):
                 if sgst:
                     parts.append(f"SGST ₹{sgst:,.2f}")
             if parts:
-                tk.Label(footer, text="    ".join(parts), bg=T.SURFACE,
-                         fg=T.TEXT_MUTED, font=("Arial", 9)
-                         ).pack(side="right", padx=(0, 4), pady=15)
-
-        display_grand = float(round(grand_total)) if has_breakdown else grand_total
-        tk.Label(footer, text=f"Grand Total: ₹{display_grand:,.2f}", bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 12, "bold")).pack(side="right", padx=20, pady=15)
-        if not str(quotation_number).upper().startswith("PI/"):
-            tk.Button(
-                footer, text="Revise", bg=T.ACCENT, fg="white", relief="flat",
-                command=lambda: (popup.destroy(), self._revise_quotation(quotation_number)),
-            ).pack(side="left", padx=10, pady=15)
-        tk.Button(footer, text="Close", bg=T.BG, fg=T.TEXT, relief="flat", command=popup.destroy).pack(side="left", padx=20, pady=15)
+                tk.Label(row2, text="   ".join(parts), bg=T.SURFACE,
+                         fg=T.TEXT_MUTED, font=T.FONT_TINY,
+                         anchor="w").pack(side="left", pady=10)
 
     def _items_from_generated_docx(self, quotation):
         """Recover line items from the generated .docx for legacy records."""
@@ -1184,48 +1204,77 @@ class Dashboard(tk.Tk):
     # ═════════════════════════════════════════════════════════
 
     def _show_pending_followups(self):
-        import tkinter as tk
-        from tkinter import ttk
         from app.services.quotation_history_service import get_pending_followups
-        
+
         pending = get_pending_followups(days_old=3)
-        
+
         popup = tk.Toplevel(self)
         popup.title("Pending Follow-ups")
-        popup.geometry("750x450")
+        popup.geometry("760x480")
+        popup.minsize(560, 360)
         popup.configure(bg=T.BG)
         popup.transient(self)
         popup.grab_set()
-        
-        tk.Label(popup, text="⏰ Quotations Needing Follow-up (3+ days old)",
-                 bg=T.BG, fg=T.TEXT, font=("Arial", 14, "bold")).pack(pady=15)
-        
+        try:
+            W.set_window_icon(popup)
+        except Exception:
+            pass
+        W.apply_ttk_theme(popup)
+        popup.bind("<Escape>", lambda _e: popup.destroy())
+
+        head = tk.Frame(popup, bg=T.SURFACE)
+        head.pack(fill="x")
+        tk.Label(head, text="Pending follow-ups", bg=T.SURFACE, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w", padx=24, pady=(16, 0))
+        tk.Label(head, text="Quotations older than 3 days that still need a decision.",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL).pack(anchor="w", padx=24, pady=(2, 0))
+        tk.Frame(popup, bg=T.ACCENT, height=2).pack(fill="x", padx=24, pady=(12, 0))
+
+        foot = tk.Frame(popup, bg=T.SURFACE,
+                        highlightbackground=T.BORDER, highlightthickness=1)
+        foot.pack(side="bottom", fill="x")
+        W.GhostButton(
+            foot, "Close", popup.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=12)
+
         if not pending:
-            tk.Label(popup, text="✅ No pending follow-ups! All quotations are up to date.",
-                     bg=T.BG, fg="#27AE60", font=("Arial", 11)).pack(pady=50)
-            tk.Button(popup, text="Close", command=popup.destroy, bg=T.BG, relief="flat").pack(pady=10)
+            wrap = tk.Frame(popup, bg=T.BG)
+            wrap.pack(fill="both", expand=True)
+            W.EmptyState(
+                wrap, icon="✓", title="No pending follow-ups",
+                hint="Every quotation is up to date.", bg=T.BG,
+            ).place(relx=0.5, rely=0.5, anchor="center")
             return
-        
+
         frame = tk.Frame(popup, bg=T.BG)
-        frame.pack(fill="both", expand=True, padx=20, pady=10)
-        
+        frame.pack(fill="both", expand=True, padx=24, pady=16)
+
+        card = tk.Frame(frame, bg=T.SURFACE,
+                        highlightbackground=T.BORDER, highlightthickness=1)
+        card.pack(fill="both", expand=True)
+
         cols = ("quotation", "customer", "date", "total")
-        tree = ttk.Treeview(frame, columns=cols, show="headings", height=12)
-        tree.heading("quotation", text="Quotation No.")
-        tree.heading("customer", text="Customer")
-        tree.heading("date", text="Date")
-        tree.heading("total", text="Grand Total")
-        tree.column("quotation", width=180)
-        tree.column("customer", width=250)
-        tree.column("date", width=120)
-        tree.column("total", width=150, anchor="e")
-        
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree = ttk.Treeview(card, columns=cols, show="headings", height=10)
+        for col, title, width, anchor in (
+            ("quotation", "Quotation No.", 190, "w"),
+            ("customer", "Customer", 300, "w"),
+            ("date", "Date", 130, "w"),
+            ("total", "Grand Total", 160, "e"),
+        ):
+            tree.heading(col, text=title, anchor=anchor)
+            tree.column(col, width=width, anchor=anchor,
+                        stretch=(col == "customer"))
+
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
+
+        vsb = ttk.Scrollbar(card, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
-        
-        for q in pending:
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
+
+        for idx, q in enumerate(pending):
             try:
                 total_str = f"₹{float(q['grand_total']):,.2f}"
             except Exception:
@@ -1235,80 +1284,104 @@ class Dashboard(tk.Tk):
                 q["customer_name"],
                 q["date"],
                 total_str,
-            ))
-        
-        btn_frame = tk.Frame(popup, bg=T.BG)
-        btn_frame.pack(fill="x", pady=10)
-        
+            ), tags=("evenrow" if idx % 2 else "oddrow",))
+
         def open_selected():
             sel = tree.selection()
             if not sel:
                 return
-            values = tree.item(sel[0], "values")
-            quot_no = values[0]
             popup.destroy()
             try:
                 from ui.crystal.quotation_history import QuotationHistory
                 QuotationHistory(self)
             except Exception as e:
                 print(f"Could not open history: {e}")
-        
-        tk.Button(btn_frame, text="Open Quotation History", command=open_selected,
-                  bg=T.ACCENT, fg="white", font=("Arial", 10, "bold"), relief="flat",
-                  padx=15, pady=6).pack(side="right", padx=10)
-        tk.Button(btn_frame, text="Close", command=popup.destroy,
-                  bg=T.BG, fg=T.TEXT, relief="flat").pack(side="right", padx=10)
+
+        tree.bind("<Double-1>", lambda _e: open_selected())
+        W.PrimaryButton(
+            foot, "Open quotation history", open_selected, padx=16, pady=7,
+        ).pack(side="right", padx=(0, 8), pady=12)
 
     def _do_global_search(self):
-        import tkinter as tk
-        from tkinter import ttk
         from app.services.search_service import global_search
-        
+
         query = self._search_var.get().strip()
         if len(query) < 2:
-            from tkinter import messagebox
-            messagebox.showinfo("Search", "Please enter at least 2 characters.", parent=self)
+            messagebox.showinfo(
+                "Search", "Please enter at least 2 characters.", parent=self)
             return
-        
+
         results = global_search(query)
-        
+
         popup = tk.Toplevel(self)
-        popup.title(f"Search Results: {query}")
-        popup.geometry("800x500")
-        popup.configure(bg="#F4F6F8")
+        popup.title("Search Results")
+        popup.geometry("860x540")
+        popup.minsize(620, 380)
+        popup.configure(bg=T.BG)
         popup.transient(self)
         popup.grab_set()
-        
-        tk.Label(popup, text=f"🔍 Results for \"{query}\" ({len(results)} found)",
-                 bg="#F4F6F8", fg="#2C3E50", font=("Arial", 14, "bold")).pack(pady=15)
-        
+        try:
+            W.set_window_icon(popup)
+        except Exception:
+            pass
+        W.apply_ttk_theme(popup)
+        popup.bind("<Escape>", lambda _e: popup.destroy())
+
+        head = tk.Frame(popup, bg=T.SURFACE)
+        head.pack(fill="x")
+        tk.Label(head, text="Search results", bg=T.SURFACE, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w", padx=24, pady=(16, 0))
+        tk.Label(head, text=f"{len(results)} match{'es' if len(results) != 1 else ''} for “{query}”",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL).pack(anchor="w", padx=24, pady=(2, 0))
+        tk.Frame(popup, bg=T.ACCENT, height=2).pack(fill="x", padx=24, pady=(12, 0))
+
+        foot = tk.Frame(popup, bg=T.SURFACE,
+                        highlightbackground=T.BORDER, highlightthickness=1)
+        foot.pack(side="bottom", fill="x")
+        W.GhostButton(
+            foot, "Close", popup.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=12)
+
         if not results:
-            tk.Label(popup, text="No results found.", bg="#F4F6F8", fg="#7F8C8D",
-                     font=("Arial", 11)).pack(pady=50)
-            tk.Button(popup, text="Close", command=popup.destroy, bg="#F4F6F8", relief="flat").pack(pady=10)
+            wrap = tk.Frame(popup, bg=T.BG)
+            wrap.pack(fill="both", expand=True)
+            W.EmptyState(
+                wrap, icon="⌕", title="No results found",
+                hint="Try a different name, number or model.", bg=T.BG,
+            ).place(relx=0.5, rely=0.5, anchor="center")
             return
-        
-        frame = tk.Frame(popup, bg="#F4F6F8")
-        frame.pack(fill="both", expand=True, padx=20, pady=10)
-        
+
+        frame = tk.Frame(popup, bg=T.BG)
+        frame.pack(fill="both", expand=True, padx=24, pady=16)
+
+        card = tk.Frame(frame, bg=T.SURFACE,
+                        highlightbackground=T.BORDER, highlightthickness=1)
+        card.pack(fill="both", expand=True)
+
         cols = ("type", "title", "subtitle")
-        tree = ttk.Treeview(frame, columns=cols, show="headings", height=15)
-        tree.heading("type", text="Type")
-        tree.heading("title", text="Name / Number")
-        tree.heading("subtitle", text="Details")
-        tree.column("type", width=100)
-        tree.column("title", width=250)
-        tree.column("subtitle", width=380)
-        
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
+        tree = ttk.Treeview(card, columns=cols, show="headings", height=12)
+        for col, title, width, anchor in (
+            ("type", "Type", 110, "w"),
+            ("title", "Name / Number", 270, "w"),
+            ("subtitle", "Details", 420, "w"),
+        ):
+            tree.heading(col, text=title, anchor=anchor)
+            tree.column(col, width=width, anchor=anchor,
+                        stretch=(col == "subtitle"))
+
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
+
+        vsb = ttk.Scrollbar(card, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
-        
-        for r in results:
-            tree.insert("", "end", values=(r["type"], r["title"], r["subtitle"]))
-        
-        tk.Button(popup, text="Close", command=popup.destroy, bg="#F4F6F8", relief="flat").pack(pady=10)
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
+
+        for idx, r in enumerate(results):
+            tree.insert("", "end", values=(
+                r.get("type", ""), r.get("title", ""), r.get("subtitle", ""),
+            ), tags=("evenrow" if idx % 2 else "oddrow",))
 
     # ═════════════════════════════════════════════════════
     # NAV HANDLERS

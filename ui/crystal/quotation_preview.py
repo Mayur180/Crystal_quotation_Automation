@@ -7,7 +7,7 @@ Replaces the 6-tab VMM-style layout with one scrollable page:
 import os
 import sys
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 
 # Project root on path
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -94,6 +94,12 @@ class QuotationPreview(tk.Toplevel):
         self.on_finalise = on_finalise
         self.confirmed = False
 
+        try:
+            from ui.crystal import widgets as _W
+            _W.apply_ttk_theme(self)
+        except Exception:
+            pass
+
         self._build_interface()
         self.protocol("WM_DELETE_WINDOW", self._close)
 
@@ -114,9 +120,8 @@ class QuotationPreview(tk.Toplevel):
         self._render_single_page()
 
     def _build_header(self):
-        header = tk.Frame(self, bg=self.CARD, height=72)
+        header = tk.Frame(self, bg=self.CARD)
         header.pack(fill="x")
-        header.pack_propagate(False)
 
         brand = tk.Frame(header, bg=self.CARD)
         brand.pack(side="left", padx=26)
@@ -135,7 +140,7 @@ class QuotationPreview(tk.Toplevel):
         wrap.pack(fill="both", expand=True)
 
         self._canvas = tk.Canvas(wrap, bg=self.BG, highlightthickness=0)
-        scroll = tk.Scrollbar(wrap, orient="vertical", command=self._canvas.yview)
+        scroll = ttk.Scrollbar(wrap, orient="vertical", command=self._canvas.yview)
         self._canvas.configure(yscrollcommand=scroll.set)
         scroll.pack(side="right", fill="y")
         self._canvas.pack(side="left", fill="both", expand=True)
@@ -164,10 +169,9 @@ class QuotationPreview(tk.Toplevel):
             pass
 
     def _build_navigation(self):
-        nav = tk.Frame(self, bg="white", height=70,
+        nav = tk.Frame(self, bg="white",
                        highlightbackground=self.BORDER, highlightthickness=1)
         nav.pack(side="bottom", fill="x")
-        nav.pack_propagate(False)
 
         # Left: close
         left = tk.Frame(nav, bg="white")

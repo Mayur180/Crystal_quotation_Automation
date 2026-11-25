@@ -156,11 +156,10 @@ class BackupExport(tk.Toplevel):
         header.pack(fill="x")
 
         # Footer before the expanding body
-        footer = tk.Frame(self, bg=T.SURFACE, height=64,
+        footer = tk.Frame(self, bg=T.SURFACE,
                           highlightbackground=T.BORDER,
                           highlightthickness=1)
         footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
         W.GhostButton(
             footer, "Close", self.destroy, padx=18, pady=7,
         ).pack(side="right", padx=22, pady=13)

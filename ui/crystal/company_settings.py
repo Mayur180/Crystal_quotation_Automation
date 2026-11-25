@@ -308,10 +308,9 @@ class CompanySettings(tk.Toplevel):
             self._entries.append(field.entry)
 
     def _build_footer(self):
-        footer = tk.Frame(self, bg=T.SURFACE, height=66,
+        footer = tk.Frame(self, bg=T.SURFACE,
                           highlightbackground=T.BORDER, highlightthickness=1)
         footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
 
         W.GhostButton(
             footer, "Reset to Defaults", self._reset, padx=14, pady=7,

@@ -419,6 +419,20 @@ def set_window_icon(window):
         pass
 
 
+def fit_toplevel(win, width=None, *, min_height=0, margin=80):
+    """Size a dialog to its requested content, keeping it fully on screen."""
+    win.update_idletasks()
+    sw, sh = win.winfo_screenwidth(), win.winfo_screenheight()
+    w = int(width or win.winfo_reqwidth())
+    w = max(320, min(w, sw - 40))
+    h = max(int(min_height), win.winfo_reqheight())
+    h = min(h, sh - margin)
+    x = max(10, (sw - w) // 2)
+    y = max(10, (sh - h) // 2 - 20)
+    win.geometry(f"{w}x{h}+{x}+{y}")
+    return w, h
+
+
 def apply_ttk_theme(root):
     """Apply the CRYSTAL table theme. Safe to call on every window."""
     st = ttk.Style(root)
@@ -461,12 +475,24 @@ def apply_ttk_theme(root):
         selectbackground=[("readonly", T.SURFACE)],
         selectforeground=[("readonly", T.TEXT)],
     )
-    st.configure("Vertical.TScrollbar", width=10,
-                 background=T.BORDER, troughcolor=T.SURFACE_ALT,
-                 bordercolor=T.SURFACE, arrowcolor=T.TEXT_MUTED)
-    st.configure("Horizontal.TScrollbar", width=10,
-                 background=T.BORDER, troughcolor=T.SURFACE_ALT,
-                 bordercolor=T.SURFACE, arrowcolor=T.TEXT_MUTED)
+    for orient in ("Vertical", "Horizontal"):
+        st.configure(
+            f"{orient}.TScrollbar",
+            width=12, arrowsize=0, gripcount=0,
+            background=T.BORDER_HARD, troughcolor=T.SURFACE_ALT,
+            bordercolor=T.SURFACE, lightcolor=T.BORDER_HARD,
+            darkcolor=T.BORDER_HARD, arrowcolor=T.TEXT_MUTED,
+            relief="flat", borderwidth=0,
+        )
+        st.map(
+            f"{orient}.TScrollbar",
+            background=[
+                ("pressed", T.TEXT_FAINT),
+                ("active", T.TEXT_MUTED),
+                ("disabled", T.BORDER),
+            ],
+            arrowcolor=[("disabled", T.BORDER)],
+        )
     st.configure(
         "Crystal.Horizontal.TProgressbar",
         troughcolor=T.SURFACE_ALT, background=T.ACCENT,

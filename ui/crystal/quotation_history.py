@@ -463,11 +463,10 @@ class QuotationHistory(tk.Toplevel):
         # Force enable delete for now
         self._force_delete = True
 
-        bar = tk.Frame(self, bg=self.CARD, height=68,
+        bar = tk.Frame(self, bg=self.CARD,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
-        bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
         left.pack(side="left", padx=22, pady=15)
@@ -783,6 +782,8 @@ class QuotationHistory(tk.Toplevel):
             btns_inner, "Apply", _apply, padx=16, pady=6,
         ).pack(side="right", padx=(0, 8))
 
+        W.fit_toplevel(dlg, 340)
+
     def _record_with_items(self, record):
         """Merge the locally stored line items into a (cloud) record."""
         if not record:
@@ -830,10 +831,12 @@ class QuotationHistory(tk.Toplevel):
 
         popup = tk.Toplevel(self)
         popup.title(f"Material — {number}")
-        popup.geometry("800x460")
+        popup.geometry("800x540")
         popup.configure(bg=T.BG)
         popup.transient(self)
         W.set_window_icon(popup)
+        W.apply_ttk_theme(popup)
+        popup.bind("<Escape>", lambda _e: popup.destroy())
 
         head = tk.Frame(popup, bg=T.BG)
         head.pack(fill="x", padx=22, pady=(16, 0))
@@ -859,6 +862,8 @@ class QuotationHistory(tk.Toplevel):
             ).pack(anchor="w", pady=(2, 0))
 
         if not items:
+            W.GhostButton(popup, "Close", popup.destroy,
+                          padx=18, pady=7).pack(side="bottom", pady=(0, 18))
             empty = W.EmptyState(
                 popup, icon="📄", title="No material stored",
                 hint=("Open this quotation on the PC that created it, or "
@@ -866,8 +871,6 @@ class QuotationHistory(tk.Toplevel):
                 bg=T.BG,
             )
             empty.pack(expand=True)
-            W.GhostButton(popup, "Close", popup.destroy,
-                          padx=18, pady=7).pack(pady=(0, 18))
             return
 
         table = tk.Frame(
@@ -938,7 +941,7 @@ class QuotationHistory(tk.Toplevel):
             grand_total = float(round(grand_total))
 
         foot = tk.Frame(popup, bg=T.BG)
-        foot.pack(fill="x", padx=22, pady=12)
+        foot.pack(side="bottom", fill="x", padx=22, pady=12, before=table)
         tk.Label(
             foot, text=f"Grand total   {_money(grand_total)}",
             bg=T.BG, fg=T.TEXT, font=T.FONT_H3,

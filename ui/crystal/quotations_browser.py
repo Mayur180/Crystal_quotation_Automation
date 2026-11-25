@@ -106,11 +106,10 @@ class QuotationsBrowser(tk.Toplevel):
 
         # ---- footer (bottom first) ----
         foot = tk.Frame(
-            self, bg=T.SURFACE, height=64,
+            self, bg=T.SURFACE,
             highlightbackground=T.BORDER, highlightthickness=1,
         )
         foot.pack(side="bottom", fill="x")
-        foot.pack_propagate(False)
         self.status_var = tk.StringVar(value="Ready.")
         tk.Label(
             foot, textvariable=self.status_var, bg=T.SURFACE,

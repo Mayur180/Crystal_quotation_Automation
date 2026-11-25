@@ -78,13 +78,12 @@ class CustomerEditDialog(tk.Toplevel):
         self.result = None
 
         self.title("Edit Customer" if customer else "New Customer")
-        self.geometry("620x700")
+        self.withdraw()
         self.minsize(500, 480)
         self.configure(bg=T.SURFACE)
         W.set_window_icon(self)
 
         self.transient(parent)
-        self.grab_set()
         W.apply_ttk_theme(self)
 
         self.customer = customer or {}
@@ -94,6 +93,10 @@ class CustomerEditDialog(tk.Toplevel):
         self._build_interface()
 
         self.protocol("WM_DELETE_WINDOW", self._cancel)
+
+        W.fit_toplevel(self, 620, min_height=780)
+        self.deiconify()
+        self.grab_set()
 
         # ---- Keyboard shortcuts ----
         try:
@@ -120,11 +123,10 @@ class CustomerEditDialog(tk.Toplevel):
                  font=T.FONT_SMALL).pack(anchor="w", pady=(2, 0))
         tk.Frame(self, bg=T.ACCENT, height=2).pack(fill="x", padx=24, pady=(12, 0))
 
-        footer = tk.Frame(self, bg=T.SURFACE, height=64,
+        footer = tk.Frame(self, bg=T.SURFACE,
                           highlightbackground=T.BORDER,
                           highlightthickness=1)
         footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
 
         W.GhostButton(
             footer, "Cancel", self._cancel, padx=16, pady=7,
@@ -138,7 +140,8 @@ class CustomerEditDialog(tk.Toplevel):
         outer.pack(fill="both", expand=True)
 
         scroll_canvas = tk.Canvas(outer, bg=self.BG, highlightthickness=0, bd=0)
-        scroll_bar = tk.Scrollbar(outer, orient="vertical", command=scroll_canvas.yview)
+        scroll_bar = ttk.Scrollbar(outer, orient="vertical",
+                                   command=scroll_canvas.yview)
         scroll_canvas.configure(yscrollcommand=scroll_bar.set)
 
         scroll_canvas.pack(side="left", fill="both", expand=True)
@@ -453,11 +456,10 @@ class CustomerDatabase(tk.Toplevel):
             pass
 
     def _build_footer(self):
-        bar = tk.Frame(self, bg=self.CARD, height=68,
+        bar = tk.Frame(self, bg=self.CARD,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
-        bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
         left.pack(side="left", padx=22, pady=15)

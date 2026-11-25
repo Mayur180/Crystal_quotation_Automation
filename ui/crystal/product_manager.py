@@ -148,9 +148,8 @@ class ProductEditDialog(tk.Toplevel):
 
     def _build_interface(self):
 
-        header = tk.Frame(self, bg=self.CARD, height=68)
+        header = tk.Frame(self, bg=self.CARD)
         header.pack(fill="x")
-        header.pack_propagate(False)
 
         tk.Label(header,
                  text=f"Edit Product — {self.original_model}",
@@ -214,11 +213,10 @@ class ProductEditDialog(tk.Toplevel):
                     e.configure(state="readonly",
                                 readonlybackground=self.SOFT)
 
-        footer = tk.Frame(self, bg="white", height=66,
+        footer = tk.Frame(self, bg="white",
                           highlightbackground=self.BORDER,
                           highlightthickness=1)
         footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
 
         tk.Button(footer, text="Cancel", command=self._cancel,
                   bg="white", fg=self.TEXT,
@@ -381,11 +379,10 @@ class ProductManager(tk.Toplevel):
         self.body.pack(fill="both", expand=True, padx=28, pady=(0, 12))
 
     def _build_footer(self):
-        bar = tk.Frame(self, bg=self.CARD, height=68,
+        bar = tk.Frame(self, bg=self.CARD,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
-        bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
         left.pack(side="left", padx=22, pady=15)
@@ -885,12 +882,26 @@ class ProductManager(tk.Toplevel):
 
         dialog = tk.Toplevel(self)
         dialog.title("Bulk Price Adjust")
-        dialog.geometry("460x360")
+        dialog.withdraw()
         dialog.configure(bg=T.SURFACE)
         dialog.transient(self)
-        dialog.grab_set()
         W.set_window_icon(dialog)
         W.apply_ttk_theme(dialog)
+
+        footer = tk.Frame(
+            dialog, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        footer.pack(side="bottom", fill="x")
+        btn_row = tk.Frame(footer, bg=T.SURFACE)
+        btn_row.pack(fill="x", padx=24, pady=12)
+
+        W.GhostButton(
+            btn_row, "Cancel", dialog.destroy, padx=18, pady=7,
+        ).pack(side="right")
+        W.PrimaryButton(
+            btn_row, "Apply", lambda: apply_bulk(), padx=18, pady=7,
+        ).pack(side="right", padx=(0, 8))
 
         inner = tk.Frame(dialog, bg=T.SURFACE)
         inner.pack(fill="both", expand=True, padx=24, pady=18)
@@ -902,6 +913,7 @@ class ProductManager(tk.Toplevel):
         tk.Label(
             inner, text="Apply one percentage change to a category or the whole catalog.",
             bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+            wraplength=420, justify="left",
         ).pack(anchor="w", pady=(2, 14))
 
         tk.Label(inner, text="CATEGORY",
@@ -953,22 +965,16 @@ class ProductManager(tk.Toplevel):
             dialog.destroy()
             self._reload()
 
-        btn_row = tk.Frame(inner, bg=T.SURFACE)
-        btn_row.pack(side="bottom", fill="x", pady=(18, 0))
-
-        W.GhostButton(
-            btn_row, "Cancel", dialog.destroy, padx=18, pady=7,
-        ).pack(side="right")
-        W.PrimaryButton(
-            btn_row, "Apply", apply_bulk, padx=18, pady=7,
-        ).pack(side="right", padx=(0, 8))
-
         # Escape closes the bulk dialog
         try:
             from ui.common.ui_helpers import install_modal_shortcuts
             install_modal_shortcuts(dialog, on_escape=dialog.destroy)
         except Exception:
             pass
+
+        W.fit_toplevel(dialog, 480)
+        dialog.deiconify()
+        dialog.grab_set()
 
     # --------------------------------------------------------
     # RESTORE

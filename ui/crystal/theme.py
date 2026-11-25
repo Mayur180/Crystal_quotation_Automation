@@ -66,7 +66,7 @@ FONT_ICON     = ("Segoe UI Symbol", 12)
 SP_XS, SP_SM, SP_MD, SP_LG, SP_XL, SP_2XL, SP_3XL = 4, 8, 16, 24, 32, 48, 64
 
 # ─── Sizes ───
-TOPBAR_HEIGHT = 60
+TOPBAR_HEIGHT = 66
 SIDEBAR_WIDTH = 232
 CARD_PADX     = 22
 CARD_PADY     = 20

@@ -134,11 +134,10 @@ class ActivityLog(tk.Toplevel):
 
         # ---- action bar (bottom first) ----
         abar = tk.Frame(
-            self, bg=T.SURFACE, height=64,
+            self, bg=T.SURFACE,
             highlightbackground=T.BORDER, highlightthickness=1,
         )
         abar.pack(side="bottom", fill="x")
-        abar.pack_propagate(False)
         W.DangerButton(
             abar, "Clear log", self._clear_log, padx=14, pady=7,
         ).pack(side="left", padx=22, pady=13)

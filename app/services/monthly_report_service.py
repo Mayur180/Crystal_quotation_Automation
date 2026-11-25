@@ -54,7 +54,20 @@ def _to_float(v):
 
 
 def _load_records():
-    """Load all quotation records via the history service."""
+    """Load quotation records, merging local history with the cloud sheet."""
+    try:
+        from app.services.quotation_history_service import (
+            fetch_quotations_merged,
+            list_quotations,
+        )
+        from app.services.paths import get_active_module
+        merged = fetch_quotations_merged(
+            limit=1000000, module=get_active_module(), silent=True
+        )
+        if merged:
+            return merged
+    except Exception:
+        pass
     try:
         from app.services.quotation_history_service import list_quotations
         return list_quotations(limit=1000000) or []

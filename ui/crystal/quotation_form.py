@@ -3653,7 +3653,7 @@ class QuotationForm(tk.Toplevel):
                     
                     status_label.pack_forget()
                     canvas = tk.Canvas(image_frame, bg=T.BG, highlightthickness=0)
-                    scrollbar = tk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
+                    scrollbar = ttk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
                     canvas.configure(yscrollcommand=scrollbar.set)
                     scrollbar.pack(side="right", fill="y")
                     canvas.pack(side="left", fill="both", expand=True)

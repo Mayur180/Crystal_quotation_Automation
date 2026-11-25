@@ -43,11 +43,10 @@ class TermsEditor(tk.Toplevel):
         header.pack(fill="x")
 
         footer = tk.Frame(
-            self, bg=T.SURFACE, height=64,
+            self, bg=T.SURFACE,
             highlightbackground=T.BORDER, highlightthickness=1,
         )
         footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
 
         W.GhostButton(footer, "Cancel", self._cancel, padx=18, pady=7).pack(
             side="right", padx=(0, 24), pady=13)
