@@ -51,13 +51,11 @@ def _phase_login():
     import tkinter as tk
     from ui.login_window import LoginWindow
     
-    # Check for saved session (auto-login)
+    # Check for a saved session (auto-login)
     try:
-        import json
-        from app.services.paths import get_data_root
-        session_file = get_data_root() / "session.json"
-        if session_file.exists():
-            session_data = json.loads(session_file.read_text(encoding='utf-8'))
+        from app.services.session_service import load_session, clear_session
+        session_data = load_session()
+        if session_data:
             # Reconstruct the UserSession from saved data
             from app.services.auth_service import UserSession
             saved_session = UserSession(
@@ -72,10 +70,8 @@ def _phase_login():
             if user and user.get("is_active", True):
                 print(f"[auto-login] Welcome back, {saved_session.username}!")
                 return saved_session
-            else:
-                # User no longer exists or is inactive — delete the session
-                session_file.unlink()
-                print("[auto-login] Session invalid, please log in again.")
+            clear_session()
+            print("[auto-login] Session invalid, please log in again.")
     except Exception as e:
         print(f"[auto-login] Could not auto-login: {e}")
 
@@ -197,11 +193,8 @@ def _phase_dashboard(session):
                 return
             # Clear the saved session on logout
             try:
-                import json
-                from app.services.paths import get_data_root
-                session_file = get_data_root() / "session.json"
-                if session_file.exists():
-                    session_file.unlink()
+                from app.services.session_service import clear_session
+                clear_session()
             except Exception:
                 pass
             logged_out["value"] = True
@@ -283,6 +276,16 @@ def main():
     except Exception:
         pass
 
+    # ---- OFFLINE QUEUE: retry sheet pushes left over from a previous run ----
+    try:
+        from app.services.sync_queue import has_pending, process_queue
+        if has_pending():
+            import threading
+            print("[startup] Pending sheet pushes found — retrying in background.")
+            threading.Thread(target=process_queue, daemon=True).start()
+    except Exception as e:
+        print(f"[startup] Sync queue retry skipped: {e}")
+
     # ---- SYNC USERS FROM GOOGLE SHEETS ----
     # Refresh in the background so the login window opens immediately. Only
     # block when there is no local user file yet (fresh PC).
@@ -317,11 +320,9 @@ def main():
             print("[DEBUG] Logout detected — clearing session and restarting...")
             # Delete session file so auto-login doesn't fire
             try:
-                from app.services.paths import get_data_root
-                session_file = get_data_root() / "session.json"
-                if session_file.exists():
-                    session_file.unlink()
-                    print("[DEBUG] Session file deleted.")
+                from app.services.session_service import clear_session
+                clear_session()
+                print("[DEBUG] Session file deleted.")
             except Exception as e:
                 print(f"[DEBUG] Could not delete session: {e}")
             return main()

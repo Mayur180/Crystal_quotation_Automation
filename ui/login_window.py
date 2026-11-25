@@ -197,31 +197,15 @@ class LoginWindow:
         self._cleanup_bindings()
         self.frame.destroy()
         # Save session if "Remember Me" is checked
-        if self.remember_var.get():
-            try:
-                import json
-                from app.services.paths import get_data_root
-                session_file = get_data_root() / "session.json"
-                session_data = {
-                    "user_id": session.user_id,
-                    "username": session.username,
-                    "full_name": session.full_name,
-                    "modules": session.modules,
-                }
-                with open(session_file, 'w', encoding='utf-8') as f:
-                    json.dump(session_data, f, indent=2)
+        try:
+            from app.services.session_service import save_session, clear_session
+            if self.remember_var.get():
+                save_session(session)
                 print(f"[session] Saved session for {session.username}")
-            except Exception as e:
-                print(f"[session] Could not save session: {e}")
-        else:
-            # Clear any existing session if "Remember Me" is unchecked
-            try:
-                from app.services.paths import get_data_root
-                session_file = get_data_root() / "session.json"
-                if session_file.exists():
-                    session_file.unlink()
-            except Exception:
-                pass
+            else:
+                clear_session()
+        except Exception as e:
+            print(f"[session] Could not save session: {e}")
 
         self.on_success(session)
 

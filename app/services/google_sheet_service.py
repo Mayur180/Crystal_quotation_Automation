@@ -42,17 +42,34 @@ def _with_customer_keys(data):
     return out
 
 
+def _enqueue_failed(data):
+    """Keep a failed push so the sync queue can retry it later."""
+    try:
+        action = str((data or {}).get("action") or "").strip()
+        if not action or action == "login":
+            # Login events are timestamped audit rows — replaying them late
+            # would only confuse the sheet.
+            return
+        from app.services.sync_queue import enqueue
+        enqueue(action, data, module="Crystal")
+    except Exception as e:
+        print(f"[google-sheet] could not queue payload: {e}")
+
+
 def send_to_sheet(data):
     """POST a dict to the webhook. Returns True on success, False on failure.
 
-    Never raises — logs errors to stdout only.
+    Never raises — logs errors to stdout only. Failures are queued in
+    data/pending_sync.json so an offline PC syncs once it reconnects.
     """
     if not WEBHOOK_URL or "PASTE" in WEBHOOK_URL:
         print("[google-sheet] webhook URL not configured")
         return False
 
+    payload_data = _with_customer_keys(data)
+
     try:
-        payload = json.dumps(_with_customer_keys(data), ensure_ascii=False).encode("utf-8")
+        payload = json.dumps(payload_data, ensure_ascii=False).encode("utf-8")
         req = urllib.request.Request(
             WEBHOOK_URL,
             data=payload,
@@ -66,19 +83,23 @@ def send_to_sheet(data):
             body = resp.read().decode("utf-8", errors="replace")
             if resp.status == 200:
                 print(f"[google-sheet] sent OK: {data.get('quotation_number')}")
+                try:
+                    from app.services.sync_queue import flush_async
+                    flush_async()
+                except Exception:
+                    pass
                 return True
             else:
                 print(f"[google-sheet] HTTP {resp.status}: {body[:200]}")
-                return False
     except urllib.error.HTTPError as e:
         print(f"[google-sheet] HTTP error {e.code}: {e.reason}")
-        return False
     except urllib.error.URLError as e:
         print(f"[google-sheet] URL error: {e.reason}")
-        return False
     except Exception as e:
         print(f"[google-sheet] unexpected error: {type(e).__name__}: {e}")
-        return False
+
+    _enqueue_failed(payload_data)
+    return False
 
 
 def fetch_leads_from_sheet():

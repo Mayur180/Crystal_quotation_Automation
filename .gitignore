@@ -21,3 +21,6 @@ data/offer_counter.json
 data/Crystal/_source/*.log
 data/Crystal/backups/
 app/generators/data/offer_counter.json
+# machine-local state
+data/session.json
+data/pending_sync.json

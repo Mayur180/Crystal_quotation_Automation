@@ -1,12 +1,30 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
 
+# Seed data bundled into the EXE. On first launch these files are copied
+# to <exe_dir>/data; existing files are never overwritten.
+# Deliberately excluded: backups/, _source/, activity logs, sessions —
+# runtime state that should not travel inside the binary.
+SEED_DATA = [
+    ('data/Users.json', 'data'),
+    ('data/User_Access.json', 'data'),
+    ('data/offer_counter.json', 'data'),
+    ('data/VMM', 'data/VMM'),
+    ('data/Crystal/catalog.json', 'data/Crystal'),
+    ('data/Crystal/customers.json', 'data/Crystal'),
+    ('data/Crystal/quotations.json', 'data/Crystal'),
+    ('data/Crystal/deleted_quotations.json', 'data/Crystal'),
+    ('data/Crystal/quotation_counter.json', 'data/Crystal'),
+    ('data/Crystal/company_settings.json', 'data/Crystal'),
+    ('data/Crystal/custom_terms.json', 'data/Crystal'),
+    ('data/Crystal/leads.json', 'data/Crystal'),
+]
+
 datas = [
     ('assets', 'assets'),
-    ('data', 'data'),    # SEED — copied to exe_dir/data on first launch
     ('ui', 'ui'),
     ('app', 'app'),
-]
+] + SEED_DATA
 binaries = []
 
 hiddenimports = [

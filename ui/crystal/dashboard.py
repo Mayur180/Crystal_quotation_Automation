@@ -176,7 +176,86 @@ class Dashboard(tk.Tk):
         if self._on_logout:
             chip.bind("<Button-1>", lambda e: self._on_logout())
 
+        # Pending sheet-sync indicator (only visible while pushes are queued)
+        self._sync_chip = tk.Label(
+            right, text="", bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=("Arial", 9, "bold"), cursor="hand2", padx=8, pady=6,
+        )
+        self._sync_chip.bind("<Button-1>", lambda e: self._sync_now(manual=True))
+        self._refresh_sync_chip()
+        self.after(60000, self._sync_tick)
+
         return bar
+
+    # ═════════════════════════════════════════════════════════
+    # OFFLINE SYNC QUEUE
+    # ═════════════════════════════════════════════════════════
+
+    def _pending_sync_count(self):
+        try:
+            from app.services.sync_queue import pending_count
+            return pending_count()
+        except Exception:
+            return 0
+
+    def _refresh_sync_chip(self):
+        n = self._pending_sync_count()
+        try:
+            if n:
+                self._sync_chip.config(text=f"⏳ {n} to sync")
+                if not self._sync_chip.winfo_ismapped():
+                    self._sync_chip.pack(side="right", padx=(0, 12), pady=15)
+            else:
+                self._sync_chip.pack_forget()
+        except Exception:
+            pass
+        return n
+
+    def _sync_now(self, manual=False):
+        try:
+            self._sync_chip.config(text="⏳ Syncing…")
+        except Exception:
+            pass
+
+        def worker():
+            result = {"processed": 0, "remaining": 0}
+            try:
+                from app.services.sync_queue import process_queue
+                result = process_queue()
+            except Exception as e:
+                print(f"[sync] {e}")
+            try:
+                self.after(0, lambda: self._on_sync_done(result, manual))
+            except Exception:
+                pass
+
+        threading.Thread(target=worker, daemon=True).start()
+
+    def _on_sync_done(self, result, manual=False):
+        remaining = self._refresh_sync_chip()
+        if not manual:
+            return
+        processed = int(result.get("processed") or 0)
+        if remaining == 0 and processed:
+            messagebox.showinfo("Sync complete",
+                                f"{processed} pending item(s) pushed to Google Sheets.")
+        elif remaining and not processed:
+            messagebox.showwarning("Still offline",
+                                   f"{remaining} item(s) are waiting.\n"
+                                   "They will retry automatically when the internet is back.")
+
+    def _sync_tick(self):
+        if self._pending_sync_count():
+            self._refresh_sync_chip()
+            try:
+                from app.services.sync_queue import flush_async
+                flush_async(min_interval=90)
+            except Exception:
+                pass
+        try:
+            self.after(120000, self._sync_tick)
+        except Exception:
+            pass
 
     # ═════════════════════════════════════════════════════════
     # BODY CONTENT

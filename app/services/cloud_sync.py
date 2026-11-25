@@ -469,14 +469,15 @@ def update_quotation_status_in_cloud(quotation_number: str, new_status: str) -> 
     invalidate_quotes_cache()
 
     if _get_module() == "CRYSTAL":
+        payload = {
+            "action": "update_status",
+            "quotation_number": quotation_number,
+            "status": new_status,
+        }
         try:
             res = requests.post(
                 APPS_SCRIPT_URL,
-                json={
-                    "action": "update_status",
-                    "quotation_number": quotation_number,
-                    "status": new_status,
-                },
+                json=payload,
                 timeout=15,
             )
             if res.status_code == 200:
@@ -490,10 +491,24 @@ def update_quotation_status_in_cloud(quotation_number: str, new_status: str) -> 
                         f"{body.get('message', 'error')} "
                         "(redeploy tools/apps_script_cloud_sync.gs to enable it)"
                     )
-                    return False
-                return True
+                else:
+                    try:
+                        from app.services.sync_queue import flush_async
+                        flush_async()
+                    except Exception:
+                        pass
+                    return True
         except Exception as e:
             print(f"[cloud] Sheets status update failed: {e}")
+
+        # Offline or script not ready — retry through the sync queue.
+        try:
+            from app.services.sync_queue import enqueue
+            if enqueue("update_status", payload):
+                print(f"[cloud] {quotation_number} status update queued for sync.")
+                return True
+        except Exception:
+            pass
         return False
 
     sb = get_supabase()
@@ -506,12 +521,10 @@ def update_quotation_status_in_cloud(quotation_number: str, new_status: str) -> 
 
 def _delete_sheet_row(q_no: str) -> None:
     """Remove the sheet row in the background (best effort)."""
+    payload = {"action": "delete_quotation", "quotation_number": q_no}
+    done = False
     try:
-        res = requests.post(
-            APPS_SCRIPT_URL,
-            json={"action": "delete_quotation", "quotation_number": q_no},
-            timeout=20,
-        )
+        res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=20)
         if res.status_code == 200:
             try:
                 body = res.json()
@@ -524,9 +537,18 @@ def _delete_sheet_row(q_no: str) -> None:
                     "(redeploy tools/apps_script_cloud_sync.gs to enable row deletion)"
                 )
             else:
+                done = True
                 print(f"[cloud] {q_no} deleted from GOOGLE SHEETS.")
     except Exception as e:
         print(f"[cloud] Sheets delete failed: {e}")
+
+    if not done:
+        try:
+            from app.services.sync_queue import enqueue
+            if enqueue("delete_quotation", payload):
+                print(f"[cloud] {q_no} row deletion queued for sync.")
+        except Exception:
+            pass
 
 
 def delete_quotation_from_cloud(quotation_number: str) -> bool:
@@ -563,21 +585,22 @@ def upload_customer_to_cloud(customer_data: dict, module: str = None) -> bool:
 
 def _upload_customer_body(customer_data: dict, module: str = None) -> bool:
     active_module = _get_module(module)
-    
+
+    payload = {
+        "action": "customer",
+        "name": customer_data.get("name", ""),
+        "company": customer_data.get("company", ""),
+        "phone": customer_data.get("phone", ""),
+        "email": customer_data.get("email", ""),
+        "address": customer_data.get("address", ""),
+        "city": customer_data.get("city", ""),
+        "state": customer_data.get("state", ""),
+        "pincode": customer_data.get("pincode", ""),
+        "gstin": customer_data.get("gstin", "")
+    }
+
     # We only save to Google Sheets for now (since Crystal doesn't use Supabase)
     try:
-        payload = {
-            "action": "customer",
-            "name": customer_data.get("name", ""),
-            "company": customer_data.get("company", ""),
-            "phone": customer_data.get("phone", ""),
-            "email": customer_data.get("email", ""),
-            "address": customer_data.get("address", ""),
-            "city": customer_data.get("city", ""),
-            "state": customer_data.get("state", ""),
-            "pincode": customer_data.get("pincode", ""),
-            "gstin": customer_data.get("gstin", "")
-        }
         res = requests.post(APPS_SCRIPT_URL, json=payload, timeout=15)
         if res.status_code == 200:
             print(f"[cloud] ✅ Customer {payload['name']} saved to GOOGLE SHEETS.")
@@ -585,7 +608,14 @@ def _upload_customer_body(customer_data: dict, module: str = None) -> bool:
             return True
     except Exception as e:
         print(f"[cloud] ❌ GOOGLE SHEETS customer save failed: {e}")
-        
+
+    # Sheet unreachable — keep the push in the offline queue.
+    try:
+        from app.services.sync_queue import enqueue
+        enqueue("customer", payload)
+    except Exception:
+        pass
+
     # Also save to Supabase if it's VMM
     sb = get_supabase()
     if sb and active_module == "VMM":
