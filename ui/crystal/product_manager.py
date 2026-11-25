@@ -675,10 +675,9 @@ class ProductManager(tk.Toplevel):
         
         dialog = tk.Toplevel(self)
         dialog.title("Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}")
-        dialog.geometry("680x480")
         dialog.configure(bg=T.SURFACE)
         dialog.transient(self)
-        dialog.grab_set()
+        dialog.withdraw()
         W.set_window_icon(dialog)
         W.apply_ttk_theme(dialog)
 
@@ -696,8 +695,14 @@ class ProductManager(tk.Toplevel):
         ).pack(anchor="w", pady=(2, 0))
         tk.Frame(dialog, bg=T.ACCENT, height=2).pack(fill="x", padx=22, pady=(12, 0))
 
+        # Reserve the footer before the expanding card so DPI-scaled text
+        # can never squeeze the Save/Cancel buttons.
+        btn_frame = tk.Frame(dialog, bg=T.SURFACE)
+        btn_frame.pack(side="bottom", fill="x", padx=22, pady=(10, 14))
+        tk.Frame(dialog, bg=T.BORDER, height=1).pack(side="bottom", fill="x")
+
         main_frame = tk.Frame(dialog, bg=T.BG)
-        main_frame.pack(fill="both", expand=True, padx=22, pady=14)
+        main_frame.pack(fill="both", expand=True, padx=22, pady=(14, 8))
 
         card = tk.Frame(
             main_frame, bg=T.SURFACE,
@@ -766,9 +771,6 @@ class ProductManager(tk.Toplevel):
         card.grid_columnconfigure(1, weight=1)
         card.grid_columnconfigure(3, weight=1)
 
-        btn_frame = tk.Frame(main_frame, bg=T.BG)
-        btn_frame.pack(fill="x", pady=(12, 0))
-
         def save():
             model = fields["model"].get().strip()
             if not model:
@@ -811,6 +813,22 @@ class ProductManager(tk.Toplevel):
         W.PrimaryButton(
             btn_frame, "Save product", save, padx=18, pady=7,
         ).pack(side="right", padx=(0, 8))
+
+        # Fit the window to its requested content instead of a fixed height.
+        dialog.update_idletasks()
+        width = min(680, dialog.winfo_screenwidth() - 40)
+        height = dialog.winfo_reqheight()
+        height = min(max(480, height),
+                     dialog.winfo_screenheight() - 80)
+        self.update_idletasks()
+        x = self.winfo_rootx() + (self.winfo_width() - width) // 2
+        y = self.winfo_rooty() + max(0, (self.winfo_height() - height) // 3)
+        x = max(10, min(x, dialog.winfo_screenwidth() - width - 10))
+        y = max(10, min(y, dialog.winfo_screenheight() - height - 40))
+        dialog.geometry(f"{width}x{height}+{x}+{y}")
+        dialog.minsize(width, height)
+        dialog.deiconify()
+        dialog.grab_set()
 
 
     def _edit_selected(self):
