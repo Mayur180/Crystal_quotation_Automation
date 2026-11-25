@@ -3,148 +3,186 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from app.services import lead_service as LS
 from ui.crystal import theme as T
+from ui.crystal import widgets as W
 
 class LeadsManager(tk.Toplevel):
     def __init__(self, parent, on_convert=None):
         super().__init__(parent)
         self.title("Customer Leads")
-        self.geometry("1100x650")
+        self.geometry("1100x660")
+        self.minsize(980, 560)
         self.configure(bg=T.BG)
+        W.set_window_icon(self)
         self.transient(parent)
         self.grab_set()
         self._on_convert = on_convert
-        
+
+        W.apply_ttk_theme(self)
         self._build()
         self._refresh()
 
     def _build(self):
-        hdr = tk.Frame(self, bg=T.SURFACE); hdr.pack(fill="x")
-        tk.Label(hdr, text="Customer Leads", bg=T.SURFACE, fg=T.TEXT, font=("Arial", 18, "bold")).pack(side="left", padx=24, pady=20)
-        tk.Button(hdr, text="+ Log New Lead", bg=T.ACCENT, fg="white", font=("Arial", 11, "bold"), relief="flat", padx=15, pady=8, cursor="hand2", command=self._open_add_dialog).pack(side="right", padx=24)
+        header = W.PageHeader(
+            self, title="Customer Leads",
+            subtitle="Enquiries from calls, WhatsApp and email",
+            meta="Loading…", padx=28,
+        )
+        header.pack(fill="x")
+        self.count_label = header.meta_label
 
-        # Table Frame
-        # Table Frame
-        table_frame = tk.Frame(self, bg=T.BG)
-        table_frame.pack(fill="both", expand=True, padx=24, pady=10)
+        toolbar = tk.Frame(self, bg=T.BG)
+        toolbar.pack(fill="x", padx=28, pady=(14, 10))
+        W.PrimaryButton(
+            toolbar, "Log new lead", self._open_add_dialog,
+            icon="+", padx=14, pady=7,
+        ).pack(side="right")
 
-        # Apply premium theme
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        
-        # Dark headers
-        style.configure("Treeview.Heading",
-                        background="#2C3E50",
-                        foreground="white",
-                        font=("Arial", 10, "bold"),
-                        relief="flat",
-                        padding=6)
-        style.map("Treeview.Heading",
-                  background=[("active", "#34495E")],
-                  foreground=[("active", "white")])
-        
-        # Row styling WITH horizontal grid lines
-        style.configure("Treeview",
-                        rowheight=35,
-                        font=("Arial", 10),
-                        background="white",
-                        fieldbackground="white",
-                        borderwidth=1,
-                        relief="solid")
-        
-        # Add horizontal separators (gridlines)
-        style.layout("Treeview", [
-            ('Treeview.treearea', {'sticky': 'nswe'})
-        ])
-        # Set the color of the grid lines
-        style.configure("Treeview", bordercolor="#D5DBE1", lightcolor="#D5DBE1", darkcolor="#D5DBE1")
+        self._build_footer()
 
-        columns = ("date", "customer", "phone", "email", "qty", "source", "notes", "status")
-        self.tree = ttk.Treeview(table_frame, columns=columns, show="headings", selectmode="browse")
-        
-        # Column widths
+        card = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True, padx=28, pady=(0, 12))
+
+        columns = ("date", "customer", "phone", "email",
+                   "qty", "source", "notes", "status")
+        self.tree = ttk.Treeview(
+            card, columns=columns, show="headings",
+            selectmode="browse", height=10,
+        )
+
+        headings = {
+            "date": "Date", "customer": "Customer", "phone": "Phone",
+            "email": "Email", "qty": "Qty", "source": "Source",
+            "notes": "Notes", "status": "Status",
+        }
         widths = {
-            "date": 90, 
-            "customer": 130, 
-            "phone": 110, 
-            "email": 180, 
-            "qty": 50, 
-            "source": 80, 
-            "notes": 220,  # Reduced from 300 to fit Status
-            "status": 80
+            "date": 100, "customer": 150, "phone": 115, "email": 185,
+            "qty": 55, "source": 90, "notes": 240, "status": 90,
         }
         for col in columns:
-            self.tree.heading(col, text=col.title(), anchor="w")
-            self.tree.column(col, width=widths[col], anchor="w", stretch=True)
-        
-        # Zebra striping
-        self.tree.tag_configure("evenrow", background="#F8F9FA")
-        self.tree.tag_configure("oddrow", background="#FFFFFF")
-        
-        vsb = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
+            self.tree.heading(col, text=headings[col],
+                              anchor="e" if col == "qty" else "w")
+            self.tree.column(
+                col, width=widths[col], minwidth=50,
+                anchor="e" if col == "qty" else "w",
+                stretch=(col == "notes"),
+            )
+
+        # Zebra striping keeps wide rows readable
+        self.tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.tree.tag_configure("oddrow", background=T.SURFACE)
+
+        vsb = ttk.Scrollbar(card, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
-        
-        self.tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        self.tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
 
-        # Bottom Action Bar
-        bar = tk.Frame(self, bg=T.SURFACE)
-        bar.pack(fill="x", side="bottom")
-        tk.Frame(bar, bg=T.BORDER, height=1).pack(fill="x")
+        self._empty = W.EmptyState(
+            card, icon="📋", title="Loading leads…",
+            hint="Fetching leads from the Google Sheet.",
+        )
 
-        btn_wrap = tk.Frame(bar, bg=T.SURFACE)
-        btn_wrap.pack(fill="x", padx=24, pady=15)
+        self.tree.bind("<Double-1>", lambda _e: self._convert())
 
-        tk.Button(btn_wrap, text="🗑 Delete", bg="#FFFFFF", fg="#D32F2F", font=("Arial", 10, "bold"), relief="solid", bd=1, padx=15, pady=8, command=self._delete_lead).pack(side="left")
-        tk.Button(btn_wrap, text="Mark as Sent", bg="#FFFFFF", fg=T.TEXT, font=("Arial", 10, "bold"), relief="solid", bd=1, padx=15, pady=8, command=self._mark_sent).pack(side="left", padx=10)
-        
-        # Add the Restore button
-        tk.Button(btn_wrap, text="☁ Restore from Sheet", bg="#0277BD", fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=8, command=self._restore_from_sheet).pack(side="left", padx=10)
-        
-        # Primary Action (Right side)
-        tk.Button(btn_wrap, text="Convert to Quotation →", bg="#C40000", fg="white", font=("Arial", 11, "bold"), relief="flat", padx=20, pady=8, command=self._convert).pack(side="right")
+    def _build_footer(self):
+        bar = tk.Frame(
+            self, bg=T.SURFACE, height=68,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        bar.pack(side="bottom", fill="x")
+        bar.pack_propagate(False)
+
+        left = tk.Frame(bar, bg=T.SURFACE)
+        left.pack(side="left", padx=22, pady=15)
+
+        W.DangerButton(
+            left, "Delete", self._delete_lead, padx=12, pady=7,
+        ).pack(side="left")
+        W.GhostButton(
+            left, "Mark as sent", self._mark_sent, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Restore from sheet", self._restore_from_sheet,
+            padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+
+        right = tk.Frame(bar, bg=T.SURFACE)
+        right.pack(side="right", padx=22, pady=15)
+        W.PrimaryButton(
+            right, "Convert to quotation", self._convert,
+            padx=16, pady=7,
+        ).pack(side="right")
 
     def _refresh(self):
-        # Clear table and show loading
         self.tree.delete(*self.tree.get_children())
-        self.tree.insert("", "end", iid="loading", values=("Loading...", "", "", "", "", "", "", ""))
-        
+        self._show_empty(True, "Loading leads…",
+                         "Fetching leads from the Google Sheet.")
+
         import threading
-        
+
         def fetch_data():
             try:
                 leads = LS.load_leads()
-                # Schedule UI update on main thread
                 self.after(0, lambda: self._update_table(leads))
             except Exception as e:
                 self.after(0, lambda: self._update_table([], str(e)))
 
         threading.Thread(target=fetch_data, daemon=True).start()
 
+    def _show_empty(self, visible, title=None, hint=None):
+        try:
+            if visible:
+                if title:
+                    self._empty.set_text(title, hint)
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+            else:
+                self._empty.place_forget()
+        except Exception:
+            pass
+
     def _update_table(self, leads, error=None):
         self.tree.delete(*self.tree.get_children())
+
         if error:
-            self.tree.insert("", "end", values=(f"Error: {error}", "", "", "", "", "", "", ""))
+            if self.count_label is not None:
+                self.count_label.configure(text="Could not load leads")
+            self._show_empty(
+                True, "Could not load leads",
+                "Check the connection, then use Restore from sheet.",
+            )
             return
-            
-        seen_ids = set()
+
         for idx, lead in enumerate(leads):
             lead_id = lead.get("leadid") or lead.get("id") or ""
-            if not lead_id or lead_id in seen_ids:
+            if not lead_id or lead_id in self.tree.get_children():
                 lead_id = f"row_{idx}_{lead_id}"
-            seen_ids.add(lead_id)
-            
-            # Handle both "qty" and "quantity" keys
+
             qty = lead.get("qty") or lead.get("quantity") or ""
-            
+
             self.tree.insert("", "end", iid=lead_id, values=(
                 lead.get("date", ""), lead.get("customer", ""), lead.get("phone", ""),
                 lead.get("email", ""), qty, lead.get("source", ""),
                 lead.get("notes", ""), lead.get("status", "")
-            ))
+            ), tags=("evenrow" if idx % 2 else "oddrow",))
+
+        count = len(leads)
+        if self.count_label is not None:
+            self.count_label.configure(
+                text=f"{count:,} lead{'s' if count != 1 else ''}"
+            )
+        self._show_empty(
+            not leads, "No leads yet",
+            "Use Log new lead to capture an enquiry.",
+        )
 
     def _mark_sent(self):
         sel = self.tree.selection()
-        if not sel: return
+        if not sel:
+            messagebox.showinfo("Leads", "Select a lead first.", parent=self)
+            return
         try:
             if LS.mark_lead_sent(sel[0]):
                 self._refresh()
@@ -171,14 +209,18 @@ class LeadsManager(tk.Toplevel):
 
     def _delete_lead(self):
         sel = self.tree.selection()
-        if not sel: return
+        if not sel:
+            messagebox.showinfo("Leads", "Select a lead first.", parent=self)
+            return
         if messagebox.askyesno("Delete", "Are you sure you want to permanently delete this lead?", parent=self):
             if LS.delete_lead(sel[0]):
                 self._refresh()
 
     def _convert(self):
         sel = self.tree.selection()
-        if not sel: return
+        if not sel:
+            messagebox.showinfo("Leads", "Select a lead first.", parent=self)
+            return
         lead = next((l for l in LS.load_leads() if (l.get("leadid") or l.get("id")) == sel[0]), None)
         if lead and self._on_convert:
             self.destroy()
@@ -191,47 +233,45 @@ class LeadDialog(tk.Toplevel):
     def __init__(self, parent, on_save=None):
         super().__init__(parent)
         self.title("Log New Lead")
-        self.geometry("600x700")
-        self.configure(bg="#F4F6F8")
+        self.geometry("620x640")
+        self.configure(bg=T.SURFACE)
         self.resizable(False, False)
         self.transient(parent)
         self.grab_set()
+        W.set_window_icon(self)
         self._on_save = on_save
-        
+
         # Center the window on screen
         self.update_idletasks()
-        x = (self.winfo_screenwidth() // 2) - (600 // 2)
-        y = (self.winfo_screenheight() // 2) - (700 // 2)
+        x = (self.winfo_screenwidth() // 2) - (620 // 2)
+        y = (self.winfo_screenheight() // 2) - (640 // 2)
         self.geometry(f"+{x}+{y}")
 
+        W.apply_ttk_theme(self)
         self._build()
 
     def _build(self):
-        # Header
-        header = tk.Frame(self, bg="#FFFFFF", height=70)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-        tk.Label(header, text="Log New Lead", bg="#FFFFFF", fg="#2C3E50", font=("Arial", 18, "bold")).pack(side="left", padx=24, pady=20)
-        tk.Frame(self, bg="#E0E0E0", height=1).pack(fill="x")
+        head = tk.Frame(self, bg=T.SURFACE)
+        head.pack(fill="x", padx=24, pady=(18, 0))
+        tk.Label(head, text="Log new lead", bg=T.SURFACE, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w")
+        tk.Label(head, text="Capture an enquiry so it is not lost.",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL).pack(anchor="w", pady=(2, 0))
+        tk.Frame(self, bg=T.ACCENT, height=2).pack(fill="x", padx=24, pady=(12, 0))
 
-        # Main content area
-        content = tk.Frame(self, bg="#F4F6F8")
-        content.pack(fill="both", expand=True, padx=30, pady=20)
-        content.grid_columnconfigure(1, weight=1)
+        self._build_footer()
 
-        # Helper function to create a field row
-        def add_field(row_idx, label_text, var, widget_type="entry", values=None):
-            tk.Label(content, text=label_text, bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10, "bold"), anchor="w").grid(row=row_idx, column=0, sticky="w", padx=(0, 15), pady=(10, 2))
-            
-            if widget_type == "entry":
-                widget = tk.Entry(content, textvariable=var, font=("Arial", 11), relief="solid", bd=1)
-            elif widget_type == "combobox":
-                widget = ttk.Combobox(content, textvariable=var, values=values, state="readonly", font=("Arial", 11))
-            
-            widget.grid(row=row_idx, column=1, sticky="ew", pady=(10, 2))
-            return widget
+        content = tk.Frame(self, bg=T.BG)
+        content.pack(fill="both", expand=True, padx=24, pady=14)
 
-        # Variables
+        card = tk.Frame(
+            content, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True)
+        card.grid_columnconfigure(1, weight=1)
+
         self._customer_var = tk.StringVar()
         self._company_var = tk.StringVar()
         self._phone_var = tk.StringVar()
@@ -240,35 +280,69 @@ class LeadDialog(tk.Toplevel):
         self._source_var = tk.StringVar(value="Other")
         self._notes_var = tk.StringVar()
 
-        # Fields
-        add_field(0, "Customer Name *", self._customer_var)
-        add_field(1, "Company Name", self._company_var)
+        def add_field(row_idx, label_text, var, widget_type="entry", values=None):
+            tk.Label(
+                card, text=label_text, bg=T.SURFACE, fg=T.TEXT_BODY,
+                font=T.FONT_LABEL, anchor="w",
+            ).grid(row=row_idx, column=0, sticky="w", padx=(20, 14), pady=(11, 0))
+
+            if widget_type == "entry":
+                widget = W.SearchEntry(
+                    card, textvariable=var, placeholder="", show_icon=False,
+                )
+            else:
+                widget = ttk.Combobox(
+                    card, textvariable=var, values=values,
+                    state="readonly", font=T.FONT_BODY,
+                )
+            widget.grid(row=row_idx, column=1, sticky="ew",
+                        padx=(0, 20), pady=(11, 0))
+            return widget
+
+        customer_entry = add_field(0, "Customer name *", self._customer_var)
+        add_field(1, "Company", self._company_var)
         add_field(2, "Phone", self._phone_var)
         add_field(3, "Email", self._email_var)
         add_field(4, "Quantity", self._qty_var)
-        add_field(5, "Source", self._source_var, widget_type="combobox", values=["Gmail", "WhatsApp", "Call", "Website", "Other"])
+        add_field(5, "Source", self._source_var, widget_type="combobox",
+                  values=["Gmail", "WhatsApp", "Call", "Website", "Other"])
 
-        # Notes (larger text area)
-        tk.Label(content, text="Notes (What did they ask for?)", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10, "bold"), anchor="w").grid(row=6, column=0, sticky="nw", padx=(0, 15), pady=(10, 2))
-        notes_frame = tk.Frame(content, bg="#F4F6F8")
-        notes_frame.grid(row=6, column=1, sticky="ew", pady=(10, 2))
-        
-        self._notes_text = tk.Text(notes_frame, height=5, font=("Arial", 11), relief="solid", bd=1)
-        self._notes_text.pack(fill="x")
-        
-        # Notes scrollbar
-        notes_scroll = ttk.Scrollbar(notes_frame, orient="vertical", command=self._notes_text.yview)
+        tk.Label(
+            card, text="Notes", bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_LABEL, anchor="w",
+        ).grid(row=6, column=0, sticky="nw", padx=(20, 14), pady=(11, 0))
+
+        notes_wrap = tk.Frame(card, bg=T.BORDER_HARD)
+        notes_wrap.grid(row=6, column=1, sticky="ew",
+                        padx=(0, 20), pady=(11, 16))
+        notes_inner = tk.Frame(notes_wrap, bg=T.SURFACE)
+        notes_inner.pack(fill="both", expand=True, padx=1, pady=1)
+        self._notes_text = tk.Text(
+            notes_inner, height=5, font=T.FONT_BODY,
+            bg=T.SURFACE, fg=T.TEXT, bd=0, highlightthickness=0,
+            insertbackground=T.TEXT, wrap="word",
+        )
+        self._notes_text.pack(side="left", fill="both", expand=True,
+                              padx=8, pady=6)
+        notes_scroll = ttk.Scrollbar(notes_inner, orient="vertical",
+                                     command=self._notes_text.yview)
         self._notes_text.configure(yscrollcommand=notes_scroll.set)
         notes_scroll.pack(side="right", fill="y")
 
-        # Bottom Action Bar
-        btn_bar = tk.Frame(self, bg="#FFFFFF", height=60)
-        btn_bar.pack(fill="x", side="bottom")
-        btn_bar.pack_propagate(False)
-        tk.Frame(self, bg="#E0E0E0", height=1).pack(fill="x", side="bottom")
+        customer_entry.entry.focus_set()
 
-        tk.Button(btn_bar, text="Save Lead", bg="#C40000", fg="white", font=("Arial", 11, "bold"), relief="flat", cursor="hand2", padx=20, pady=5, command=self._save).pack(side="right", padx=24, pady=10)
-        tk.Button(btn_bar, text="Cancel", bg="#E0E0E0", fg="#333", font=("Arial", 11), relief="flat", cursor="hand2", padx=20, pady=5, command=self.destroy).pack(side="right", padx=(0, 10), pady=10)
+    def _build_footer(self):
+        bar = tk.Frame(self, bg=T.SURFACE, height=64,
+                       highlightbackground=T.BORDER, highlightthickness=1)
+        bar.pack(side="bottom", fill="x")
+        bar.pack_propagate(False)
+
+        W.GhostButton(
+            bar, "Cancel", self.destroy, padx=16, pady=7,
+        ).pack(side="right", padx=(8, 22), pady=13)
+        W.PrimaryButton(
+            bar, "Save lead", self._save, padx=18, pady=7,
+        ).pack(side="right", pady=13)
 
     def _save(self):
         from tkinter import messagebox

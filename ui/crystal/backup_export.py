@@ -13,6 +13,10 @@ import sys
 import subprocess
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
+
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
 
 
 PROJECT_ROOT = os.path.abspath(
@@ -76,24 +80,42 @@ def _open_in_explorer(path):
         return False
 
 
+def _friendly_ts(value):
+    text = "" if value is None else str(value).strip()
+    if not text:
+        return "—"
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d_%H-%M-%S",
+                "%Y-%m-%dT%H:%M:%S", "%Y%m%d_%H%M%S",
+                "%Y-%m-%d %H-%M-%S"):
+        try:
+            return datetime.strptime(text, fmt).strftime("%d-%m-%Y %H:%M")
+        except ValueError:
+            pass
+    try:
+        return datetime.fromisoformat(text.replace("Z", "+00:00")) \
+            .strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return text
+
+
 # ============================================================
 # MAIN WINDOW
 # ============================================================
 
 class BackupExport(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    SOFT = "#F8F9FA"
-    GREEN = "#16804B"
-    GREEN_LIGHT = "#ECF8F1"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    SOFT = T.SURFACE_ALT
+    GREEN = T.SUCCESS
+    GREEN_LIGHT = T.SUCCESS_BG
 
     def __init__(self, parent):
 
@@ -101,8 +123,9 @@ class BackupExport(tk.Toplevel):
 
         self.title("CRYSTAL | Backup / Export")
         self.geometry("1040x700")
-        self.minsize(900, 580)
+        self.minsize(920, 600)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -110,7 +133,7 @@ class BackupExport(tk.Toplevel):
         self.current_tab = "backup"
         self.selected_backup = None
 
-        self._configure_style()
+        W.apply_ttk_theme(self)
         self._build_interface()
         self._switch_tab("backup")
 
@@ -123,87 +146,51 @@ class BackupExport(tk.Toplevel):
 
     # --------------------------------------------------------
 
-    def _configure_style(self):
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-
-        style.configure("BE.Treeview",
-                        background="white", fieldbackground="white",
-                        foreground=self.TEXT, borderwidth=1,
-                        relief="solid", rowheight=28, font=("Arial", 9))
-        style.configure("BE.Treeview.Heading",
-                        background=self.SOFT, foreground=self.TEXT,
-                        font=("Arial", 9, "bold"), relief="flat")
-        style.map("BE.Treeview",
-                  background=[("selected", self.RED_LIGHT)],
-                  foreground=[("selected", self.TEXT)])
-
-    # --------------------------------------------------------
-
     def _build_interface(self):
 
-        # Header
-        header = tk.Frame(self, bg=self.CARD, height=78)
+        header = W.PageHeader(
+            self, title="Backup / Export",
+            subtitle="Snapshots and data exports",
+            padx=28,
+        )
         header.pack(fill="x")
-        header.pack_propagate(False)
 
-        brand = tk.Frame(header, bg=self.CARD)
-        brand.pack(side="left", padx=28)
-
-        tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 22, "bold")).pack(side="left", pady=22)
-        tk.Label(brand, text="  /  Backup / Export",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 11)).pack(side="left", pady=26)
-
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
+        # Footer before the expanding body
+        footer = tk.Frame(self, bg=T.SURFACE, height=64,
+                          highlightbackground=T.BORDER,
+                          highlightthickness=1)
+        footer.pack(side="bottom", fill="x")
+        footer.pack_propagate(False)
+        W.GhostButton(
+            footer, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=13)
 
         # Tabs
-        tab_bar = tk.Frame(self, bg=self.CARD, height=52)
-        tab_bar.pack(fill="x")
-        tab_bar.pack_propagate(False)
-
-        inner = tk.Frame(tab_bar, bg=self.CARD)
-        inner.pack(padx=28, pady=8)
+        tab_bar = tk.Frame(self, bg=self.BG)
+        tab_bar.pack(fill="x", padx=28, pady=(14, 10))
 
         self.tab_buttons = {}
         for key, label in [("backup", "Backup"),
                             ("export", "Export"),
-                            ("backups", "Manage Backups")]:
-            btn = tk.Button(inner, text=label,
-                            command=lambda k=key: self._switch_tab(k),
-                            bg=self.SOFT, fg=self.TEXT,
-                            activebackground="#ECEEF1",
-                            activeforeground=self.TEXT,
-                            relief="solid", bd=1, highlightthickness=0,
-                            font=("Arial", 9, "bold"),
-                            cursor="hand2", padx=14, pady=6)
+                            ("backups", "Manage backups")]:
+            btn = tk.Button(
+                tab_bar, text=label,
+                command=lambda k=key: self._switch_tab(k),
+                bg=T.SURFACE_ALT, fg=T.TEXT_BODY,
+                activebackground=T.SURFACE_HOVER,
+                activeforeground=T.TEXT,
+                relief="flat", bd=0, highlightthickness=1,
+                highlightbackground=T.BORDER,
+                highlightcolor=T.BORDER,
+                font=T.FONT_BODY_B, cursor="hand2",
+                padx=16, pady=7,
+            )
             btn.pack(side="left", padx=(0, 6))
             self.tab_buttons[key] = btn
 
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
-
         # Body
         self.body = tk.Frame(self, bg=self.BG)
-        self.body.pack(fill="both", expand=True, padx=28, pady=18)
-
-        # Footer
-        footer = tk.Frame(self, bg=self.CARD, height=66,
-                          highlightbackground=self.BORDER,
-                          highlightthickness=1)
-        footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
-
-        tk.Button(footer, text="Close", command=self.destroy,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6",
-                  activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  width=14, height=2).pack(side="right", padx=22, pady=14)
+        self.body.pack(fill="both", expand=True, padx=28, pady=(0, 4))
 
     # --------------------------------------------------------
 
@@ -217,13 +204,13 @@ class BackupExport(tk.Toplevel):
 
         for k, btn in self.tab_buttons.items():
             if k == key:
-                btn.configure(bg=self.RED, fg="white",
-                              activebackground=self.RED_DARK,
-                              activeforeground="white")
+                btn.configure(bg=T.ACCENT_SOFT, fg=T.ACCENT,
+                              activebackground=T.ACCENT_SOFT,
+                              activeforeground=T.ACCENT)
             else:
-                btn.configure(bg=self.SOFT, fg=self.TEXT,
-                              activebackground="#ECEEF1",
-                              activeforeground=self.TEXT)
+                btn.configure(bg=T.SURFACE_ALT, fg=T.TEXT_BODY,
+                              activebackground=T.SURFACE_HOVER,
+                              activeforeground=T.TEXT)
 
         if key == "backup":
             self._render_backup_tab()
@@ -239,41 +226,41 @@ class BackupExport(tk.Toplevel):
     def _render_backup_tab(self):
 
         card = self._card()
-        self._card_title(card, "Create a Backup")
+        self._card_title(card, "Create a backup")
 
         tk.Label(card,
-                 text=("Create a zip snapshot of all application data:\n"
-                       "catalog, customers, quotations, terms, company "
-                       "settings, offer counter, and logo.\n\n"
-                       "Backups are stored in:\n"
-                       "output/backups/"),
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 10),
-                 anchor="w", justify="left").pack(anchor="w", pady=(0, 14))
+                 text=("Create a zip snapshot of all application data: catalog, "
+                       "customers, quotations, terms, company settings, offer "
+                       "counter and logo."),
+                 bg=self.CARD, fg=T.TEXT_BODY,
+                 font=T.FONT_SMALL,
+                 anchor="w", justify="left", wraplength=760).pack(
+            anchor="w", pady=(0, 4))
+
+        tk.Label(card,
+                 text="Backups are stored in output/backups/",
+                 bg=self.CARD, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL,
+                 anchor="w").pack(anchor="w", pady=(0, 16))
 
         row = tk.Frame(card, bg=self.CARD)
         row.pack(fill="x", pady=(0, 8))
 
-        tk.Label(row, text="Label (optional)",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold")).pack(anchor="w")
+        tk.Label(row, text="LABEL (OPTIONAL)",
+                 bg=self.CARD, fg=T.TEXT_MUTED,
+                 font=T.FONT_LABEL).pack(anchor="w", pady=(0, 4))
 
         self.label_var = tk.StringVar()
-        tk.Entry(row, textvariable=self.label_var,
-                 bg="white", fg=self.TEXT,
-                 relief="solid", bd=1,
-                 font=("Arial", 10),
-                 insertbackground=self.RED).pack(fill="x", ipady=6, pady=(4, 0))
+        W.SearchEntry(
+            row, textvariable=self.label_var,
+            placeholder="e.g. before rate revision",
+            show_icon=False,
+        ).pack(fill="x")
 
-        tk.Button(card, text="Create Backup Now",
-                  command=self._do_create_backup,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK,
-                  activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 10, "bold"),
-                  cursor="hand2",
-                  padx=18, pady=8).pack(anchor="w", pady=(14, 0))
+        W.PrimaryButton(
+            card, "Create backup now", self._do_create_backup,
+            padx=16, pady=8,
+        ).pack(anchor="w", pady=(16, 0))
 
     def _do_create_backup(self):
 
@@ -304,14 +291,13 @@ class BackupExport(tk.Toplevel):
     def _render_export_tab(self):
 
         card = self._card()
-        self._card_title(card, "Export Data")
+        self._card_title(card, "Export data")
 
         tk.Label(card,
-                 text=("Choose what to export. Files are saved to:\n"
-                       "output/exports/"),
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 10),
-                 anchor="w", justify="left").pack(anchor="w", pady=(0, 16))
+                 text="Choose what to export. Files are saved to output/exports/",
+                 bg=self.CARD, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL,
+                 anchor="w").pack(anchor="w", pady=(0, 14))
 
         options = [
             ("Quotations as CSV",
@@ -333,29 +319,23 @@ class BackupExport(tk.Toplevel):
 
     def _export_row(self, parent, title, subtitle, command):
 
-        row = tk.Frame(parent, bg=self.SOFT,
-                       highlightbackground=self.BORDER,
+        row = tk.Frame(parent, bg=T.SURFACE_ALT,
+                       highlightbackground=T.BORDER,
                        highlightthickness=1)
         row.pack(fill="x", pady=4)
 
-        text = tk.Frame(row, bg=self.SOFT)
+        text = tk.Frame(row, bg=T.SURFACE_ALT)
         text.pack(side="left", fill="x", expand=True, padx=14, pady=10)
 
-        tk.Label(text, text=title, bg=self.SOFT, fg=self.TEXT,
-                 font=("Arial", 10, "bold"), anchor="w").pack(anchor="w")
+        tk.Label(text, text=title, bg=T.SURFACE_ALT, fg=T.TEXT,
+                 font=T.FONT_BODY_B, anchor="w").pack(anchor="w")
 
-        tk.Label(text, text=subtitle, bg=self.SOFT, fg=self.MUTED,
-                 font=("Arial", 9), anchor="w").pack(anchor="w", pady=(2, 0))
+        tk.Label(text, text=subtitle, bg=T.SURFACE_ALT, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL, anchor="w").pack(anchor="w", pady=(2, 0))
 
-        tk.Button(row, text="Export",
-                  command=command,
-                  bg=self.CARD, fg=self.TEXT,
-                  activebackground="#F3F4F6",
-                  activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9, "bold"),
-                  cursor="hand2",
-                  padx=14, pady=6).pack(side="right", padx=12, pady=10)
+        W.GhostButton(
+            row, "Export", command, padx=14, pady=6,
+        ).pack(side="right", padx=12, pady=10)
 
     def _handle_export(self, func, success_label):
 
@@ -402,67 +382,83 @@ class BackupExport(tk.Toplevel):
 
         backups = list_backups() if list_backups else []
 
+        card = tk.Frame(self.body, bg=T.SURFACE,
+                        highlightbackground=T.BORDER,
+                        highlightthickness=1)
+        card.pack(fill="both", expand=True)
+
+        head = tk.Frame(card, bg=T.SURFACE)
+        head.pack(fill="x", padx=16, pady=(12, 6))
+        tk.Label(
+            head, text="Saved backups", bg=T.SURFACE, fg=T.TEXT,
+            font=T.FONT_H3, anchor="w",
+        ).pack(side="left")
+        tk.Label(
+            head, text=f"{len(backups):,} backup(s)", bg=T.SURFACE,
+            fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(side="right")
+
+        actions = tk.Frame(card, bg=T.SURFACE)
+        actions.pack(side="bottom", fill="x", padx=14, pady=(6, 12))
+
+        W.GhostButton(
+            actions, "Open folder", self._open_backup_folder, padx=13, pady=7,
+        ).pack(side="left")
+        self.restore_btn = W.PrimaryButton(
+            actions, "Restore selected", self._do_restore_backup, padx=13, pady=7,
+        )
+        self.restore_btn.pack(side="left", padx=(8, 0))
+        self.delete_btn = W.DangerButton(
+            actions, "Delete selected", self._do_delete_backup, padx=13, pady=7,
+        )
+        self.delete_btn.pack(side="left", padx=(8, 0))
+        self.restore_btn.set_enabled(bool(backups))
+        self.delete_btn.set_enabled(bool(backups))
+
         cols = ("timestamp", "filename", "size")
-        tree = ttk.Treeview(self.body, columns=cols, show="headings",
-                            style="BE.Treeview", height=16)
+        tree = ttk.Treeview(card, columns=cols, show="headings", height=12)
 
-        for c, w in [("timestamp", 220), ("filename", 380), ("size", 120)]:
-            tree.heading(c, text=c.title())
-            tree.column(c, width=w, anchor="w",
+        for c, title, width, anchor in (
+            ("timestamp", "Created", 170, "w"),
+            ("filename", "Backup file", 460, "w"),
+            ("size", "Size", 100, "e"),
+        ):
+            tree.heading(c, text=title, anchor=anchor)
+            tree.column(c, width=width, anchor=anchor,
                         stretch=(c == "filename"))
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
 
-        for ts, path in backups:
+        for i, (ts, path) in enumerate(backups):
             try:
                 size_kb = f"{path.stat().st_size / 1024:.1f} KB"
             except Exception:
                 size_kb = "—"
-            tree.insert("", "end", iid=str(path),
-                        values=(ts, path.name, size_kb))
+            tree.insert(
+                "", "end", iid=str(path),
+                values=(_friendly_ts(ts), path.name, size_kb),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
+            )
 
-        vsb = ttk.Scrollbar(self.body, orient="vertical",
+        vsb = ttk.Scrollbar(card, orient="vertical",
                             command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=(0, 2))
+        tree.pack(side="left", fill="both", expand=True,
+                  padx=2, pady=(0, 2))
+
+        empty = W.EmptyState(
+            card, icon="🗄", title="No backups yet",
+            hint="Create one from the Backup tab.",
+        )
+        if not backups:
+            empty.place(relx=0.5, rely=0.5, anchor="center")
+            empty.lift()
+
+        self.backup_tree = tree
 
         tree.bind("<<TreeviewSelect>>", self._on_backup_select)
         tree.bind("<Double-1>", lambda e: self._do_restore_backup())
-
-        # Actions below
-        actions = tk.Frame(self.body, bg=self.BG)
-        actions.pack(side="bottom", fill="x", pady=(10, 0))
-
-        tk.Button(actions, text="Open Folder",
-                  command=self._open_backup_folder,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6",
-                  activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9, "bold"),
-                  cursor="hand2",
-                  padx=14, pady=6).pack(side="left")
-
-        tk.Button(actions, text="Restore Selected",
-                  command=self._do_restore_backup,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK,
-                  activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 9, "bold"),
-                  cursor="hand2",
-                  padx=14, pady=6).pack(side="left", padx=(8, 0))
-
-        tk.Button(actions, text="Delete Selected",
-                  command=self._do_delete_backup,
-                  bg="white", fg=self.RED,
-                  activebackground=self.RED_LIGHT,
-                  activeforeground=self.RED,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9, "bold"),
-                  cursor="hand2",
-                  padx=14, pady=6).pack(side="left", padx=(8, 0))
-
-        self.backup_tree = tree
 
         # ---- Keyboard shortcuts on the backup tree ----
         try:
@@ -479,6 +475,11 @@ class BackupExport(tk.Toplevel):
     def _on_backup_select(self, _event=None):
         sel = self.backup_tree.selection()
         self.selected_backup = sel[0] if sel else None
+        try:
+            self.restore_btn.set_enabled(bool(sel))
+            self.delete_btn.set_enabled(bool(sel))
+        except Exception:
+            pass
 
     def _do_restore_backup(self):
 
@@ -545,7 +546,7 @@ class BackupExport(tk.Toplevel):
         outer = tk.Frame(self.body, bg=self.CARD,
                          highlightbackground=self.BORDER,
                          highlightthickness=1)
-        outer.pack(fill="both", expand=True)
+        outer.pack(fill="x")
         inner = tk.Frame(outer, bg=self.CARD)
         inner.pack(fill="both", expand=True, padx=24, pady=22)
         return inner
@@ -553,7 +554,7 @@ class BackupExport(tk.Toplevel):
     def _card_title(self, parent, title):
         tk.Label(parent, text=title.upper(),
                  bg=self.CARD, fg=self.RED,
-                 font=("Arial", 8, "bold")).pack(anchor="w", pady=(0, 10))
+                 font=T.FONT_LABEL).pack(anchor="w", pady=(0, 8))
 
 
 # ============================================================

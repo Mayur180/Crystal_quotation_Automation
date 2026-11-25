@@ -9,6 +9,10 @@ import os
 import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
+
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
 
 
 PROJECT_ROOT = os.path.abspath(
@@ -33,23 +37,42 @@ def _text(v):
     return "" if v is None else str(v).strip()
 
 
+def _friendly_ts(value):
+    text = _text(value)
+    if not text:
+        return "—"
+    try:
+        dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        return dt.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return text
+
+
+def _friendly_event(value):
+    text = _text(value)
+    if not text:
+        return "—"
+    return text.replace("_", " ").strip().capitalize()
+
+
 class ActivityLog(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_LIGHT = "#FFF3F3"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_LIGHT = T.ACCENT_SOFT
 
     def __init__(self, parent):
         super().__init__(parent)
 
         self.title("CRYSTAL | Activity Log")
-        self.geometry("980x640")
-        self.minsize(820, 520)
+        self.geometry("1000x660")
+        self.minsize(860, 540)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -57,7 +80,7 @@ class ActivityLog(tk.Toplevel):
         self.search_var = tk.StringVar()
         self.event_var = tk.StringVar(value="All")
 
-        self._configure_style()
+        W.apply_ttk_theme(self)
         self._build_interface()
         self._reload()
 
@@ -67,91 +90,61 @@ class ActivityLog(tk.Toplevel):
         except Exception:
             pass
 
-    def _configure_style(self):
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except Exception:
-            pass
-        style.configure(
-            "Activity.Treeview",
-            background="white",
-            fieldbackground="white",
-            foreground=self.TEXT,
-            rowheight=26,
-            borderwidth=0,
-            font=("Arial", 9),
-        )
-        style.configure(
-            "Activity.Treeview.Heading",
-            background="#F0F1F3",
-            foreground=self.TEXT,
-            relief="flat",
-            font=("Arial", 9, "bold"),
-        )
-
     def _build_interface(self):
-        # ---- header ----
-        head = tk.Frame(self, bg=self.BG)
-        head.pack(fill="x", padx=28, pady=(18, 8))
-        tk.Label(
-            head, text="Activity Log",
-            bg=self.BG, fg=self.TEXT,
-            font=("Arial", 14, "bold"),
-        ).pack(side="left")
-        tk.Label(
-            head, text="Audit trail of recent actions",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 9),
-        ).pack(side="left", padx=(10, 0), pady=(6, 0))
-
-        self.count_label = tk.Label(
-            head, text="", bg=self.BG, fg=self.MUTED,
-            font=("Arial", 9),
+        header = W.PageHeader(
+            self, title="Activity Log",
+            subtitle="Audit trail of recent actions",
+            meta="—", padx=28,
         )
-        self.count_label.pack(side="right")
+        header.pack(fill="x")
+        self.count_label = header.meta_label
 
-        # ---- search bar ----
-        bar = tk.Frame(self, bg=self.BG)
-        bar.pack(fill="x", padx=28, pady=(0, 8))
+        # ---- filter bar ----
+        bar_card = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        bar_card.pack(fill="x", padx=28, pady=(14, 10))
+        bar = tk.Frame(bar_card, bg=T.SURFACE)
+        bar.pack(fill="x", padx=14, pady=10)
 
-        tk.Label(
-            bar, text="Search",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 8, "bold"),
-        ).pack(side="left", padx=(0, 8))
-
-        entry = tk.Entry(
+        search = W.SearchEntry(
             bar, textvariable=self.search_var,
-            bg="white", fg=self.TEXT,
-            relief="solid", bd=1,
-            font=("Arial", 10),
-            insertbackground=self.RED,
+            placeholder="Search details, quote no. or user…",
         )
-        entry.pack(side="left", fill="x", expand=True, ipady=6)
-        entry.bind("<KeyRelease>", lambda _e: self._reload())
+        search.pack(side="left", fill="x", expand=True)
+        search.entry.bind("<KeyRelease>", lambda _e: self._reload())
 
         tk.Label(
-            bar, text="Event",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 8, "bold"),
+            bar, text="EVENT", bg=T.SURFACE, fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL,
         ).pack(side="left", padx=(12, 6))
 
         cb = ttk.Combobox(
             bar, textvariable=self.event_var,
             values=("All", "created", "status_changed", "deleted"),
-            state="readonly", width=14, font=("Arial", 9),
+            state="readonly", width=14, font=T.FONT_SMALL,
         )
-        cb.pack(side="left", ipady=3)
+        cb.pack(side="left", ipady=4)
         cb.bind("<<ComboboxSelected>>", lambda _e: self._reload())
 
-        tk.Button(
-            bar, text="Clear Filter", command=self._clear_search,
-            bg="white", fg=self.MUTED,
-            activebackground="#F3F4F6", activeforeground=self.TEXT,
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2", padx=12, pady=4,
-        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            bar, "Clear", self._clear_search, padx=12, pady=7,
+        ).pack(side="left", padx=(10, 0))
+
+        # ---- action bar (bottom first) ----
+        abar = tk.Frame(
+            self, bg=T.SURFACE, height=64,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        abar.pack(side="bottom", fill="x")
+        abar.pack_propagate(False)
+        W.DangerButton(
+            abar, "Clear log", self._clear_log, padx=14, pady=7,
+        ).pack(side="left", padx=22, pady=13)
+        W.GhostButton(
+            abar, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=13)
 
         # ---- table ----
         card = tk.Frame(
@@ -159,12 +152,11 @@ class ActivityLog(tk.Toplevel):
             highlightbackground=self.BORDER,
             highlightthickness=1,
         )
-        card.pack(fill="both", expand=True, padx=28, pady=(0, 12))
+        card.pack(fill="both", expand=True, padx=28, pady=(0, 14))
 
         cols = ("timestamp", "event", "number", "detail", "user")
         self.tree = ttk.Treeview(
-            card, columns=cols, show="headings",
-            style="Activity.Treeview", height=18,
+            card, columns=cols, show="headings", height=12,
         )
 
         headings = {
@@ -175,58 +167,40 @@ class ActivityLog(tk.Toplevel):
             "user": "User",
         }
         widths = {
-            "timestamp": 160,
-            "event": 130,
-            "number": 200,
-            "detail": 340,
-            "user": 90,
+            "timestamp": 150,
+            "event": 140,
+            "number": 180,
+            "detail": 380,
+            "user": 100,
+        }
+        anchors = {
+            "timestamp": "w",
+            "event": "w",
+            "number": "w",
+            "detail": "w",
+            "user": "w",
         }
 
         for c in cols:
-            self.tree.heading(c, text=headings[c])
+            self.tree.heading(c, text=headings[c], anchor=anchors[c])
             self.tree.column(
-                c, width=widths[c], anchor="w",
+                c, width=widths[c], anchor=anchors[c],
                 stretch=(c == "detail"),
             )
+        self.tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.tree.tag_configure("oddrow", background=T.SURFACE)
 
         vsb = ttk.Scrollbar(card, orient="vertical",
                             command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
         self.tree.pack(side="left", fill="both", expand=True,
-                       padx=14, pady=14)
-        vsb.pack(side="right", fill="y", pady=14)
+                       padx=2, pady=2)
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
 
-        # ---- action bar ----
-        abar = tk.Frame(
-            self, bg=self.CARD, height=60,
-            highlightbackground=self.BORDER, highlightthickness=1,
+        self._empty = W.EmptyState(
+            card, icon="🕘", title="No activity yet",
+            hint="Actions appear here as quotations are created or changed.",
         )
-        abar.pack(side="bottom", fill="x")
-        abar.pack_propagate(False)
-
-        left = tk.Frame(abar, bg=self.CARD)
-        left.pack(side="left", padx=22)
-
-        tk.Button(
-            left, text="Clear Log", command=self._clear_log,
-            bg="white", fg=self.RED,
-            activebackground=self.RED_LIGHT, activeforeground=self.RED,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
-        ).pack(side="left", pady=14)
-
-        right = tk.Frame(abar, bg=self.CARD)
-        right.pack(side="right", padx=22)
-
-        tk.Button(
-            right, text="Close", command=self.destroy,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6", activeforeground=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
-        ).pack(side="right", pady=14)
 
     def _clear_search(self):
         self.search_var.set("")
@@ -257,7 +231,8 @@ class ActivityLog(tk.Toplevel):
     def _reload(self):
         if list_events is None:
             self._fill_rows([])
-            self.count_label.configure(text="Service unavailable")
+            if self.count_label is not None:
+                self.count_label.configure(text="Service unavailable")
             return
 
         search = self.search_var.get().strip()
@@ -273,20 +248,33 @@ class ActivityLog(tk.Toplevel):
             records = []
 
         self._fill_rows(records)
-        self.count_label.configure(text=f"{len(records)} event(s)")
+        if self.count_label is not None:
+            self.count_label.configure(text=f"{len(records):,} event(s)")
+
+    def _set_empty(self, visible):
+        try:
+            if visible:
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+            else:
+                self._empty.place_forget()
+        except Exception:
+            pass
 
     def _fill_rows(self, records):
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        for r in records:
+        for i, r in enumerate(records):
             self.tree.insert(
                 "", "end",
                 values=(
-                    _text(r.get("timestamp")),
-                    _text(r.get("event")),
-                    _text(r.get("quotation_number")),
-                    _text(r.get("detail")),
-                    _text(r.get("user")),
+                    _friendly_ts(r.get("timestamp")),
+                    _friendly_event(r.get("event")),
+                    _text(r.get("quotation_number")) or "—",
+                    _text(r.get("detail")) or "—",
+                    _text(r.get("user")) or "—",
                 ),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
             )
+        self._set_empty(not records)

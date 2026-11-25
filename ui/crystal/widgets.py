@@ -1,5 +1,7 @@
 """CRYSTAL — Widget Library V2 (polished)."""
+import sys
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
 from ui.crystal import theme as T
 
@@ -76,6 +78,7 @@ class _BaseButton(tk.Frame):
                            highlightcolor=border,
                            highlightthickness=1)
         self._bg        = bg
+        self._fg        = fg
         self._hover_bg  = hover_bg
         self._press_bg  = press_bg or hover_bg
         self._command   = command
@@ -128,6 +131,14 @@ class _BaseButton(tk.Frame):
         self._label.configure(bg=color)
         if self._icon:
             self._icon.configure(bg=color)
+
+    def set_enabled(self, enabled):
+        self._enabled = bool(enabled)
+        self.configure(cursor="hand2" if enabled else "arrow")
+        self._paint(self._bg if enabled else T.NEUTRAL_BG)
+        self._label.configure(fg=self._fg if enabled else T.TEXT_MUTED)
+        if self._icon:
+            self._icon.configure(fg=self._fg if enabled else T.TEXT_MUTED)
 
 
 class PrimaryButton(_BaseButton):
@@ -388,6 +399,207 @@ class TopBar(tk.Frame):
 
         if on_logout:
             chip.bind("<Button-1>", lambda e: on_logout())
+
+
+# ═══════════════════════════════════════════════════════════
+# TTK THEME — one look for every table / combo / scrollbar
+# ═══════════════════════════════════════════════════════════
+
+def set_window_icon(window):
+    """Give any Toplevel the CRYSTAL app icon (no-op if missing)."""
+    try:
+        base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
+        ico = base / "assets" / "logo" / "LOGO.ico"
+        if ico.is_file():
+            window.iconbitmap(default=str(ico))
+    except Exception:
+        pass
+
+
+def apply_ttk_theme(root):
+    """Apply the CRYSTAL table theme. Safe to call on every window."""
+    st = ttk.Style(root)
+    try:
+        st.theme_use("clam")
+    except tk.TclError:
+        return
+
+    st.layout("Treeview", [("Treeview.treearea", {"sticky": "nswe"})])
+    st.configure(
+        "Treeview",
+        background=T.SURFACE, fieldbackground=T.SURFACE,
+        foreground=T.TEXT, font=T.FONT_SMALL,
+        rowheight=32, borderwidth=0, relief="flat",
+    )
+    st.map(
+        "Treeview",
+        background=[("selected", T.ACCENT_SOFT)],
+        foreground=[("selected", T.TEXT)],
+    )
+    st.configure(
+        "Treeview.Heading",
+        background=T.SURFACE_ALT, foreground=T.TEXT_BODY,
+        font=T.FONT_LABEL, relief="flat",
+        borderwidth=0, padding=(10, 9),
+    )
+    st.map("Treeview.Heading", background=[("active", T.SURFACE_HOVER)])
+
+    st.configure(
+        "TCombobox",
+        fieldbackground=T.SURFACE, background=T.SURFACE,
+        foreground=T.TEXT, arrowcolor=T.TEXT_MUTED,
+        bordercolor=T.BORDER_HARD, lightcolor=T.BORDER_HARD,
+        darkcolor=T.BORDER_HARD, padding=5,
+    )
+    st.map(
+        "TCombobox",
+        fieldbackground=[("readonly", T.SURFACE)],
+        bordercolor=[("focus", T.FOCUS)],
+        selectbackground=[("readonly", T.SURFACE)],
+        selectforeground=[("readonly", T.TEXT)],
+    )
+    st.configure("Vertical.TScrollbar", width=10,
+                 background=T.BORDER, troughcolor=T.SURFACE_ALT,
+                 bordercolor=T.SURFACE, arrowcolor=T.TEXT_MUTED)
+    st.configure("Horizontal.TScrollbar", width=10,
+                 background=T.BORDER, troughcolor=T.SURFACE_ALT,
+                 bordercolor=T.SURFACE, arrowcolor=T.TEXT_MUTED)
+
+
+# ═══════════════════════════════════════════════════════════
+# SEARCH BOX — placeholder + focus ring, no chunky border
+# ═══════════════════════════════════════════════════════════
+
+class SearchEntry(tk.Frame):
+    def __init__(self, parent, *, textvariable=None, width=34,
+                 placeholder="Search…", on_submit=None, bg=T.SURFACE,
+                 show_icon=True):
+        super().__init__(parent, bg=T.BORDER_HARD)
+
+        self._bg = bg
+        self._placeholder = placeholder
+        self._showing_placeholder = False
+
+        inner = tk.Frame(self, bg=bg)
+        inner.pack(fill="both", expand=True, padx=1, pady=1)
+
+        if show_icon:
+            tk.Label(inner, text="🔍", bg=bg, fg=T.TEXT_FAINT,
+                     font=T.FONT_TINY).pack(side="left", padx=(10, 2))
+
+        self.var = textvariable if textvariable is not None else tk.StringVar()
+        self.entry = tk.Entry(
+            inner, textvariable=self.var, width=width,
+            bg=bg, fg=T.TEXT, font=T.FONT_BODY, bd=0,
+            highlightthickness=0, insertbackground=T.TEXT,
+        )
+        self.entry.pack(side="left", fill="both", expand=True,
+                        padx=(0 if show_icon else 10, 10), ipady=8)
+
+        self._hint = None
+        if placeholder:
+            self._hint = tk.Label(self.entry, text=placeholder, bg=bg,
+                                  fg=T.TEXT_FAINT, font=T.FONT_BODY,
+                                  cursor="xterm")
+            self._hint.bind("<Button-1>", lambda e: self.entry.focus_set())
+
+        def _hide(_e=None):
+            if self._hint is not None:
+                self._hint.place_forget()
+
+        def _maybe_show(*_a):
+            if self._hint is not None and not self.var.get():
+                self._hint.place(x=1, rely=0.5, anchor="w")
+
+        self.entry.bind("<FocusIn>", self._focus_in)
+        self.entry.bind("<FocusOut>", self._focus_out)
+        self.entry.bind("<KeyRelease>", _maybe_show)
+        self._hide_hint = _hide
+        self._maybe_show = _maybe_show
+        if on_submit:
+            self.entry.bind("<Return>", lambda e: on_submit())
+        try:
+            self.var.trace_add(
+                "write",
+                lambda *_: _hide() if self.var.get() else None,
+            )
+        except Exception:
+            pass
+        _maybe_show()
+
+    def _focus_in(self, _e=None):
+        self.configure(bg=T.FOCUS)
+        self._hide_hint()
+
+    def _focus_out(self, _e=None):
+        self.configure(bg=T.BORDER_HARD)
+        self._maybe_show()
+
+    def get(self):
+        return self.var.get()
+
+    def clear(self):
+        self.entry.delete(0, "end")
+        self._maybe_show()
+        self.configure(bg=T.BORDER_HARD)
+
+
+# ═══════════════════════════════════════════════════════════
+# PAGE HEADER — brand + breadcrumb + right-side meta
+# ═══════════════════════════════════════════════════════════
+
+class PageHeader(tk.Frame):
+    def __init__(self, parent, *, title, subtitle=None, meta=None,
+                 padx=24, bg=T.BG):
+        super().__init__(parent, bg=bg)
+
+        row = tk.Frame(self, bg=bg)
+        row.pack(fill="x", padx=padx, pady=(18, 0))
+
+        tk.Label(row, text="CRYSTAL", bg=bg, fg=T.ACCENT,
+                 font=(T.FONT_FAMILY, 15, "bold")).pack(side="left")
+        tk.Label(row, text="  /  ", bg=bg, fg=T.TEXT_FAINT,
+                 font=T.FONT_BODY).pack(side="left")
+        tk.Label(row, text=title, bg=bg, fg=T.TEXT,
+                 font=T.FONT_H2).pack(side="left")
+        self.meta_label = None
+        if meta:
+            self.meta_label = tk.Label(row, text=meta, bg=bg, fg=T.TEXT_MUTED,
+                                       font=T.FONT_SMALL)
+            self.meta_label.pack(side="right")
+        if subtitle:
+            tk.Label(row, text=subtitle, bg=bg, fg=T.TEXT_MUTED,
+                     font=T.FONT_SMALL).pack(side="left", padx=(12, 0), pady=(2, 0))
+
+        tk.Frame(self, bg=T.ACCENT, height=2).pack(
+            fill="x", padx=padx, pady=(14, 0))
+
+
+# ═══════════════════════════════════════════════════════════
+# EMPTY STATE — for tables with no rows
+# ═══════════════════════════════════════════════════════════
+
+class EmptyState(tk.Frame):
+    def __init__(self, parent, *, title="Nothing here yet",
+                 hint=None, icon="🗂", bg=T.SURFACE):
+        super().__init__(parent, bg=bg)
+        tk.Label(self, text=icon, bg=bg, fg=T.TEXT_FAINT,
+                 font=("Segoe UI Emoji", 24)).pack(pady=(0, 8))
+        self._title = tk.Label(self, text=title, bg=bg, fg=T.TEXT_BODY,
+                               font=T.FONT_BODY_B)
+        self._title.pack()
+        self._hint = tk.Label(self, text=hint or "", bg=bg, fg=T.TEXT_MUTED,
+                              font=T.FONT_SMALL)
+        if hint:
+            self._hint.pack(pady=(4, 0))
+
+    def set_text(self, title, hint=None):
+        self._title.configure(text=title)
+        self._hint.configure(text=hint or "")
+        if hint:
+            self._hint.pack(pady=(4, 0))
+        else:
+            self._hint.pack_forget()
 
 
 # ═══════════════════════════════════════════════════════════

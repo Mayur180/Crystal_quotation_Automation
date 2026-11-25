@@ -13,6 +13,9 @@ import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
 
 PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -37,21 +40,37 @@ except Exception:
     customer_count = None
 
 
+def _friendly_ts(value):
+    text = str(value or "").strip()
+    if not text:
+        return "—"
+    try:
+        from datetime import datetime
+        for fmt in ("%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(text[:19], fmt).strftime("%d-%m-%Y %H:%M")
+            except ValueError:
+                continue
+    except Exception:
+        pass
+    return text[:16].replace("T", " ")
+
+
 # ============================================================
 # EDIT DIALOG
 # ============================================================
 
 class CustomerEditDialog(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    SOFT = "#F8F9FA"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    SOFT = T.SURFACE_ALT
 
     def __init__(self, parent, customer=None):
         super().__init__(parent)
@@ -59,12 +78,14 @@ class CustomerEditDialog(tk.Toplevel):
         self.result = None
 
         self.title("Edit Customer" if customer else "New Customer")
-        self.geometry("620x780")
+        self.geometry("620x700")
         self.minsize(500, 480)
-        self.configure(bg=self.BG)
+        self.configure(bg=T.SURFACE)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
+        W.apply_ttk_theme(self)
 
         self.customer = customer or {}
         self.customer_id = self.customer.get("id")
@@ -86,17 +107,31 @@ class CustomerEditDialog(tk.Toplevel):
             pass
 
     def _build_interface(self):
-        header = tk.Frame(self, bg=self.CARD, height=68)
-        header.pack(fill="x")
-        header.pack_propagate(False)
+        header = tk.Frame(self, bg=T.SURFACE)
+        header.pack(fill="x", padx=24, pady=(18, 0))
 
         tk.Label(header,
-                 text=("Edit Customer" if self.customer_id else "New Customer"),
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 15, "bold")).pack(anchor="w", padx=24,
-                                                  pady=(18, 0))
+                 text=("Edit customer" if self.customer_id else "New customer"),
+                 bg=T.SURFACE, fg=T.TEXT,
+                 font=T.FONT_H2).pack(anchor="w")
+        tk.Label(header,
+                 text="Billing and contact details used on quotations.",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_SMALL).pack(anchor="w", pady=(2, 0))
+        tk.Frame(self, bg=T.ACCENT, height=2).pack(fill="x", padx=24, pady=(12, 0))
 
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
+        footer = tk.Frame(self, bg=T.SURFACE, height=64,
+                          highlightbackground=T.BORDER,
+                          highlightthickness=1)
+        footer.pack(side="bottom", fill="x")
+        footer.pack_propagate(False)
+
+        W.GhostButton(
+            footer, "Cancel", self._cancel, padx=16, pady=7,
+        ).pack(side="right", padx=(8, 22), pady=13)
+        W.PrimaryButton(
+            footer, "Save customer", self._save, padx=18, pady=7,
+        ).pack(side="right", pady=13)
 
         # Scrollable container
         outer = tk.Frame(self, bg=self.BG)
@@ -159,7 +194,7 @@ class CustomerEditDialog(tk.Toplevel):
         fields = [
             ("Name",             "name",             False),
             ("Company",          "company",          False),
-            ("Contact Person",   "contact_person",   False),
+            ("Contact person",   "contact_person",   False),
             ("Phone",            "phone",            False),
             ("Email",            "email",            False),
             ("GSTIN",            "gstin",            False),
@@ -174,46 +209,29 @@ class CustomerEditDialog(tk.Toplevel):
             box = tk.Frame(inner, bg=self.CARD)
             box.pack(fill="x", pady=5)
 
-            tk.Label(box, text=label, bg=self.CARD, fg=self.TEXT,
-                     font=("Arial", 9, "bold"), width=16,
-                     anchor="w").pack(side="left", anchor="n")
+            tk.Label(box, text=label, bg=T.SURFACE, fg=T.TEXT_BODY,
+                     font=T.FONT_LABEL, width=16,
+                     anchor="w").pack(side="left", anchor="n", pady=(8, 0))
 
             self.vars[key] = tk.StringVar(value=self.customer.get(key, "") or "")
 
             if multiline:
-                w = tk.Text(box, height=3, bg="white", fg=self.TEXT,
-                            relief="solid", bd=1, font=("Arial", 10),
-                            insertbackground=self.RED, wrap="word")
-                w.pack(side="left", fill="x", expand=True, ipady=4)
+                wrap = tk.Frame(box, bg=T.BORDER_HARD)
+                wrap.pack(side="left", fill="x", expand=True)
+                inner_wrap = tk.Frame(wrap, bg=T.SURFACE)
+                inner_wrap.pack(fill="both", expand=True, padx=1, pady=1)
+                w = tk.Text(inner_wrap, height=3, bg=T.SURFACE, fg=T.TEXT,
+                            bd=0, highlightthickness=0, font=T.FONT_BODY,
+                            insertbackground=T.TEXT, wrap="word")
+                w.pack(side="left", fill="both", expand=True,
+                       padx=8, pady=6)
                 w.insert("1.0", self.vars[key].get())
                 self.vars[key + "_widget"] = w
             else:
-                e = tk.Entry(box, textvariable=self.vars[key],
-                             bg="white", fg=self.TEXT,
-                             relief="solid", bd=1,
-                             font=("Arial", 10),
-                             insertbackground=self.RED)
-                e.pack(side="left", fill="x", expand=True, ipady=6)
-
-        footer = tk.Frame(self, bg="white", height=64,
-                          highlightbackground=self.BORDER,
-                          highlightthickness=1)
-        footer.pack(side="bottom", fill="x")
-        footer.pack_propagate(False)
-
-        tk.Button(footer, text="Cancel", command=self._cancel,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6", activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  width=14, height=2).pack(side="right", padx=(8, 22), pady=13)
-
-        tk.Button(footer, text="Save Customer", command=self._save,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK, activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 10, "bold"), cursor="hand2",
-                  width=18, height=2).pack(side="right", pady=13)
+                W.SearchEntry(
+                    box, textvariable=self.vars[key],
+                    placeholder="", show_icon=False,
+                ).pack(side="left", fill="x", expand=True)
 
     def _collect(self):
         data = {}
@@ -264,25 +282,26 @@ class CustomerEditDialog(tk.Toplevel):
 
 class CustomerDatabase(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    GREEN = "#16804B"
-    SOFT = "#F8F9FA"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    GREEN = T.SUCCESS
+    SOFT = T.SURFACE_ALT
 
     def __init__(self, parent):
         super().__init__(parent)
 
         self.title("CRYSTAL | Customer Database")
-        self.geometry("1100x720")
-        self.minsize(940, 600)
+        self.geometry("1180x720")
+        self.minsize(1000, 600)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -291,7 +310,7 @@ class CustomerDatabase(tk.Toplevel):
         self.selected_id = None
         self._import_queue = queue.Queue()
 
-        self._configure_style()
+        W.apply_ttk_theme(self)
         self._build_interface()
         self._reload()
 
@@ -310,61 +329,39 @@ class CustomerDatabase(tk.Toplevel):
         except Exception:
             pass
 
-    def _configure_style(self):
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-
-        style.configure("Customer.Treeview",
-                        background="white", fieldbackground="white",
-                        foreground=self.TEXT, borderwidth=1,
-                        relief="solid", rowheight=30, font=("Arial", 9))
-        style.configure("Customer.Treeview.Heading",
-                        background=self.SOFT, foreground=self.TEXT,
-                        font=("Arial", 9, "bold"), relief="flat")
-        style.map("Customer.Treeview",
-                  background=[("selected", self.RED_LIGHT)],
-                  foreground=[("selected", self.TEXT)])
-
     def _build_interface(self):
-        # Header
-        header = tk.Frame(self, bg=self.CARD, height=78)
+        header = W.PageHeader(
+            self, title="Customer Database",
+            subtitle="Customer and company records",
+            meta="Loading…", padx=28,
+        )
         header.pack(fill="x")
-        header.pack_propagate(False)
+        self.count_label = header.meta_label
 
-        brand = tk.Frame(header, bg=self.CARD)
-        brand.pack(side="left", padx=28)
+        toolbar = tk.Frame(self, bg=self.BG)
+        toolbar.pack(fill="x", padx=28, pady=(14, 10))
 
-        tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 22, "bold")).pack(side="left", pady=22)
-        tk.Label(brand, text="  /  Customer Database",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 11)).pack(side="left", pady=26)
+        actions = tk.Frame(toolbar, bg=T.BG)
+        actions.pack(side="right")
+        W.PrimaryButton(
+            actions, "New quotation",
+            self._open_quotation_for_selected, padx=14, pady=7,
+        ).pack(side="right")
+        W.GhostButton(
+            actions, "New proforma invoice",
+            lambda: self._open_quotation_for_selected("proforma"),
+            padx=12, pady=7,
+        ).pack(side="right", padx=(0, 8))
 
-        right = tk.Frame(header, bg=self.CARD)
-        right.pack(side="right", padx=28)
+        search = W.SearchEntry(
+            toolbar, textvariable=self.search_var, width=30,
+            placeholder="Search name, company, phone or email…",
+            bg=self.CARD,
+        )
+        search.pack(side="left", fill="x", expand=True, padx=(0, 10))
+        search.entry.bind("<KeyRelease>", lambda e: self._reload(), add="+")
 
-        self.count_label = tk.Label(right, text="", bg=self.CARD,
-                                    fg=self.MUTED, font=("Arial", 9))
-        self.count_label.pack(anchor="e", pady=26)
-
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
-
-        # Search
-        bar = tk.Frame(self, bg=self.BG)
-        bar.pack(fill="x", padx=28, pady=(18, 8))
-
-        tk.Label(bar, text="Search", bg=self.BG, fg=self.MUTED,
-                 font=("Arial", 8, "bold")).pack(side="left", padx=(0, 8))
-
-        entry = tk.Entry(bar, textvariable=self.search_var,
-                         bg="white", fg=self.TEXT,
-                         relief="solid", bd=1,
-                         font=("Arial", 10), insertbackground=self.RED)
-        entry.pack(side="left", fill="x", expand=True, ipady=6)
-        entry.bind("<KeyRelease>", lambda e: self._reload())
+        self._build_footer()
 
         # Table
         card = tk.Frame(self, bg=self.CARD,
@@ -374,18 +371,18 @@ class CustomerDatabase(tk.Toplevel):
 
         cols = ("name", "company", "phone", "email", "last_used")
         self.tree = ttk.Treeview(card, columns=cols, show="headings",
-                                 style="Customer.Treeview", height=14)
+                                 height=10)
 
         headings = {
             "name": "Name",
             "company": "Company",
             "phone": "Phone",
             "email": "Email",
-            "last_used": "Last Used",
+            "last_used": "Last used",
         }
         widths = {
-            "name": 180, "company": 220, "phone": 130,
-            "email": 220, "last_used": 130,
+            "name": 220, "company": 260, "phone": 130,
+            "email": 240, "last_used": 150,
         }
 
         for c in cols:
@@ -393,11 +390,19 @@ class CustomerDatabase(tk.Toplevel):
             self.tree.column(c, width=widths[c], anchor="w",
                              stretch=(c in ("company", "email")))
 
+        self.tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.tree.tag_configure("oddrow", background=T.SURFACE)
+
         vsb = ttk.Scrollbar(card, orient="vertical",
                             command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
-        self.tree.pack(side="left", fill="both", expand=True, padx=14, pady=14)
-        vsb.pack(side="right", fill="y", pady=14)
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        self.tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
+
+        self._empty = W.EmptyState(
+            card, icon="👥", title="No customers found",
+            hint="Adjust the search, or add a new customer.",
+        )
 
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.tree.bind("<Double-1>", lambda e: self._edit())
@@ -447,57 +452,37 @@ class CustomerDatabase(tk.Toplevel):
         except Exception:
             pass
 
-        # Action bar
-        bar = tk.Frame(self, bg=self.CARD, height=70,
+    def _build_footer(self):
+        bar = tk.Frame(self, bg=self.CARD, height=68,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
         bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
-        left.pack(side="left", padx=22)
+        left.pack(side="left", padx=22, pady=15)
 
-        self._btn(left, "+  New Customer", self._new, primary=True).pack(
-            side="left", pady=14)
-        self._btn(left, "⬆ Import Excel…", self._import_excel).pack(
-            side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Edit", self._edit).pack(side="left",
-                                                  padx=(8, 0), pady=14)
-        self._btn(left, "📋 View History", self._view_history).pack(
-            side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Delete", self._delete, danger=True).pack(
-            side="left", padx=(8, 0), pady=14)
+        W.PrimaryButton(
+            left, "New customer", self._new, icon="+", padx=14, pady=7,
+        ).pack(side="left")
+        W.GhostButton(
+            left, "Edit", self._edit, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "View history", self._view_history, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Import Excel…", self._import_excel, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.DangerButton(
+            left, "Delete", self._delete, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
 
         right = tk.Frame(bar, bg=self.CARD)
-        right.pack(side="right", padx=22)
-
-        self._btn(right, "New Quotation", self._open_quotation_for_selected).pack(
-            side="right", padx=(0, 8), pady=14)
-        self._btn(right, "New Proforma Invoice",
-                  lambda: self._open_quotation_for_selected("proforma")).pack(
-            side="right", padx=(0, 8), pady=14)
-        self._btn(right, "Close", self.destroy).pack(side="right", pady=14)
-
-    def _btn(self, parent, text, command, *, primary=False, danger=False):
-        if primary:
-            bg = self.RED
-            fg = "white"
-            active_bg = self.RED_DARK
-            relief = "flat"
-            bd = 0
-        else:
-            bg = "white"
-            fg = self.RED if danger else self.TEXT
-            active_bg = self.RED_LIGHT if danger else "#F3F4F6"
-            relief = "solid"
-            bd = 1
-
-        return tk.Button(parent, text=text, command=command,
-                         bg=bg, fg=fg,
-                         activebackground=active_bg, activeforeground=fg,
-                         relief=relief, bd=bd, highlightthickness=0,
-                         font=("Arial", 9, "bold"), cursor="hand2",
-                         padx=14, pady=6)
+        right.pack(side="right", padx=22, pady=15)
+        W.GhostButton(
+            right, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right")
 
     def _reload(self):
         if list_customers is None:
@@ -512,8 +497,7 @@ class CustomerDatabase(tk.Toplevel):
         for row in self.tree.get_children():
             self.tree.delete(row)
 
-        for r in records:
-            last = (r.get("last_used") or "")[:16].replace("T", " ")
+        for idx, r in enumerate(records):
             self.tree.insert("", "end",
                              iid=r.get("id", ""),
                              values=(
@@ -521,10 +505,23 @@ class CustomerDatabase(tk.Toplevel):
                                  r.get("company", ""),
                                  r.get("phone", ""),
                                  r.get("email", ""),
-                                 last or "—",
-                             ))
+                                 _friendly_ts(r.get("last_used")),
+                             ),
+                             tags=("evenrow" if idx % 2 else "oddrow",))
 
-        self.count_label.configure(text=f"{len(records)} customer(s)")
+        count = len(records)
+        if self.count_label is not None:
+            self.count_label.configure(
+                text=f"{count:,} customer{'s' if count != 1 else ''}"
+            )
+        try:
+            if count:
+                self._empty.place_forget()
+            else:
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+        except Exception:
+            pass
 
     def _on_select(self, _event=None):
         sel = self.tree.selection()

@@ -1,109 +1,175 @@
 """User Management window (admin-only)."""
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 
 from app.services import user_service as US
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
+
+def _friendly_ts(value):
+    text = "" if value is None else str(value).strip()
+    if not text:
+        return "—"
+    try:
+        dt = datetime.fromisoformat(text.replace("Z", "+00:00"))
+        return dt.strftime("%d-%m-%Y %H:%M")
+    except Exception:
+        return text
 
 
 class UserManager(tk.Toplevel):
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    ACCENT = "#C40000"
-    SOFT = "#F9FAFB"
+
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    BORDER = T.BORDER
 
     def __init__(self, parent, *, current_username=""):
         super().__init__(parent)
-        self.title("User Management")
+        self.title("CRYSTAL | User Management")
+        self.geometry("1000x640")
+        self.minsize(900, 560)
         self.configure(bg=self.BG)
-        self.geometry("960x600")
-        self.minsize(800, 500)
+        W.set_window_icon(self)
         self.transient(parent)
         self.grab_set()
         self._current_username = current_username
+        W.apply_ttk_theme(self)
         self._build()
         self._refresh()
+        try:
+            self.bind("<Escape>", lambda _e: self.destroy())
+        except Exception:
+            pass
 
     def _build(self):
-        header = tk.Frame(self, bg=self.CARD)
+        header = W.PageHeader(
+            self, title="User Management",
+            subtitle="Accounts, roles and module access",
+            meta="—", padx=28,
+        )
         header.pack(fill="x")
-        tk.Label(header, text="User Management", bg=self.CARD,
-                 fg=self.TEXT, font=("Arial", 18, "bold")
-                 ).pack(anchor="w", padx=24, pady=(20, 2))
-        tk.Label(header,
-                 text="Create, edit, or deactivate users. Passwords can be reset here.",
-                 bg=self.CARD, fg=self.MUTED, font=("Arial", 10)
-                 ).pack(anchor="w", padx=24, pady=(0, 14))
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
+        self.count_label = header.meta_label
 
-        bar = tk.Frame(self, bg=self.BG)
-        bar.pack(fill="x", padx=24, pady=(14, 8))
+        # ---- toolbar ----
+        bar = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        bar.pack(fill="x", padx=28, pady=(14, 10))
+        row = tk.Frame(bar, bg=T.SURFACE)
+        row.pack(fill="x", padx=14, pady=10)
+        tk.Label(
+            row, text="Select a user to edit, reset a password or change status.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(side="left")
+        W.PrimaryButton(
+            row, "Add user", self._on_add, icon="+", padx=14, pady=7,
+        ).pack(side="right")
 
-        def _mkbtn(text, cmd, primary=False):
-            return tk.Button(
-                bar, text=text, command=cmd,
-                bg=self.ACCENT if primary else self.CARD,
-                fg="white" if primary else self.TEXT,
-                activebackground=self.ACCENT if primary else self.SOFT,
-                activeforeground="white" if primary else self.TEXT,
-                relief="flat", bd=0, padx=16, pady=8, cursor="hand2",
-                font=("Arial", 10, "bold"))
+        # ---- footer (pack before expanding table) ----
+        foot = tk.Frame(
+            self, bg=T.SURFACE, height=64,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        foot.pack(side="bottom", fill="x")
+        foot.pack_propagate(False)
+        W.GhostButton(
+            foot, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=13)
+        W.DangerButton(
+            foot, "Delete", self._on_delete, padx=13, pady=7,
+        ).pack(side="right", padx=(0, 10), pady=13)
+        W.GhostButton(
+            foot, "Deactivate", self._on_deactivate, padx=13, pady=7,
+        ).pack(side="right", padx=(0, 6), pady=13)
+        W.GhostButton(
+            foot, "Activate", self._on_activate, padx=13, pady=7,
+        ).pack(side="right", padx=(0, 6), pady=13)
+        W.GhostButton(
+            foot, "Reset password", self._on_reset_pw, padx=13, pady=7,
+        ).pack(side="right", padx=(0, 6), pady=13)
+        W.GhostButton(
+            foot, "Edit", self._on_edit, padx=13, pady=7,
+        ).pack(side="right", padx=(0, 6), pady=13)
 
-        _mkbtn("+ Add user", self._on_add, primary=True).pack(side="left")
-        _mkbtn("Edit", self._on_edit).pack(side="left", padx=(8, 0))
-        _mkbtn("Reset password", self._on_reset_pw).pack(side="left", padx=(8, 0))
-        _mkbtn("Deactivate", self._on_deactivate).pack(side="left", padx=(8, 0))
-        _mkbtn("Activate", self._on_activate).pack(side="left", padx=(8, 0))
-        _mkbtn("Delete", self._on_delete).pack(side="left", padx=(8, 0))
+        # ---- table ----
+        card = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True, padx=28, pady=(0, 14))
 
-        table_wrap = tk.Frame(self, bg=self.BG)
-        table_wrap.pack(fill="both", expand=True, padx=24, pady=(0, 16))
-
-        cols = ("user_id", "username", "full_name", "role",
-                "modules", "active", "created")
-        self.tree = ttk.Treeview(table_wrap, columns=cols,
+        cols = ("username", "full_name", "role", "modules", "active", "created")
+        self.tree = ttk.Treeview(card, columns=cols,
                                  show="headings", selectmode="browse")
-        for col, label, w in [
-            ("user_id",   "ID",          80),
-            ("username",  "Username",   140),
-            ("full_name", "Full name",  180),
-            ("role",      "Role",       100),
-            ("modules",   "Modules",    140),
-            ("active",    "Active",      80),
-            ("created",   "Created",    120),
+        for col, label, width, anchor, stretch in [
+            ("username",  "Username",  150, "w", False),
+            ("full_name", "Full name", 220, "w", True),
+            ("role",      "Role",      100, "w", False),
+            ("modules",   "Modules",   150, "w", False),
+            ("active",    "Status",    100, "w", False),
+            ("created",   "Created",   150, "e", False),
         ]:
-            self.tree.heading(col, text=label)
-            self.tree.column(col, width=w, anchor="w",
-                             stretch=(col in ("full_name", "modules")))
-        vsb = ttk.Scrollbar(table_wrap, orient="vertical",
-                            command=self.tree.yview)
-        self.tree.configure(yscrollcommand=vsb.set)
-        self.tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+            self.tree.heading(col, text=label, anchor=anchor)
+            self.tree.column(col, width=width, anchor=anchor, stretch=stretch)
+        self.tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.tree.tag_configure("oddrow", background=T.SURFACE)
+        self.tree.tag_configure("inactive", foreground=T.TEXT_MUTED)
 
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
-        foot = tk.Frame(self, bg=self.CARD)
-        foot.pack(fill="x")
-        tk.Button(foot, text="Close", command=self.destroy,
-                  bg=self.CARD, fg=self.TEXT, relief="flat", bd=0,
-                  padx=18, pady=10, cursor="hand2",
-                  font=("Arial", 10, "bold")
-                  ).pack(side="right", padx=24, pady=12)
+        vsb = ttk.Scrollbar(card, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=(0, 2))
+        self.tree.pack(side="left", fill="both", expand=True,
+                       padx=2, pady=(0, 2))
+
+        self._empty = W.EmptyState(
+            card, icon="👤", title="No users found",
+            hint="Add a user to give someone access to the app.",
+        )
+
+    def _set_empty(self, visible):
+        try:
+            if visible:
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+            else:
+                self._empty.place_forget()
+        except Exception:
+            pass
 
     def _refresh(self):
         self.tree.delete(*self.tree.get_children())
-        for u in US.load_users():
-            modules = ",".join(US.get_user_modules(u.get("user_id", "")))
-            active = "yes" if u.get("is_active", True) else "no"
-            self.tree.insert("", "end", iid=u.get("user_id", ""),
-                             values=(u.get("user_id", ""),
-                                     u.get("username", ""),
-                                     u.get("full_name", ""),
-                                     u.get("role", "user"),
-                                     modules, active,
-                                     u.get("created_at", "")))
+        try:
+            users = US.load_users()
+        except Exception as e:
+            messagebox.showerror("User Management",
+                                 f"Could not load users:\n{e}", parent=self)
+            users = []
+        for i, u in enumerate(users):
+            modules = ", ".join(US.get_user_modules(u.get("user_id", "")))
+            active = bool(u.get("is_active", True))
+            tags = ["evenrow" if i % 2 == 0 else "oddrow"]
+            if not active:
+                tags.append("inactive")
+            self.tree.insert(
+                "", "end", iid=u.get("user_id", ""),
+                values=(
+                    u.get("username", ""),
+                    u.get("full_name", "") or "—",
+                    (u.get("role") or "user").capitalize(),
+                    modules or "—",
+                    "Active" if active else "Inactive",
+                    _friendly_ts(u.get("created_at")),
+                ),
+                tags=tuple(tags),
+            )
+        if self.count_label is not None:
+            self.count_label.configure(text=f"{len(users):,} user(s)")
+        self._set_empty(not users)
 
     def _selected_user(self):
         sel = self.tree.selection()
@@ -195,36 +261,62 @@ class UserManager(tk.Toplevel):
 
 
 class UserEditDialog(tk.Toplevel):
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    ACCENT = "#C40000"
-    SOFT = "#F9FAFB"
+
+    CARD = T.SURFACE
 
     def __init__(self, parent, *, user=None, current_username="", on_saved=None):
         super().__init__(parent)
-        self.title("Edit user" if user else "New user")
-        self.configure(bg=self.BG)
-        self.geometry("480x580")
+        self.title("CRYSTAL | Edit user" if user else "CRYSTAL | New user")
+        self.geometry("500x600")
         self.resizable(False, False)
+        self.configure(bg=self.CARD)
+        W.set_window_icon(self)
         self.transient(parent)
         self.grab_set()
         self._user = user
         self._current_username = current_username
         self._on_saved = on_saved or (lambda: None)
+        W.apply_ttk_theme(self)
         self._build()
         if user:
             self._load_user(user)
+        try:
+            self.bind("<Escape>", lambda _e: self.destroy())
+        except Exception:
+            pass
 
     def _build(self):
+        head = tk.Frame(self, bg=self.CARD)
+        head.pack(fill="x", padx=28, pady=(22, 0))
+        tk.Label(
+            head, text="Edit user" if self._user else "New user",
+            bg=self.CARD, fg=T.TEXT, font=T.FONT_H1, anchor="w",
+        ).pack(anchor="w")
+        tk.Label(
+            head,
+            text="Account details, role and module access.",
+            bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_SMALL, anchor="w",
+        ).pack(anchor="w", pady=(2, 0))
+        tk.Frame(self, bg=T.ACCENT, height=2).pack(
+            fill="x", padx=28, pady=(12, 0))
+
+        # footer first so it never gets clipped
+        foot = tk.Frame(self, bg=self.CARD)
+        foot.pack(side="bottom", fill="x", padx=28, pady=(10, 18))
+        W.PrimaryButton(
+            foot, "Save user", self._on_save, padx=16, pady=8,
+        ).pack(side="right")
+        W.GhostButton(
+            foot, "Cancel", self.destroy, padx=16, pady=8,
+        ).pack(side="right", padx=(0, 8))
+
         wrap = tk.Frame(self, bg=self.CARD)
-        wrap.pack(fill="both", expand=True, padx=24, pady=20)
+        wrap.pack(fill="both", expand=True, padx=28, pady=(18, 0))
 
         def _lbl(text):
-            tk.Label(wrap, text=text, bg=self.CARD, fg=self.MUTED,
-                     font=("Arial", 9, "bold")).pack(anchor="w", pady=(10, 2))
+            tk.Label(wrap, text=text, bg=self.CARD, fg=T.TEXT_MUTED,
+                     font=T.FONT_LABEL, anchor="w").pack(
+                anchor="w", pady=(10, 4))
 
         self.var_username = tk.StringVar()
         self.var_full = tk.StringVar()
@@ -234,41 +326,52 @@ class UserEditDialog(tk.Toplevel):
         self.var_module_crystal = tk.BooleanVar(value=False)
 
         _lbl("USERNAME *")
-        tk.Entry(wrap, textvariable=self.var_username,
-                 font=("Arial", 11)).pack(fill="x", ipady=4)
-        _lbl("FULL NAME")
-        tk.Entry(wrap, textvariable=self.var_full,
-                 font=("Arial", 11)).pack(fill="x", ipady=4)
-        _lbl("PASSWORD *" + ("  (blank = keep current)" if self._user else ""))
-        tk.Entry(wrap, textvariable=self.var_password, show="*",
-                 font=("Arial", 11)).pack(fill="x", ipady=4)
-        _lbl("ROLE")
-        ttk.Combobox(wrap, textvariable=self.var_role,
-                     values=["user", "admin"], state="readonly"
-                     ).pack(fill="x")
-        _lbl("MODULE ACCESS")
-        row = tk.Frame(wrap, bg=self.CARD)
-        row.pack(fill="x", pady=(4, 0))
-        tk.Checkbutton(row, text="VMM", variable=self.var_module_vmm,
-                       bg=self.CARD, fg=self.TEXT,
-                       activebackground=self.CARD, selectcolor=self.SOFT
-                       ).pack(side="left")
-        tk.Checkbutton(row, text="Crystal", variable=self.var_module_crystal,
-                       bg=self.CARD, fg=self.TEXT,
-                       activebackground=self.CARD, selectcolor=self.SOFT
-                       ).pack(side="left", padx=(16, 0))
+        self.username_entry = W.SearchEntry(
+            wrap, textvariable=self.var_username,
+            placeholder="e.g. accounts", show_icon=False,
+        )
+        self.username_entry.pack(fill="x")
 
-        btn_row = tk.Frame(self, bg=self.CARD)
-        btn_row.pack(fill="x", padx=24, pady=(0, 20))
-        tk.Button(btn_row, text="Cancel", command=self.destroy,
-                  bg=self.CARD, fg=self.TEXT, relief="flat", bd=0,
-                  padx=18, pady=8, cursor="hand2",
-                  font=("Arial", 10, "bold")).pack(side="right")
-        tk.Button(btn_row, text="Save", command=self._on_save,
-                  bg=self.ACCENT, fg="white", activebackground=self.ACCENT,
-                  relief="flat", bd=0, padx=18, pady=8, cursor="hand2",
-                  font=("Arial", 10, "bold")
-                  ).pack(side="right", padx=(0, 8))
+        _lbl("FULL NAME")
+        W.SearchEntry(
+            wrap, textvariable=self.var_full,
+            placeholder="Display name", show_icon=False,
+        ).pack(fill="x")
+
+        _lbl("PASSWORD *" + ("  (blank = keep current)" if self._user else ""))
+        self.pw_entry = W.SearchEntry(
+            wrap, textvariable=self.var_password,
+            placeholder="Minimum 4 characters", show_icon=False,
+        )
+        self.pw_entry.pack(fill="x")
+        self.pw_entry.entry.configure(show="*")
+
+        _lbl("ROLE")
+        ttk.Combobox(
+            wrap, textvariable=self.var_role,
+            values=["user", "admin"], state="readonly",
+            font=T.FONT_SMALL,
+        ).pack(fill="x", ipady=4)
+
+        _lbl("MODULE ACCESS")
+        mod_row = tk.Frame(wrap, bg=self.CARD)
+        mod_row.pack(fill="x", pady=(2, 0))
+        for text, var, pad in (
+            ("Crystal", self.var_module_crystal, (0, 18)),
+            ("VMM", self.var_module_vmm, (0, 0)),
+        ):
+            tk.Checkbutton(
+                mod_row, text=text, variable=var,
+                bg=self.CARD, fg=T.TEXT_BODY, font=T.FONT_BODY,
+                activebackground=self.CARD, activeforeground=T.TEXT,
+                selectcolor=T.SURFACE, highlightthickness=0,
+                bd=0, cursor="hand2",
+            ).pack(side="left", padx=pad)
+
+        try:
+            self.username_entry.entry.focus_set()
+        except Exception:
+            pass
 
     def _load_user(self, u):
         self.var_username.set(u.get("username", ""))
@@ -277,6 +380,11 @@ class UserEditDialog(tk.Toplevel):
         mods = US.get_user_modules(u.get("user_id", ""))
         self.var_module_vmm.set("VMM" in mods)
         self.var_module_crystal.set("Crystal" in mods)
+        try:
+            self.username_entry.entry.configure(state="readonly",
+                                               readonlybackground=T.SURFACE_ALT)
+        except Exception:
+            pass
 
     def _on_save(self):
         username = self.var_username.get().strip()
@@ -288,6 +396,18 @@ class UserEditDialog(tk.Toplevel):
             modules.append("VMM")
         if self.var_module_crystal.get():
             modules.append("Crystal")
+        if not username:
+            messagebox.showerror("Save failed", "Username is required.",
+                                 parent=self)
+            return
+        if not self._user and not pw.strip():
+            messagebox.showerror("Save failed", "Password is required.",
+                                 parent=self)
+            return
+        if not modules:
+            messagebox.showerror("Save failed",
+                                 "Select at least one module.", parent=self)
+            return
         try:
             if self._user:
                 US.update_user(self._user["user_id"],

@@ -19,6 +19,9 @@ from tkinter import ttk, messagebox
 from decimal import Decimal, InvalidOperation
 from datetime import datetime
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
 
 # ============================================================
 # PROJECT ROOT
@@ -138,27 +141,28 @@ def _record_matches_search(record, search):
 
 class QuotationHistory(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    GREEN = "#16804B"
-    GREEN_LIGHT = "#ECF8F1"
-    SOFT = "#F8F9FA"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    GREEN = T.SUCCESS
+    GREEN_LIGHT = T.SUCCESS_BG
+    SOFT = T.SURFACE_ALT
 
     def __init__(self, parent):
 
         super().__init__(parent)
 
         self.title("CRYSTAL | Quotation History")
-        self.geometry("1180x740")
-        self.minsize(1000, 620)
+        self.geometry("1180x720")
+        self.minsize(1000, 600)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -196,37 +200,7 @@ class QuotationHistory(tk.Toplevel):
     # --------------------------------------------------------
 
     def _configure_style(self):
-
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-
-        style.configure(
-            "History.Treeview",
-            background="white",
-            fieldbackground="white",
-            foreground=self.TEXT,
-            borderwidth=1,
-            relief="solid",
-            rowheight=30,
-            font=("Arial", 9),
-        )
-
-        style.configure(
-            "History.Treeview.Heading",
-            background=self.SOFT,
-            foreground=self.TEXT,
-            font=("Arial", 9, "bold"),
-            relief="flat",
-        )
-
-        style.map(
-            "History.Treeview",
-            background=[("selected", self.RED_LIGHT)],
-            foreground=[("selected", self.TEXT)],
-        )
+        W.apply_ttk_theme(self)
 
     # --------------------------------------------------------
 
@@ -234,113 +208,97 @@ class QuotationHistory(tk.Toplevel):
 
         self._build_header()
         self._build_search()
-        self._build_table()
+        # Footer claims its space before the table expands into the rest.
         self._build_actions()
+        self._build_table()
 
     # --------------------------------------------------------
 
     def _build_header(self):
 
-        header = tk.Frame(self, bg=self.CARD, height=78)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-
-        brand = tk.Frame(header, bg=self.CARD)
-        brand.pack(side="left", padx=28)
-
-        tk.Label(
-            brand, text="CRYSTAL",
-            bg=self.CARD, fg=self.RED,
-            font=("Arial", 22, "bold"),
-        ).pack(side="left", pady=22)
-
-        tk.Label(
-            brand, text="  /  Quotation History",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 11),
-        ).pack(side="left", pady=26)
-
-        right = tk.Frame(header, bg=self.CARD)
-        right.pack(side="right", padx=28)
-
-        self.count_label = tk.Label(
-            right, text="",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 9),
+        header = W.PageHeader(
+            self,
+            title="Quotation History",
+            subtitle="Quotations and proforma invoices",
+            meta="Loading…",
+            padx=28,
+            bg=self.BG,
         )
-        self.count_label.pack(anchor="e", pady=26)
-
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
+        header.pack(fill="x")
+        self.count_label = header.meta_label
 
     # --------------------------------------------------------
 
     def _build_search(self):
 
-        bar = tk.Frame(self, bg=self.BG)
-        bar.pack(fill="x", padx=28, pady=(18, 8))
+        card = tk.Frame(
+            self, bg=self.CARD,
+            highlightbackground=self.BORDER,
+            highlightthickness=1,
+        )
+        card.pack(fill="x", padx=28, pady=(14, 10))
 
-        def _label(parent, text, pad=(0, 8)):
+        bar = tk.Frame(card, bg=self.CARD)
+        bar.pack(fill="x", padx=14, pady=12)
+
+        def _label(parent, text, pad=(14, 6)):
             tk.Label(
-                parent, text=text,
-                bg=self.BG, fg=self.MUTED,
-                font=("Arial", 8, "bold"),
+                parent, text=text.upper(),
+                bg=self.CARD, fg=self.MUTED,
+                font=T.FONT_LABEL,
             ).pack(side="left", padx=pad)
 
-        def _entry(parent, var, width=None, expand=False):
-            e = tk.Entry(
-                parent,
-                textvariable=var,
-                bg="white", fg=self.TEXT,
-                relief="solid", bd=1,
-                font=("Arial", 10),
-                insertbackground=self.RED,
-            )
-            if width:
-                e.configure(width=width)
-            if expand:
-                e.pack(side="left", fill="x", expand=True, ipady=6)
-            else:
-                e.pack(side="left", ipady=6)
-            e.bind("<KeyRelease>", lambda _e: self._schedule_filter())
-            return e
+        search = W.SearchEntry(
+            bar,
+            textvariable=self.search_var,
+            width=30,
+            placeholder="Search quote no., customer, model…",
+            bg=self.CARD,
+        )
+        search.pack(side="left", fill="x", expand=True)
+        search.entry.bind("<KeyRelease>",
+                          lambda _e: self._schedule_filter(), add="+")
 
-        _label(bar, "Search")
-        _entry(bar, self.search_var, expand=True)
+        _label(bar, "From")
+        from_entry = W.SearchEntry(
+            bar, textvariable=self.from_date_var, width=10,
+            placeholder="dd-mm-yyyy", show_icon=False, bg=self.CARD,
+        )
+        from_entry.pack(side="left")
+        from_entry.entry.bind("<KeyRelease>",
+                              lambda _e: self._schedule_filter(), add="+")
 
-        _label(bar, "From", pad=(12, 6))
-        _entry(bar, self.from_date_var, width=12)
+        _label(bar, "To")
+        to_entry = W.SearchEntry(
+            bar, textvariable=self.to_date_var, width=10,
+            placeholder="dd-mm-yyyy", show_icon=False, bg=self.CARD,
+        )
+        to_entry.pack(side="left")
+        to_entry.entry.bind("<KeyRelease>",
+                            lambda _e: self._schedule_filter(), add="+")
 
-        _label(bar, "To", pad=(12, 6))
-        _entry(bar, self.to_date_var, width=12)
-
-        _label(bar, "Status", pad=(12, 6))
+        _label(bar, "Status")
         status_cb = ttk.Combobox(
             bar,
             textvariable=self.status_var,
             values=("All", "Draft", "Sent", "Accepted", "Rejected", "Expired"),
             state="readonly",
-            width=10,
-            font=("Arial", 9),
+            width=11,
+            font=T.FONT_SMALL,
         )
-        status_cb.pack(side="left", ipady=3)
+        status_cb.pack(side="left", ipady=4)
         status_cb.bind("<<ComboboxSelected>>", lambda _e: self._reload())
 
-        tk.Button(
-            bar, text="Clear",
-            command=self._clear_search,
-            bg="white", fg=self.MUTED,
-            activebackground="#F3F4F6",
-            activeforeground=self.TEXT,
-            relief="flat", bd=0,
-            highlightthickness=0,
-            font=("Arial", 9),
-            cursor="hand2", padx=12, pady=4,
-        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            bar, "Clear", self._clear_search,
+            padx=12, pady=7,
+        ).pack(side="left", padx=(12, 0))
 
     def _clear_search(self):
         self.search_var.set("")
         self.from_date_var.set("")
         self.to_date_var.set("")
+        self.status_var.set("All")
         self._reload()
 
     # --------------------------------------------------------
@@ -358,16 +316,15 @@ class QuotationHistory(tk.Toplevel):
                 "model", "total", "files")
 
         self.tree = ttk.Treeview(
-            card, columns=cols, show="headings",
-            style="History.Treeview", height=14,
+            card, columns=cols, show="headings", height=10,
         )
 
         # ---- Status row colors (tagged per-row in _fill_rows) ----
         STATUS_STYLES = {
-            "Sent":     ("#EAF2FB", "#0D4A8F"),
-            "Accepted": ("#E7F6EC", "#0F6B3A"),
-            "Rejected": ("#FDECEC", "#A01616"),
-            "Expired":  ("#F0F1F3", "#6B7280"),
+            "Sent":     (T.INFO_BG, "#1D4ED8"),
+            "Accepted": (T.SUCCESS_BG, "#0B7A45"),
+            "Rejected": (T.DANGER_BG, "#B42318"),
+            "Expired":  (T.NEUTRAL_BG, "#5B6474"),
         }
         for _status_name, (_bg, _fg) in STATUS_STYLES.items():
             self.tree.tag_configure(
@@ -446,11 +403,16 @@ class QuotationHistory(tk.Toplevel):
             "offer_no": 150,
             "date": 105,
             "status": 90,
-            "customer": 170,
-            "company": 200,
-            "model": 110,
+            "customer": 180,
+            "company": 190,
+            "model": 130,
             "total": 130,
-            "files": 90,
+            "files": 100,
+        }
+        anchors = {
+            "total": "e",
+            "status": "center",
+            "files": "center",
         }
 
         for c in cols:
@@ -458,17 +420,26 @@ class QuotationHistory(tk.Toplevel):
             self.tree.column(
                 c,
                 width=widths[c],
-                anchor="e" if c == "total" else "w",
+                anchor=anchors.get(c, "w"),
                 stretch=(c in ("customer", "company")),
             )
 
         vsb = ttk.Scrollbar(card, orient="vertical",
                             command=self.tree.yview)
-        self.tree.configure(yscrollcommand=vsb.set)
+        hsb = ttk.Scrollbar(card, orient="horizontal",
+                            command=self.tree.xview)
+        self.tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
 
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        hsb.pack(side="bottom", fill="x", padx=2, pady=(0, 2))
         self.tree.pack(side="left", fill="both", expand=True,
-                       padx=14, pady=14)
-        vsb.pack(side="right", fill="y", pady=14)
+                       padx=2, pady=2)
+
+        self._empty = W.EmptyState(
+            card, icon="📄", title="No quotations found",
+            hint="Adjust the filters, or create a new quotation.",
+        )
+        self._empty_visible = False
 
         self.tree.bind("<<TreeviewSelect>>", self._on_select)
         self.tree.bind("<Double-1>", lambda e: self._open_docx())
@@ -492,47 +463,43 @@ class QuotationHistory(tk.Toplevel):
         # Force enable delete for now
         self._force_delete = True
 
-        bar = tk.Frame(self, bg=self.CARD, height=70,
+        bar = tk.Frame(self, bg=self.CARD, height=68,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
         bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
-        left.pack(side="left", padx=22)
+        left.pack(side="left", padx=22, pady=15)
 
-        self._btn(left, "Open Word", self._open_docx).pack(side="left", pady=14)
-        self._btn(left, "Open PDF", self._open_pdf).pack(side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Show in folder", self._reveal).pack(side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Set Status", self._set_status).pack(side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Send WhatsApp", self._send_whatsapp).pack(side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Send Email", self._send_email).pack(side="left", padx=(8, 0), pady=14)
-        self._btn(left, "Delete", self._delete, danger=True).pack(side="left", padx=(8, 0), pady=14)
+        W.PrimaryButton(
+            left, "Open PDF", self._open_pdf, padx=14, pady=7,
+        ).pack(side="left")
+        W.GhostButton(
+            left, "Open Word", self._open_docx, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Show in folder", self._reveal, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Set status", self._set_status, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "WhatsApp", self._send_whatsapp, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Email", self._send_email, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
+        W.DangerButton(
+            left, "Delete", self._delete, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
 
         right = tk.Frame(bar, bg=self.CARD)
-        right.pack(side="right", padx=22)
+        right.pack(side="right", padx=22, pady=15)
 
-        self._btn(right, "Close", self.destroy).pack(side="right", pady=14)
-
-    def _btn(self, parent, text, command, *, danger=False):
-
-        bg = "white"
-        fg = self.RED if danger else self.TEXT
-        active_bg = self.RED_LIGHT if danger else "#F3F4F6"
-
-        return tk.Button(
-            parent,
-            text=text,
-            command=command,
-            bg=bg, fg=fg,
-            activebackground=active_bg,
-            activeforeground=fg,
-            relief="solid", bd=1,
-            highlightthickness=0,
-            font=("Arial", 9, "bold"),
-            cursor="hand2",
-            padx=14, pady=6,
-        )
+        W.GhostButton(
+            right, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right")
 
     # --------------------------------------------------------
 
@@ -551,12 +518,22 @@ class QuotationHistory(tk.Toplevel):
 
         if list_quotations is None:
             self._fill_rows([])
-            self.count_label.configure(text="Service unavailable")
+            if self.count_label is not None:
+                self.count_label.configure(text="Service unavailable")
+            self._set_empty(
+                True, title="History is unavailable",
+                hint="The quotation history service could not be loaded.",
+            )
             return
 
         if not self._all_records:
-            self.count_label.configure(text="Loading…")
+            if self.count_label is not None:
+                self.count_label.configure(text="Loading…")
             self._fill_rows([])
+            self._set_empty(
+                True, title="Loading quotations…",
+                hint="Fetching history from the cloud and this PC.",
+            )
             self._start_fetch()
             return
 
@@ -623,6 +600,7 @@ class QuotationHistory(tk.Toplevel):
         search = self.search_var.get().strip()
         from_text = self.from_date_var.get().strip()
         to_text = self.to_date_var.get().strip()
+        status = self.status_var.get().strip()
 
         from_date = _parse_date(from_text)
         to_date = _parse_date(to_text)
@@ -631,6 +609,10 @@ class QuotationHistory(tk.Toplevel):
         for r in self._all_records:
             if not _record_matches_search(r, search):
                 continue
+            if status and status != "All":
+                rec_status = _text(r.get("status"), "Draft")
+                if rec_status.lower() != status.lower():
+                    continue
             if from_date or to_date:
                 rec_date = _parse_date(r.get("date"))
                 if rec_date is None:
@@ -643,9 +625,13 @@ class QuotationHistory(tk.Toplevel):
 
         self._fill_rows(filtered)
 
-        self.count_label.configure(
-            text=f"{len(filtered)} quotation(s)"
-        )
+        total = len(self._all_records)
+        if len(filtered) == total:
+            text = f"{total:,} record{'s' if total != 1 else ''}"
+        else:
+            text = f"{len(filtered):,} of {total:,} records"
+        if self.count_label is not None:
+            self.count_label.configure(text=text)
 
     def _fill_rows(self, records):
 
@@ -681,6 +667,25 @@ class QuotationHistory(tk.Toplevel):
                 tags=(tag,) if tag else (),
             )
 
+        self._set_empty(
+            not records,
+            title="No quotations found",
+            hint="Adjust the filters, or create a new quotation.",
+        )
+
+    def _set_empty(self, visible, *, title=None, hint=None):
+        try:
+            if visible:
+                if title:
+                    self._empty.set_text(title, hint)
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+            else:
+                self._empty.place_forget()
+            self._empty_visible = bool(visible)
+        except Exception:
+            pass
+
     # --------------------------------------------------------
     # ACTIONS
     # --------------------------------------------------------
@@ -703,31 +708,43 @@ class QuotationHistory(tk.Toplevel):
 
         dlg = tk.Toplevel(self)
         dlg.title("Set Status")
-        dlg.configure(bg=self.BG)
+        dlg.configure(bg=T.SURFACE)
         dlg.transient(self)
         dlg.grab_set()
         dlg.resizable(False, False)
+        W.set_window_icon(dlg)
+
+        tk.Frame(dlg, bg=T.SURFACE, height=2).pack(fill="x")
 
         tk.Label(
-            dlg, text=f"Set status for {number}",
-            bg=self.BG, fg=self.TEXT,
-            font=("Arial", 10, "bold"),
-        ).pack(padx=20, pady=(16, 10))
+            dlg, text="Set status",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H3,
+        ).pack(anchor="w", padx=22, pady=(16, 2))
+        tk.Label(
+            dlg, text=number,
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(anchor="w", padx=22, pady=(0, 10))
 
         chosen = tk.StringVar(value=current)
 
+        body = tk.Frame(dlg, bg=T.SURFACE)
+        body.pack(fill="x", padx=22)
         for s_name in ("Draft", "Sent", "Accepted", "Rejected", "Expired"):
             tk.Radiobutton(
-                dlg, text=s_name, variable=chosen, value=s_name,
-                bg=self.BG, fg=self.TEXT,
-                activebackground=self.BG,
-                selectcolor="white",
-                font=("Arial", 10),
+                body, text=s_name, variable=chosen, value=s_name,
+                bg=T.SURFACE, fg=T.TEXT_BODY,
+                activebackground=T.SURFACE,
+                selectcolor=T.SURFACE,
+                font=T.FONT_BODY,
                 anchor="w",
-            ).pack(fill="x", padx=30, pady=2)
+            ).pack(fill="x", pady=3)
 
-        btns = tk.Frame(dlg, bg=self.BG)
-        btns.pack(fill="x", padx=20, pady=(14, 16))
+        tk.Frame(dlg, bg=T.BORDER, height=1).pack(fill="x", pady=(14, 0))
+
+        btns = tk.Frame(dlg, bg=T.SURFACE_ALT)
+        btns.pack(fill="x")
+        btns_inner = tk.Frame(btns, bg=T.SURFACE_ALT)
+        btns_inner.pack(fill="x", padx=18, pady=12)
 
         def _apply():
             new_status = chosen.get()
@@ -758,21 +775,12 @@ class QuotationHistory(tk.Toplevel):
                     parent=self,
                 )
 
-        tk.Button(
-            btns, text="Cancel", command=dlg.destroy,
-            bg="white", fg=self.MUTED,
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            padx=14, pady=6,
+        W.GhostButton(
+            btns_inner, "Cancel", dlg.destroy, padx=14, pady=6,
         ).pack(side="right")
 
-        tk.Button(
-            btns, text="Apply", command=_apply,
-            bg=self.RED, fg="white",
-            activebackground=self.RED, activeforeground="white",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
+        W.PrimaryButton(
+            btns_inner, "Apply", _apply, padx=16, pady=6,
         ).pack(side="right", padx=(0, 8))
 
     def _record_with_items(self, record):
@@ -822,15 +830,22 @@ class QuotationHistory(tk.Toplevel):
 
         popup = tk.Toplevel(self)
         popup.title(f"Material — {number}")
-        popup.geometry("780x430")
-        popup.configure(bg=self.BG)
+        popup.geometry("800x460")
+        popup.configure(bg=T.BG)
         popup.transient(self)
+        W.set_window_icon(popup)
 
+        head = tk.Frame(popup, bg=T.BG)
+        head.pack(fill="x", padx=22, pady=(16, 0))
         tk.Label(
-            popup,
+            head, text="Quotation material",
+            bg=T.BG, fg=T.TEXT, font=T.FONT_H3,
+        ).pack(anchor="w")
+        tk.Label(
+            head,
             text=f"{number}  ·  {_text(record.get('customer_name'))}",
-            bg=self.BG, fg=self.TEXT, font=("Arial", 12, "bold"),
-        ).pack(anchor="w", padx=20, pady=(16, 8))
+            bg=T.BG, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(anchor="w", pady=(2, 0))
 
         try:
             from app.services.quotation_number_service import split_revision
@@ -839,26 +854,27 @@ class QuotationHistory(tk.Toplevel):
             _base, _rev = number, 0
         if _rev:
             tk.Label(
-                popup, text=f"Revision R{_rev} of {_base}",
-                bg=self.BG, fg=self.MUTED, font=("Arial", 9, "italic"),
-            ).pack(anchor="w", padx=20)
+                head, text=f"Revision R{_rev} of {_base}",
+                bg=T.BG, fg=T.TEXT_MUTED, font=T.FONT_TINY,
+            ).pack(anchor="w", pady=(2, 0))
 
         if not items:
-            tk.Label(
-                popup,
-                text=(
-                    "No material details are stored for this quotation.\n\n"
-                    "Open it on the PC that created it, or wait until the "
-                    "quotation is re-saved with the updated cloud sync."
-                ),
-                bg=self.BG, fg=self.MUTED, font=("Arial", 10),
-                justify="left",
-            ).pack(anchor="w", padx=20, pady=16)
-            tk.Button(popup, text="Close", command=popup.destroy).pack(pady=10)
+            empty = W.EmptyState(
+                popup, icon="📄", title="No material stored",
+                hint=("Open this quotation on the PC that created it, or "
+                      "re-save it to sync its items."),
+                bg=T.BG,
+            )
+            empty.pack(expand=True)
+            W.GhostButton(popup, "Close", popup.destroy,
+                          padx=18, pady=7).pack(pady=(0, 18))
             return
 
-        table = tk.Frame(popup, bg=self.BG)
-        table.pack(fill="both", expand=True, padx=20, pady=(10, 0))
+        table = tk.Frame(
+            popup, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        table.pack(fill="both", expand=True, padx=22, pady=(12, 0))
 
         cols = ("model", "hsn", "qty", "price", "discount", "total")
         tree = ttk.Treeview(table, columns=cols, show="headings", height=9)
@@ -875,8 +891,8 @@ class QuotationHistory(tk.Toplevel):
 
         vsb = ttk.Scrollbar(table, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
 
         for it in items:
             tree.insert("", "end", values=(
@@ -921,11 +937,14 @@ class QuotationHistory(tk.Toplevel):
                 ))
             grand_total = float(round(grand_total))
 
+        foot = tk.Frame(popup, bg=T.BG)
+        foot.pack(fill="x", padx=22, pady=12)
         tk.Label(
-            popup, text=f"Grand Total: {_money(grand_total)}",
-            bg=self.BG, fg=self.TEXT, font=("Arial", 11, "bold"),
-        ).pack(anchor="e", padx=20, pady=(8, 4))
-        tk.Button(popup, text="Close", command=popup.destroy).pack(pady=(0, 12))
+            foot, text=f"Grand total   {_money(grand_total)}",
+            bg=T.BG, fg=T.TEXT, font=T.FONT_H3,
+        ).pack(side="left")
+        W.GhostButton(foot, "Close", popup.destroy,
+                      padx=18, pady=7).pack(side="right")
 
     def _revise(self):
         """Open a linked revision (…-R1) of the selected quotation."""
@@ -1012,41 +1031,44 @@ class QuotationHistory(tk.Toplevel):
         """
         dlg = tk.Toplevel(self)
         dlg.title("WhatsApp")
-        dlg.geometry("420x260")
-        dlg.configure(bg=self.BG)
+        dlg.geometry("420x250")
+        dlg.configure(bg=T.SURFACE)
         dlg.transient(self)
         dlg.grab_set()
         dlg.resizable(False, False)
+        W.set_window_icon(dlg)
 
         tk.Label(
-            dlg, text="No phone number found.",
-            bg=self.BG, fg=self.TEXT,
-            font=("Arial", 11, "bold"),
-        ).pack(padx=20, pady=(20, 8))
+            dlg, text="WhatsApp",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H3,
+        ).pack(anchor="w", padx=20, pady=(18, 2))
+        tk.Label(
+            dlg, text="No phone number found for this customer.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL,
+        ).pack(anchor="w", padx=20, pady=(0, 12))
 
         tk.Label(
-            dlg, text="Enter phone number:",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 9, "bold"), anchor="w",
+            dlg, text="PHONE NUMBER",
+            bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_LABEL, anchor="w",
         ).pack(fill="x", padx=20)
 
         phone_var = tk.StringVar()
-        entry = tk.Entry(
-            dlg, textvariable=phone_var,
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 11), insertbackground=self.RED,
+        entry = W.SearchEntry(
+            dlg, textvariable=phone_var, placeholder="", show_icon=False,
         )
-        entry.pack(fill="x", padx=20, ipady=6, pady=(4, 12))
-        entry.focus_set()
+        entry.pack(fill="x", padx=20, pady=(5, 12))
+        entry.entry.focus_set()
 
         save_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             dlg, text="Save to customer database",
             variable=save_var,
-            bg=self.BG, activebackground=self.BG,
-            selectcolor="white", fg=self.TEXT,
-            font=("Arial", 9),
-        ).pack(anchor="w", padx=20)
+            bg=T.SURFACE, activebackground=T.SURFACE,
+            selectcolor=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_SMALL,
+        ).pack(anchor="w", padx=18)
 
         result = {"value": None}
 
@@ -1068,24 +1090,15 @@ class QuotationHistory(tk.Toplevel):
             result["value"] = None
             dlg.destroy()
 
-        btns = tk.Frame(dlg, bg=self.BG)
-        btns.pack(fill="x", padx=20, pady=(16, 20))
+        btns = tk.Frame(dlg, bg=T.SURFACE)
+        btns.pack(fill="x", padx=20, pady=(16, 18))
 
-        tk.Button(
-            btns, text="Cancel", command=_cancel,
-            bg="white", fg=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            padx=14, pady=6,
+        W.GhostButton(
+            btns, "Cancel", _cancel, padx=16, pady=7,
         ).pack(side="right")
 
-        tk.Button(
-            btns, text="Send WhatsApp", command=_ok,
-            bg=self.RED, fg="white",
-            activebackground=self.RED, activeforeground="white",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
+        W.PrimaryButton(
+            btns, "Send WhatsApp", _ok, padx=16, pady=7,
         ).pack(side="right", padx=(0, 8))
 
         dlg.bind("<Return>", lambda _e: _ok())
@@ -1101,41 +1114,44 @@ class QuotationHistory(tk.Toplevel):
         """
         dlg = tk.Toplevel(self)
         dlg.title("Email")
-        dlg.geometry("440x260")
-        dlg.configure(bg=self.BG)
+        dlg.geometry("440x250")
+        dlg.configure(bg=T.SURFACE)
         dlg.transient(self)
         dlg.grab_set()
         dlg.resizable(False, False)
+        W.set_window_icon(dlg)
 
         tk.Label(
-            dlg, text="No email address found.",
-            bg=self.BG, fg=self.TEXT,
-            font=("Arial", 11, "bold"),
-        ).pack(padx=20, pady=(20, 8))
+            dlg, text="Email",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H3,
+        ).pack(anchor="w", padx=20, pady=(18, 2))
+        tk.Label(
+            dlg, text="No email address found for this customer.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL,
+        ).pack(anchor="w", padx=20, pady=(0, 12))
 
         tk.Label(
-            dlg, text="Enter email address:",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 9, "bold"), anchor="w",
+            dlg, text="EMAIL ADDRESS",
+            bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_LABEL, anchor="w",
         ).pack(fill="x", padx=20)
 
         email_var = tk.StringVar()
-        entry = tk.Entry(
-            dlg, textvariable=email_var,
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 11), insertbackground=self.RED,
+        entry = W.SearchEntry(
+            dlg, textvariable=email_var, placeholder="", show_icon=False,
         )
-        entry.pack(fill="x", padx=20, ipady=6, pady=(4, 12))
-        entry.focus_set()
+        entry.pack(fill="x", padx=20, pady=(5, 12))
+        entry.entry.focus_set()
 
         save_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
             dlg, text="Save to customer database",
             variable=save_var,
-            bg=self.BG, activebackground=self.BG,
-            selectcolor="white", fg=self.TEXT,
-            font=("Arial", 9),
-        ).pack(anchor="w", padx=20)
+            bg=T.SURFACE, activebackground=T.SURFACE,
+            selectcolor=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_SMALL,
+        ).pack(anchor="w", padx=18)
 
         result = {"value": None}
 
@@ -1156,24 +1172,15 @@ class QuotationHistory(tk.Toplevel):
             result["value"] = None
             dlg.destroy()
 
-        btns = tk.Frame(dlg, bg=self.BG)
-        btns.pack(fill="x", padx=20, pady=(16, 20))
+        btns = tk.Frame(dlg, bg=T.SURFACE)
+        btns.pack(fill="x", padx=20, pady=(16, 18))
 
-        tk.Button(
-            btns, text="Cancel", command=_cancel,
-            bg="white", fg=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            padx=14, pady=6,
+        W.GhostButton(
+            btns, "Cancel", _cancel, padx=16, pady=7,
         ).pack(side="right")
 
-        tk.Button(
-            btns, text="Send Email", command=_ok,
-            bg=self.RED, fg="white",
-            activebackground=self.RED, activeforeground="white",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
+        W.PrimaryButton(
+            btns, "Send Email", _ok, padx=16, pady=7,
         ).pack(side="right", padx=(0, 8))
 
         dlg.bind("<Return>", lambda _e: _ok())

@@ -12,6 +12,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from pathlib import Path
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
 
 PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -37,29 +40,32 @@ except Exception:
 
 class CompanySettings(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    GREEN = "#16804B"
-    SOFT = "#F8F9FA"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    GREEN = T.SUCCESS
+    SOFT = T.SURFACE_ALT
 
     def __init__(self, parent):
         super().__init__(parent)
 
         self.title("CRYSTAL | Company Settings")
-        self.geometry("920x780")
-        self.minsize(820, 640)
+        self.geometry("960x760")
+        self.minsize(860, 640)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
         self.transient(parent)
         self.grab_set()
 
+        W.apply_ttk_theme(self)
         self._vars = {}
+        self._entries = []
         self._build_interface()
         self._load()
 
@@ -79,27 +85,17 @@ class CompanySettings(tk.Toplevel):
     # ========================================================
 
     def _build_interface(self):
-
         self._build_header()
-        self._build_body()
         self._build_footer()
+        self._build_body()
 
     def _build_header(self):
-        header = tk.Frame(self, bg=self.CARD, height=76)
+        header = W.PageHeader(
+            self, title="Company Settings",
+            subtitle="Defaults printed on quotations and proforma invoices",
+            padx=28,
+        )
         header.pack(fill="x")
-        header.pack_propagate(False)
-
-        brand = tk.Frame(header, bg=self.CARD)
-        brand.pack(side="left", padx=26)
-
-        tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 20, "bold")).pack(side="left", pady=20)
-
-        tk.Label(brand, text="  /  Company Settings",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 10)).pack(side="left", pady=24)
-
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
 
     def _build_body(self):
         wrap = tk.Frame(self, bg=self.BG)
@@ -141,23 +137,22 @@ class CompanySettings(tk.Toplevel):
         row = tk.Frame(card2, bg=self.CARD)
         row.pack(fill="x", pady=4)
 
-        tk.Label(row, text="Logo Path", bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold"), width=18,
+        tk.Label(row, text="LOGO PATH", bg=self.CARD, fg=T.TEXT_MUTED,
+                 font=T.FONT_LABEL, width=18,
                  anchor="w").pack(side="left")
 
         self._vars["logo_path"] = tk.StringVar()
 
-        entry = tk.Entry(row, textvariable=self._vars["logo_path"],
-                         bg="white", fg=self.TEXT, relief="solid", bd=1,
-                         font=("Arial", 10), insertbackground=self.RED)
-        entry.pack(side="left", fill="x", expand=True, ipady=6)
+        logo_field = W.SearchEntry(
+            row, textvariable=self._vars["logo_path"],
+            placeholder="", show_icon=False,
+        )
+        logo_field.pack(side="left", fill="x", expand=True)
+        self._entries.append(logo_field.entry)
 
-        tk.Button(row, text="Browse…", command=self._browse_logo,
-                  bg=self.SOFT, fg=self.TEXT,
-                  activebackground="#ECEEF1", activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  padx=12, pady=4).pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            row, "Browse…", self._browse_logo, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
 
         # ---- Quotation defaults ----
         card3 = self._card(inner)
@@ -190,49 +185,44 @@ class CompanySettings(tk.Toplevel):
         tk.Label(
             card_out,
             text="PDF and Word files are saved under this folder.",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 9), anchor="w",
+            bg=self.CARD, fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL, anchor="w",
         ).pack(fill="x", pady=(0, 8))
 
         out_row = tk.Frame(card_out, bg=self.CARD)
         out_row.pack(fill="x", pady=4)
 
         tk.Label(
-            out_row, text="Folder", bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 9, "bold"), width=18, anchor="w",
+            out_row, text="FOLDER", bg=self.CARD, fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL, width=18, anchor="w",
         ).pack(side="left")
 
         self._vars["output_folder"] = tk.StringVar()
 
-        tk.Entry(
-            out_row,
-            textvariable=self._vars["output_folder"],
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 10), insertbackground=self.RED,
-        ).pack(side="left", fill="x", expand=True, ipady=6)
+        folder_field = W.SearchEntry(
+            out_row, textvariable=self._vars["output_folder"],
+            placeholder="", show_icon=False,
+        )
+        folder_field.pack(side="left", fill="x", expand=True)
+        self._entries.append(folder_field.entry)
 
-        tk.Button(
-            out_row, text="Browse…", command=self._browse_output_folder,
-            bg=self.SOFT, fg=self.TEXT,
-            activebackground="#ECEEF1", activeforeground=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            padx=12, pady=4,
+        W.GhostButton(
+            out_row, "Browse…", self._browse_output_folder, padx=12, pady=7,
         ).pack(side="left", padx=(8, 0))
 
         tk.Label(
             card_out,
             text="Inside this folder, the app creates:",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 9, "italic"), anchor="w",
+            bg=self.CARD, fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL, anchor="w",
         ).pack(fill="x", pady=(8, 0))
 
         tk.Label(
             card_out,
             text="    DD-MM-YYYY/word/Quotation_*.docx\n"
                  "    DD-MM-YYYY/pdf/Quotation_*.pdf",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Courier New", 9), anchor="w", justify="left",
+            bg=self.CARD, fg=T.TEXT_MUTED,
+            font=("Consolas", 9), anchor="w", justify="left",
         ).pack(fill="x")
 
         tk.Frame(inner, bg=self.BG, height=20).pack()
@@ -245,122 +235,95 @@ class CompanySettings(tk.Toplevel):
         reset_wrap = tk.Frame(card3, bg=self.CARD)
         reset_wrap.pack(fill="x", pady=6)
 
-        tk.Button(
-            reset_wrap,
-            text="Reset Quotation Counter",
-            command=self._reset_counter_button,
-            bg=self.RED,
-            fg="white",
-            activebackground=self.RED_DARK,
-            activeforeground="white",
-            relief="flat",
-            bd=0,
-            highlightthickness=0,
-            font=("Arial", 10, "bold"),
-            cursor="hand2",
-            padx=14,
-            pady=8,
+        W.DangerButton(
+            reset_wrap, "Reset Quotation Counter", self._reset_counter_button,
+            padx=14, pady=7,
         ).pack(side="left")
 
         tk.Label(
             reset_wrap,
             text="  Sets the next quotation number to 001.",
             bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 9),
+            fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL,
         ).pack(side="left", padx=8)
 
         # ---- Delete backups button ----
         del_wrap = tk.Frame(card3, bg=self.CARD)
         del_wrap.pack(fill="x", pady=6)
 
-        tk.Button(
-            del_wrap,
-            text="Delete Backup Files",
-            command=self._delete_backup_button,
-            bg="white",
-            fg=self.TEXT,
-            activebackground="#F3F4F6",
-            activeforeground=self.TEXT,
-            relief="solid",
-            bd=1,
-            highlightthickness=0,
-            font=("Arial", 10),
-            cursor="hand2",
-            padx=14,
-            pady=8,
+        W.DangerButton(
+            del_wrap, "Delete Backup Files", self._delete_backup_button,
+            padx=14, pady=7,
         ).pack(side="left")
 
         tk.Label(
             del_wrap,
             text="  Removes old auto-backup copies (keeps your data).",
             bg=self.CARD,
-            fg=self.MUTED,
-            font=("Arial", 9),
+            fg=T.TEXT_MUTED,
+            font=T.FONT_SMALL,
         ).pack(side="left", padx=8)
 
 
     def _card(self, parent):
         outer = tk.Frame(parent, bg=self.CARD,
                          highlightbackground=self.BORDER, highlightthickness=1)
-        outer.pack(fill="x", padx=24, pady=(16, 0))
+        outer.pack(fill="x", padx=28, pady=(14, 0))
         inner = tk.Frame(outer, bg=self.CARD)
         inner.pack(fill="both", expand=True, padx=18, pady=16)
         return inner
 
     def _section_title(self, parent, text):
         tk.Label(parent, text=text.upper(), bg=self.CARD, fg=self.RED,
-                 font=("Arial", 8, "bold")).pack(anchor="w", pady=(0, 8))
+                 font=T.FONT_LABEL).pack(anchor="w", pady=(0, 6))
 
     def _field(self, parent, label, key, multiline=False):
         box = tk.Frame(parent, bg=self.CARD)
         box.pack(fill="x", pady=4)
 
-        tk.Label(box, text=label, bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold"), width=18,
-                 anchor="w").pack(side="left", anchor="n")
+        tk.Label(box, text=label.upper(), bg=self.CARD, fg=T.TEXT_MUTED,
+                 font=T.FONT_LABEL, width=18,
+                 anchor="w").pack(side="left", anchor="n", pady=(9, 0))
 
         self._vars[key] = tk.StringVar()
 
         if multiline:
-            widget = tk.Text(box, height=3, bg="white", fg=self.TEXT,
-                             relief="solid", bd=1, font=("Arial", 10),
-                             insertbackground=self.RED, wrap="word")
-            widget.pack(side="left", fill="x", expand=True, ipady=4)
+            wrap = tk.Frame(box, bg=T.BORDER_HARD)
+            wrap.pack(side="left", fill="x", expand=True)
+            widget = tk.Text(
+                wrap, height=3, bg=T.SURFACE, fg=T.TEXT,
+                relief="flat", bd=0, highlightthickness=0,
+                font=T.FONT_BODY, insertbackground=T.ACCENT, wrap="word",
+                padx=8, pady=6,
+            )
+            widget.pack(fill="both", expand=True, padx=1, pady=1)
             self._vars[key + "_widget"] = widget
         else:
-            widget = tk.Entry(box, textvariable=self._vars[key],
-                              bg="white", fg=self.TEXT, relief="solid", bd=1,
-                              font=("Arial", 10), insertbackground=self.RED)
-            widget.pack(side="left", fill="x", expand=True, ipady=6)
+            field = W.SearchEntry(
+                box, textvariable=self._vars[key],
+                placeholder="", show_icon=False,
+            )
+            field.pack(side="left", fill="x", expand=True)
+            self._entries.append(field.entry)
 
     def _build_footer(self):
-        footer = tk.Frame(self, bg="white", height=66,
-                          highlightbackground=self.BORDER, highlightthickness=1)
+        footer = tk.Frame(self, bg=T.SURFACE, height=66,
+                          highlightbackground=T.BORDER, highlightthickness=1)
         footer.pack(side="bottom", fill="x")
         footer.pack_propagate(False)
 
-        tk.Button(footer, text="Reset to Defaults",
-                  command=self._reset,
-                  bg="white", fg=self.RED,
-                  activebackground=self.RED_LIGHT, activeforeground=self.RED,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9, "bold"), cursor="hand2",
-                  width=18, height=2).pack(side="left", padx=(22, 0), pady=14)
+        W.GhostButton(
+            footer, "Reset to Defaults", self._reset, padx=14, pady=7,
+        ).pack(side="left", padx=22, pady=13)
 
-        tk.Button(footer, text="Cancel", command=self.destroy,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6", activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  width=14, height=2).pack(side="right", padx=(8, 22), pady=14)
+        W.GhostButton(
+            footer, "Cancel", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=(0, 22), pady=13)
 
-        tk.Button(footer, text="Save Settings", command=self._save,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK, activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 10, "bold"), cursor="hand2",
-                  width=18, height=2).pack(side="right", pady=14)
+        W.PrimaryButton(
+            footer, "Save Settings", self._save, padx=18, pady=7,
+        ).pack(side="right", padx=(0, 8), pady=13)
 
     # ========================================================
     # DATA LOAD / SAVE
@@ -399,6 +362,12 @@ class CompanySettings(tk.Toplevel):
         if widget is not None:
             widget.delete("1.0", "end")
             widget.insert("1.0", settings.get("address", ""))
+
+        for entry in self._entries:
+            try:
+                entry.xview_moveto(0)
+            except Exception:
+                pass
 
     def _collect(self):
         data = {}

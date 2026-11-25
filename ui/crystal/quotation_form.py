@@ -45,6 +45,10 @@ PROJECT_ROOT = os.path.abspath(
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+from ui.crystal.terms_editor import TermsEditor
+
 
 # ============================================================
 # PROJECT IMPORTS
@@ -261,23 +265,23 @@ class QuotationForm(tk.Toplevel):
     # COLORS
     # ========================================================
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
+    BG = T.BG
+    CARD = T.SURFACE
 
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
 
-    BORDER = "#E1E4E8"
+    BORDER = T.BORDER
 
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
 
-    GREEN = "#16804B"
-    GREEN_LIGHT = "#ECF8F1"
+    GREEN = T.SUCCESS
+    GREEN_LIGHT = T.SUCCESS_BG
 
-    SOFT = "#F8F9FA"
+    SOFT = T.SURFACE_ALT
 
 
     # ========================================================
@@ -336,6 +340,11 @@ class QuotationForm(tk.Toplevel):
         self.configure(
             bg=self.BG
         )
+
+        try:
+            W.set_window_icon(self)
+        except Exception:
+            pass
 
         self.current_step = 1
         self._prefill = prefill or {}
@@ -590,32 +599,40 @@ class QuotationForm(tk.Toplevel):
 
     def _configure_style(self):
 
-        style = ttk.Style(self)
+        W.apply_ttk_theme(self)
 
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
+        style = ttk.Style(self)
 
         style.configure(
             "Crystal.TCombobox",
-            fieldbackground="white",
-            background="white",
+            fieldbackground=T.SURFACE,
+            background=T.SURFACE,
             foreground=self.TEXT,
-            bordercolor=self.BORDER,
-            lightcolor=self.BORDER,
-            darkcolor=self.BORDER,
-            padding=8,
-            font=("Arial", 10),
+            bordercolor=T.BORDER,
+            lightcolor=T.BORDER,
+            darkcolor=T.BORDER,
+            arrowcolor=T.TEXT_MUTED,
+            padding=(10, 6),
+            font=T.FONT_BODY,
         )
 
         style.map(
             "Crystal.TCombobox",
             fieldbackground=[
-                ("readonly", "white")
+                ("readonly", T.SURFACE)
             ],
             foreground=[
                 ("readonly", self.TEXT)
+            ],
+            bordercolor=[
+                ("focus", T.FOCUS),
+                ("active", T.BORDER_HARD),
+            ],
+            lightcolor=[
+                ("focus", T.FOCUS),
+            ],
+            darkcolor=[
+                ("focus", T.FOCUS),
             ],
         )
 
@@ -703,13 +720,17 @@ class QuotationForm(tk.Toplevel):
             yscrollcommand=self.scrollbar.set
         )
 
+        self.scrollbar.pack(
+            side="right",
+            fill="y"
+        )
+
         self.canvas.pack(
             side="left",
             fill="both",
             expand=True
         )
 
-        # Scrollbar intentionally hidden; mouse-wheel scrolling remains enabled.
         self.content_area.bind(
             "<Configure>",
             self._update_scroll_region
@@ -810,7 +831,7 @@ class QuotationForm(tk.Toplevel):
         header = tk.Frame(
             self,
             bg=self.CARD,
-            height=82
+            height=78
         )
 
         header.pack(
@@ -819,6 +840,15 @@ class QuotationForm(tk.Toplevel):
 
         header.pack_propagate(False)
 
+        tk.Frame(
+            header,
+            bg=self.RED,
+            height=3
+        ).pack(
+            side="bottom",
+            fill="x"
+        )
+
         brand = tk.Frame(
             header,
             bg=self.CARD
@@ -826,7 +856,7 @@ class QuotationForm(tk.Toplevel):
 
         brand.pack(
             side="left",
-            padx=30
+            padx=28
         )
 
         tk.Label(
@@ -834,10 +864,10 @@ class QuotationForm(tk.Toplevel):
             text="CRYSTAL",
             bg=self.CARD,
             fg=self.RED,
-            font=("Arial", 23, "bold")
+            font=T.FONT_H1
         ).pack(
             side="left",
-            pady=17
+            pady=15
         )
 
         self.header_sub_label = tk.Label(
@@ -845,12 +875,12 @@ class QuotationForm(tk.Toplevel):
             text=self._header_subtitle(),
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 11)
+            font=T.FONT_BODY
         )
 
         self.header_sub_label.pack(
             side="left",
-            pady=21
+            pady=19
         )
 
         company = tk.Frame(
@@ -860,7 +890,7 @@ class QuotationForm(tk.Toplevel):
 
         company.pack(
             side="right",
-            padx=30
+            padx=28
         )
 
         tk.Label(
@@ -868,10 +898,10 @@ class QuotationForm(tk.Toplevel):
             text="ARMATECH ASSOCIATES",
             bg=self.CARD,
             fg=self.TEXT,
-            font=("Arial", 12, "bold")
+            font=T.FONT_H3
         ).pack(
             anchor="e",
-            pady=(14, 1)
+            pady=(13, 1)
         )
 
         try:
@@ -886,18 +916,9 @@ class QuotationForm(tk.Toplevel):
             text=_form_tagline,
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 9)
+            font=T.FONT_SMALL
         ).pack(
             anchor="e"
-        )
-
-        tk.Frame(
-            header,
-            bg=self.RED,
-            height=3
-        ).pack(
-            side="bottom",
-            fill="x"
         )
 
 
@@ -944,10 +965,14 @@ class QuotationForm(tk.Toplevel):
             try:
                 if value == current:
                     btn.configure(bg=self.RED, fg="white",
-                                  activebackground=self.RED, activeforeground="white")
+                                  activebackground=self.RED_DARK,
+                                  activeforeground="white",
+                                  highlightbackground=self.RED)
                 else:
-                    btn.configure(bg=self.SOFT, fg=self.TEXT,
-                                  activebackground="#ECEEF1", activeforeground=self.TEXT)
+                    btn.configure(bg=T.SURFACE_ALT, fg=T.TEXT_BODY,
+                                  activebackground=T.SURFACE_HOVER,
+                                  activeforeground=self.TEXT,
+                                  highlightbackground=self.BORDER)
             except Exception:
                 pass
 
@@ -961,7 +986,9 @@ class QuotationForm(tk.Toplevel):
         self.stepper = tk.Frame(
             self,
             bg=self.CARD,
-            height=88
+            height=76,
+            highlightbackground=self.BORDER,
+            highlightthickness=1
         )
 
         self.stepper.pack(
@@ -977,8 +1004,8 @@ class QuotationForm(tk.Toplevel):
 
         inner.pack(
             fill="x",
-            padx=42,
-            pady=16
+            padx=28,
+            pady=14
         )
 
         steps = [
@@ -1010,10 +1037,13 @@ class QuotationForm(tk.Toplevel):
             circle = tk.Label(
                 holder,
                 text=str(number),
-                bg="#E9EBEE",
-                fg="#737983",
-                width=3,
-                font=("Arial", 10, "bold")
+                bg=T.NEUTRAL_BG,
+                fg=T.TEXT_MUTED,
+                width=2,
+                height=1,
+                padx=4,
+                pady=4,
+                font=T.FONT_BODY_B
             )
 
             circle.pack(
@@ -1027,7 +1057,7 @@ class QuotationForm(tk.Toplevel):
 
             text_box.pack(
                 side="left",
-                padx=8
+                padx=10
             )
 
             title_label = tk.Label(
@@ -1035,7 +1065,7 @@ class QuotationForm(tk.Toplevel):
                 text=title,
                 bg=self.CARD,
                 fg=self.MUTED,
-                font=("Arial", 9, "bold")
+                font=T.FONT_BODY_B
             )
 
             title_label.pack(
@@ -1047,7 +1077,7 @@ class QuotationForm(tk.Toplevel):
                 text=subtitle,
                 bg=self.CARD,
                 fg=self.LIGHT_MUTED,
-                font=("Arial", 8)
+                font=T.FONT_TINY
             )
 
             subtitle_label.pack(
@@ -1066,13 +1096,13 @@ class QuotationForm(tk.Toplevel):
 
                 tk.Frame(
                     inner,
-                    bg="#E5E7EA",
-                    height=2
+                    bg=T.BORDER,
+                    height=1
                 ).pack(
                     side="left",
                     fill="x",
                     expand=True,
-                    padx=8
+                    padx=14
                 )
 
 
@@ -1140,11 +1170,14 @@ class QuotationForm(tk.Toplevel):
             text=str(number),
             bg=self.RED,
             fg="white",
-            width=3,
-            font=("Arial", 9, "bold")
+            width=2,
+            height=1,
+            padx=4,
+            pady=4,
+            font=T.FONT_LABEL
         ).pack(
             side="left",
-            padx=(0, 10)
+            padx=(0, 12)
         )
 
         text_box = tk.Frame(
@@ -1161,7 +1194,7 @@ class QuotationForm(tk.Toplevel):
             text=title,
             bg=self.CARD,
             fg=self.TEXT,
-            font=("Arial", 16, "bold")
+            font=T.FONT_H2
         ).pack(
             anchor="w"
         )
@@ -1171,7 +1204,7 @@ class QuotationForm(tk.Toplevel):
             text=subtitle,
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 9)
+            font=T.FONT_SMALL
         ).pack(
             anchor="w",
             pady=(2, 0)
@@ -1195,7 +1228,7 @@ class QuotationForm(tk.Toplevel):
             bg=self.CARD
         )
 
-        label_text = label
+        label_text = label.upper()
 
         if required:
             label_text += "  *"
@@ -1204,8 +1237,8 @@ class QuotationForm(tk.Toplevel):
             box,
             text=label_text,
             bg=self.CARD,
-            fg=self.TEXT,
-            font=("Arial", 9, "bold")
+            fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL
         ).pack(
             anchor="w",
             pady=(0, 6)
@@ -1214,18 +1247,23 @@ class QuotationForm(tk.Toplevel):
         entry = tk.Entry(
             box,
             textvariable=variable,
-            bg="white",
+            bg=T.SURFACE,
             fg=self.TEXT,
-            relief="solid",
-            bd=1,
-            font=("Arial", 10),
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_BODY,
             insertbackground=self.RED
         )
 
         entry.pack(
             fill="x",
-            ipady=7
+            ipady=6
         )
+
+        box.entry = entry
 
         return box
 
@@ -1244,20 +1282,23 @@ class QuotationForm(tk.Toplevel):
 
         # ---- Document type: Quotation or Proforma Invoice ----
         type_bar = tk.Frame(card, bg=self.CARD)
-        type_bar.pack(fill="x", pady=(0, 12))
+        type_bar.pack(fill="x", pady=(0, 16))
 
         tk.Label(
-            type_bar, text="Document type",
-            bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")
-        ).pack(side="left", padx=(0, 10))
+            type_bar, text="DOCUMENT TYPE",
+            bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_LABEL
+        ).pack(side="left", padx=(0, 12))
 
         self._doc_type_buttons = {}
         for value, label in (("quotation", "Quotation"),
                              ("proforma", "Proforma Invoice")):
             btn = tk.Button(
                 type_bar, text=label,
-                font=("Arial", 9, "bold"), relief="solid", bd=1,
-                highlightthickness=0, cursor="hand2", padx=14, pady=3,
+                font=T.FONT_LABEL, relief="flat", bd=0,
+                highlightthickness=1,
+                highlightbackground=self.BORDER,
+                highlightcolor=self.BORDER,
+                cursor="hand2", padx=16, pady=5,
                 command=lambda v=value: self._set_doc_type(v),
             )
             if self._revision_number and value == "proforma":
@@ -1296,34 +1337,38 @@ class QuotationForm(tk.Toplevel):
         label_row.pack(fill="x", pady=(0, 6))
 
         tk.Label(
-            label_row, text="Customer name",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 9, "bold")
+            label_row, text="CUSTOMER NAME",
+            bg=self.CARD, fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL
         ).pack(side="left")
 
         tk.Button(
             label_row,
-            text="🔍  Lookup Saved",
+            text="Lookup saved",
             command=self._open_customer_lookup,
-            bg=self.SOFT, fg=self.TEXT,
-            activebackground="#ECEEF1", activeforeground=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 8, "bold"), cursor="hand2",
-            padx=8, pady=2,
+            bg=T.SURFACE_ALT, fg=T.TEXT_BODY,
+            activebackground=T.SURFACE_HOVER, activeforeground=self.TEXT,
+            relief="flat", bd=0, highlightthickness=1,
+            highlightbackground=self.BORDER, highlightcolor=T.FOCUS,
+            font=T.FONT_LABEL, cursor="hand2",
+            padx=10, pady=1,
         ).pack(side="right")
 
-        tk.Entry(
+        self.customer_name_entry = tk.Entry(
             name_box, textvariable=self.customer_name,
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 10), insertbackground=self.RED,
-        ).pack(fill="x", ipady=7)
+            bg=T.SURFACE, fg=self.TEXT, relief="flat", bd=0,
+            highlightthickness=1, highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_BODY, insertbackground=self.RED,
+        )
+        self.customer_name_entry.pack(fill="x", ipady=6)
 
         self._make_entry(
             grid, "Company", self.company, True
         ).grid(row=0, column=1, sticky="ew", padx=(10, 0), pady=7)
 
         self._make_entry(
-            grid, "Contact Person", self.contact_person, False
+            grid, "Contact person", self.contact_person, False
         ).grid(row=1, column=0, sticky="ew", padx=(0, 10), pady=7)
 
         self._make_entry(
@@ -1355,7 +1400,7 @@ class QuotationForm(tk.Toplevel):
         )
 
         # Automatically detect state from a known city.
-        city_entry.bind(
+        city_entry.entry.bind(
             "<KeyRelease>",
             self._auto_fill_state_from_city,
             add="+"
@@ -1365,9 +1410,9 @@ class QuotationForm(tk.Toplevel):
         state_box.grid(row=4, column=1, sticky="ew", padx=(10, 0), pady=7)
 
         tk.Label(
-            state_box, text="State",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 9, "bold")
+            state_box, text="STATE",
+            bg=self.CARD, fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL
         ).pack(anchor="w", pady=(0, 6))
 
         state_combo = ttk.Combobox(
@@ -1403,15 +1448,19 @@ class QuotationForm(tk.Toplevel):
         ).grid(row=5, column=1, sticky="ew", padx=(10, 0), pady=7)
 
         note = tk.Frame(
-            card, bg=self.RED_LIGHT
+            card, bg=T.ACCENT_SOFT
         )
         note.pack(fill="x", pady=(15, 0))
+
+        tk.Frame(
+            note, bg=self.RED, width=3
+        ).pack(side="left", fill="y")
 
         tk.Label(
             note,
             text="* Required field  •  GSTIN is optional for non-GST customers, but must be valid when entered.",
-            bg=self.RED_LIGHT, fg=self.RED_DARK,
-            font=("Arial", 9)
+            bg=T.ACCENT_SOFT, fg=T.ACCENT_DARK,
+            font=T.FONT_SMALL
         ).pack(anchor="w", padx=14, pady=10)
 
         self.status_text.set(
@@ -1488,18 +1537,23 @@ class QuotationForm(tk.Toplevel):
         top.pack(side="left", fill="both", expand=True, padx=(0, 20))
         
         # Right Column (Product Info Panel)
-        self.info_panel = tk.Frame(main_layout, bg="#F8F9FA", highlightbackground="#D5DBE1", highlightthickness=1, width=350)
+        self.info_panel = tk.Frame(main_layout, bg=T.SURFACE_ALT, highlightbackground=self.BORDER, highlightthickness=1, width=330)
         self.info_panel.pack(side="right", fill="y", expand=False)
         self.info_panel.pack_propagate(False)
         
         # Info Panel Header
-        tk.Label(self.info_panel, text="📋 Product Information", bg="#2C3E50", fg="white", font=("Arial", 10, "bold"), pady=8).pack(fill="x")
+        tk.Label(
+            self.info_panel, text="PRODUCT INFORMATION",
+            bg=T.SURFACE_ALT, fg=T.TEXT_MUTED, font=T.FONT_LABEL,
+            anchor="w", padx=14, pady=12
+        ).pack(fill="x")
+        tk.Frame(self.info_panel, bg=self.BORDER, height=1).pack(fill="x")
         
         # Scrollable Text Area
-        text_frame = tk.Frame(self.info_panel, bg="#F8F9FA")
-        text_frame.pack(fill="both", expand=True, padx=10, pady=10)
+        text_frame = tk.Frame(self.info_panel, bg=T.SURFACE_ALT)
+        text_frame.pack(fill="both", expand=True, padx=14, pady=12)
         
-        self.info_text = tk.Text(text_frame, bg="#F8F9FA", fg="#2C3E50", font=("Arial", 9), wrap="word", relief="flat", height=15)
+        self.info_text = tk.Text(text_frame, bg=T.SURFACE_ALT, fg=T.TEXT_BODY, font=T.FONT_SMALL, wrap="word", relief="flat", highlightthickness=0, bd=0, height=15)
         self.info_text.pack(side="left", fill="both", expand=True)
         
         scrollbar = ttk.Scrollbar(text_frame, orient="vertical", command=self.info_text.yview)
@@ -1509,40 +1563,51 @@ class QuotationForm(tk.Toplevel):
         self.info_text.config(state="disabled")
         
         # --- Left Column Inputs ---
-        tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
+        tk.Label(top, text="PRODUCT CATEGORY", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(anchor="w")
         self.category_combo = ttk.Combobox(top, textvariable=self.category, values=self._get_categories(), state="readonly", style="Crystal.TCombobox", width=50)
-        self.category_combo.pack(anchor="w", pady=(6, 16))
+        self.category_combo.pack(fill="x", pady=(6, 16))
         self.category_combo.bind("<<ComboboxSelected>>", self._category_changed)
 
-        tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(anchor="w")
+        tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(anchor="w")
         self.model_combo = ttk.Combobox(top, textvariable=self.model, values=self._get_models(self.category.get()), state="normal", style="Crystal.TCombobox", width=50)
-        self.model_combo.pack(anchor="w", pady=(6, 16))
+        self.model_combo.pack(fill="x", pady=(6, 16))
         self.model_combo.bind("<<ComboboxSelected>>", self._model_changed)
         self.model_combo.bind("<KeyRelease>", self._on_model_keyrelease)
 
         row = tk.Frame(top, bg=self.CARD)
         row.pack(fill="x", pady=10)
         
+        def _num_entry(variable, width):
+            e = tk.Entry(
+                row, textvariable=variable, width=width,
+                bg=T.SURFACE, fg=self.TEXT, relief="flat", bd=0,
+                highlightthickness=1, highlightbackground=self.BORDER,
+                highlightcolor=T.FOCUS, font=T.FONT_BODY,
+                insertbackground=self.RED,
+            )
+            e.pack(side="left", ipady=5, padx=(0, 20))
+            return e
+
         # HSN Code
-        tk.Label(row, text="HSN/SAC:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
+        tk.Label(row, text="HSN/SAC", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         self.hsn_var = tk.StringVar()
-        tk.Entry(row, textvariable=self.hsn_var, width=12, font=("Arial", 10)).pack(side="left", padx=(0, 20))
+        _num_entry(self.hsn_var, 12)
 
         # Price
-        tk.Label(row, text="Price (₹)", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
-        tk.Entry(row, textvariable=self.machine_price, width=10, font=("Arial", 10)).pack(side="left", padx=(0, 20))
+        tk.Label(row, text="PRICE (₹)", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
+        _num_entry(self.machine_price, 10)
 
         # Qty
-        tk.Label(row, text="Qty", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
-        tk.Entry(row, textvariable=self.machine_qty, width=6, font=("Arial", 10)).pack(side="left", padx=(0, 20))
+        tk.Label(row, text="QTY", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
+        _num_entry(self.machine_qty, 5)
 
         # Discount
-        tk.Label(row, text="Discount:", bg=self.CARD, fg=self.MUTED, font=("Arial", 8, "bold")).pack(side="left", padx=(0, 5))
+        tk.Label(row, text="DISCOUNT", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         self.disc_mode = tk.StringVar(value="Amount (₹)")
-        disc_mode_box = ttk.Combobox(row, textvariable=self.disc_mode, values=["Amount (₹)", "Percentage (%)"], state="readonly", width=12, font=("Arial", 9))
-        disc_mode_box.pack(side="left", padx=(0, 5))
+        disc_mode_box = ttk.Combobox(row, textvariable=self.disc_mode, values=["Amount (₹)", "Percentage (%)"], state="readonly", width=12, style="Crystal.TCombobox", font=T.FONT_SMALL)
+        disc_mode_box.pack(side="left", padx=(0, 6))
         self.disc_var = tk.StringVar(value="0")
-        tk.Entry(row, textvariable=self.disc_var, width=8, font=("Arial", 10)).pack(side="left", padx=(0, 20))
+        _num_entry(self.disc_var, 8)
         
         # Update Catalog Checkbox
         catalog_frame = tk.Frame(top, bg=self.CARD)
@@ -1552,11 +1617,20 @@ class QuotationForm(tk.Toplevel):
             catalog_frame,
             text="Also update catalog price for this model",
             variable=self._update_catalog_var,
-            bg=self.CARD, fg=self.MUTED, activebackground=self.CARD, selectcolor="white", font=("Arial", 9), anchor="w"
+            bg=self.CARD, fg=self.MUTED, activebackground=self.CARD,
+            activeforeground=self.TEXT, selectcolor=T.SURFACE,
+            font=T.FONT_SMALL, anchor="w"
         ).pack(side="left")
         
         # Add to Quotation Button
-        tk.Button(top, text="➕ Add to Quotation", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=self._add_item_to_cart).pack(anchor="e", pady=10)
+        tk.Button(
+            top, text="Add to quotation  +",
+            bg=self.RED, fg="white",
+            activebackground=self.RED_DARK, activeforeground="white",
+            font=T.FONT_BODY_B, relief="flat", bd=0,
+            highlightthickness=0, padx=20, pady=8,
+            cursor="hand2", command=self._add_item_to_cart,
+        ).pack(anchor="e", pady=10)
 
         # --- Cart Table ---
         self.cart_frame = tk.Frame(card, bg=self.CARD)
@@ -1564,16 +1638,27 @@ class QuotationForm(tk.Toplevel):
         
         cols = ("model", "hsn", "qty", "price", "discount", "total")
         self.cart_tree = ttk.Treeview(self.cart_frame, columns=cols, show="headings", height=6)
+        anchors = {"qty": "e", "price": "e", "discount": "e", "total": "e"}
         for c, w, t in [("model", 200, "Model"), ("hsn", 80, "HSN"), ("qty", 60, "Qty"), ("price", 100, "Price"), ("discount", 100, "Discount"), ("total", 100, "Total")]:
-            self.cart_tree.heading(c, text=t)
-            self.cart_tree.column(c, width=w, anchor="w")
+            self.cart_tree.heading(c, text=t, anchor=anchors.get(c, "w"))
+            self.cart_tree.column(c, width=w, anchor=anchors.get(c, "w"))
+        self.cart_tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.cart_tree.tag_configure("oddrow", background=T.SURFACE)
         
         vsb = ttk.Scrollbar(self.cart_frame, orient="vertical", command=self.cart_tree.yview)
         self.cart_tree.configure(yscrollcommand=vsb.set)
         self.cart_tree.pack(side="left", fill="both", expand=True)
         vsb.pack(side="right", fill="y")
 
-        tk.Button(card, text="🗑 Remove Selected", bg=self.SOFT, fg=self.TEXT, font=("Arial", 9), command=self._remove_cart_item).pack(anchor="w", pady=10)
+        tk.Button(
+            card, text="Remove selected",
+            bg=T.SURFACE, fg=T.TEXT_BODY,
+            activebackground=T.SURFACE_HOVER, activeforeground=self.TEXT,
+            font=T.FONT_SMALL, relief="flat", bd=0,
+            highlightthickness=1, highlightbackground=self.BORDER,
+            padx=14, pady=5, cursor="hand2",
+            command=self._remove_cart_item,
+        ).pack(anchor="w", pady=10)
 
         self._refresh_cart_table()
 
@@ -1660,7 +1745,7 @@ class QuotationForm(tk.Toplevel):
             f"₹{item['price']:,.0f}", 
             f"{item.get('raw_discount', 0)}%" if item.get('disc_mode') == "Percentage (%)" else f"₹{item['discount']:,.0f}",
             f"₹{item['total']:,.0f}"
-            ))
+            ), tags=("evenrow" if i % 2 == 0 else "oddrow",))
 
     def _get_categories(self):
 
@@ -1969,52 +2054,65 @@ class QuotationForm(tk.Toplevel):
         packing_ctrl_frame = tk.Frame(card, bg=self.CARD)
         packing_ctrl_frame.pack(fill="x", pady=(10, 10))
         
-        tk.Label(packing_ctrl_frame, text="Packing Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        def _pricing_entry(parent, variable, width):
+            e = tk.Entry(
+                parent, textvariable=variable, width=width,
+                bg=T.SURFACE, fg=self.TEXT, relief="flat", bd=0,
+                highlightthickness=1, highlightbackground=self.BORDER,
+                highlightcolor=T.FOCUS, font=T.FONT_BODY,
+                insertbackground=self.RED,
+            )
+            e.pack(side="left", ipady=5)
+            return e
+
+        tk.Label(packing_ctrl_frame, text="PACKING TYPE", bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         
         packing_mode_box = ttk.Combobox(
             packing_ctrl_frame,
             textvariable=self.packing_mode,
             values=["Percentage (%)", "Amount (₹)", "No Packing"],
             state="readonly",
-            width=15
+            width=15,
+            style="Crystal.TCombobox"
         )
-        packing_mode_box.pack(side="left", padx=(0, 15))
+        packing_mode_box.pack(side="left", padx=(0, 18))
         
-        tk.Label(packing_ctrl_frame, text="Value:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        tk.Label(packing_ctrl_frame, text="VALUE", bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         
-        packing_val_entry = tk.Entry(packing_ctrl_frame, textvariable=self.packing_value, width=10)
-        packing_val_entry.pack(side="left")
+        packing_val_entry = _pricing_entry(packing_ctrl_frame, self.packing_value, 10)
 
         # --- Transport & GST Controls ---
         extra_ctrl_frame = tk.Frame(card, bg=self.CARD)
         extra_ctrl_frame.pack(fill="x", pady=(0, 15))
         
-        tk.Label(extra_ctrl_frame, text="Transport (₹):", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        tk.Label(extra_ctrl_frame, text="TRANSPORT (₹)", bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         if not hasattr(self, "transport_var"):
             self.transport_var = tk.StringVar(value="0")
             
-        transport_entry = tk.Entry(extra_ctrl_frame, textvariable=self.transport_var, width=10)
-        transport_entry.pack(side="left", padx=(0, 20))
+        transport_entry = _pricing_entry(extra_ctrl_frame, self.transport_var, 10)
+        transport_entry.pack_configure(padx=(0, 20))
         
         # Bind the Transport entry to trigger a reload when the user presses Enter or clicks away
         transport_entry.bind("<Return>", lambda e: self._reload_pricing_screen())
         transport_entry.bind("<FocusOut>", lambda e: self._reload_pricing_screen())
         
-        tk.Label(extra_ctrl_frame, text="GST Type:", bg=self.CARD, fg=self.TEXT, font=("Arial", 9, "bold")).pack(side="left", padx=(0, 5))
+        tk.Label(extra_ctrl_frame, text="GST TYPE", bg=self.CARD, fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(side="left", padx=(0, 6))
         if not hasattr(self, "gst_type"):
             self.gst_type = tk.StringVar(value="CGST + SGST")
-        gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12)
+        gst_type_box = ttk.Combobox(extra_ctrl_frame, textvariable=self.gst_type, values=["CGST + SGST", "IGST"], state="readonly", width=12, style="Crystal.TCombobox")
         gst_type_box.pack(side="left")
         
         # Recalculate Button
         tk.Button(
             extra_ctrl_frame, 
-            text="🔄 Recalculate", 
+            text="Recalculate", 
             bg=self.RED, fg="white", 
-            font=("Arial", 8, "bold"), 
-            relief="flat", 
+            activebackground=self.RED_DARK, activeforeground="white",
+            font=T.FONT_LABEL, relief="flat", bd=0,
+            highlightthickness=0, padx=16, pady=6,
+            cursor="hand2",
             command=self._reload_pricing_screen
-        ).pack(side="left", padx=(15, 0))
+        ).pack(side="left", padx=(18, 0))
 
         # --- Math Calculation ---
         try:
@@ -2084,11 +2182,11 @@ class QuotationForm(tk.Toplevel):
             
             pad_y = 12 if is_grand_total else 8
             
-            lbl_font = ("Arial", 11, "bold") if is_grand_total else ("Arial", 10)
+            lbl_font = T.FONT_BODY_B if is_grand_total else T.FONT_BODY
             lbl_fg = self.TEXT if is_grand_total else self.MUTED
             tk.Label(row, text=label, bg=row_bg, fg=lbl_fg, font=lbl_font).pack(side="left", padx=15, pady=pad_y)
             
-            val_font = ("Arial", 12, "bold") if is_grand_total else ("Arial", 10, "bold")
+            val_font = T.FONT_H3 if is_grand_total else T.FONT_BODY_B
             val_fg = self.RED if is_grand_total else self.TEXT
             tk.Label(row, text=value, bg=row_bg, fg=val_fg, font=val_font).pack(side="right", padx=15, pady=pad_y)
             
@@ -2105,7 +2203,7 @@ class QuotationForm(tk.Toplevel):
 
         self._section_header(
             card,
-            5,
+            4,
             "Terms & conditions",
             "Choose whether the quotation should include the standard terms."
         )
@@ -2126,38 +2224,42 @@ class QuotationForm(tk.Toplevel):
 
         tk.Button(
             action_bar,
-            text="✎  Edit Terms & Conditions",
+            text="Edit terms",
             command=self._open_terms_editor,
-            bg=self.SOFT,
-            fg=self.TEXT,
-            activebackground="#ECEEF1",
+            bg=T.SURFACE,
+            fg=T.TEXT_BODY,
+            activebackground=T.SURFACE_HOVER,
             activeforeground=self.TEXT,
-            relief="solid",
-            bd=1,
-            highlightthickness=0,
-            font=("Arial", 9, "bold"),
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_LABEL,
             cursor="hand2",
-            padx=14,
-            pady=7
+            padx=16,
+            pady=6
         ).pack(
             side="left"
         )
 
         tk.Button(
             action_bar,
-            text="↺  Restore Defaults",
+            text="Restore defaults",
             command=self._restore_default_terms,
-            bg="white",
-            fg=self.MUTED,
-            activebackground="#F3F4F6",
+            bg=T.SURFACE,
+            fg=T.TEXT_MUTED,
+            activebackground=T.SURFACE_HOVER,
             activeforeground=self.TEXT,
-            relief="solid",
-            bd=1,
-            highlightthickness=0,
-            font=("Arial", 9),
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_SMALL,
             cursor="hand2",
             padx=14,
-            pady=7
+            pady=6
         ).pack(
             side="left",
             padx=(8, 0)
@@ -2165,19 +2267,21 @@ class QuotationForm(tk.Toplevel):
 
         tk.Button(
             action_bar,
-            text="👁  Preview Quotation",
+            text="Preview quotation",
             command=self._open_preview,
-            bg=self.GREEN,
-            fg="white",
-            activebackground="#0F5A35",
-            activeforeground="white",
+            bg=T.SURFACE,
+            fg=self.RED,
+            activebackground=T.ACCENT_SOFT,
+            activeforeground=self.RED,
             relief="flat",
             bd=0,
-            highlightthickness=0,
-            font=("Arial", 9, "bold"),
+            highlightthickness=1,
+            highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_BODY_B,
             cursor="hand2",
-            padx=14,
-            pady=7
+            padx=16,
+            pady=6
         ).pack(
             side="left",
             padx=(8, 0)
@@ -2213,7 +2317,7 @@ class QuotationForm(tk.Toplevel):
             activebackground=self.SOFT,
             selectcolor="white",
             fg=self.TEXT,
-            font=("Arial", 10, "bold")
+            font=T.FONT_BODY_B
         ).pack(
             side="left",
             padx=15,
@@ -2246,7 +2350,7 @@ class QuotationForm(tk.Toplevel):
                 ),
                 bg=self.SOFT,
                 fg=self.MUTED,
-                font=("Arial", 9, "italic")
+                font=T.FONT_SMALL
             ).pack(
                 anchor="w",
                 padx=14,
@@ -2297,7 +2401,7 @@ class QuotationForm(tk.Toplevel):
                 fg=self.TEXT,
                 width=28,
                 anchor="w",
-                font=("Arial", 9, "bold")
+                font=T.FONT_LABEL
             ).pack(
                 side="left",
                 padx=4,
@@ -2312,7 +2416,7 @@ class QuotationForm(tk.Toplevel):
                 anchor="w",
                 justify="left",
                 wraplength=650,
-                font=("Arial", 9)
+                font=T.FONT_SMALL
             ).pack(
                 side="left",
                 fill="x",
@@ -2428,7 +2532,7 @@ class QuotationForm(tk.Toplevel):
             text="QUOTATION",
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 8, "bold")
+            font=T.FONT_LABEL
         ).pack(
             anchor="w"
         )
@@ -2438,7 +2542,7 @@ class QuotationForm(tk.Toplevel):
             text="Live summary",
             bg=self.CARD,
             fg=self.TEXT,
-            font=("Arial", 17, "bold")
+            font=T.FONT_H2
         ).pack(
             anchor="w",
             pady=(3, 0)
@@ -2449,7 +2553,7 @@ class QuotationForm(tk.Toplevel):
             text="Customer not added",
             bg=self.CARD,
             fg=self.TEXT,
-            font=("Arial", 10, "bold"),
+            font=T.FONT_BODY_B,
             anchor="w",
             justify="left",
             wraplength=300
@@ -2466,7 +2570,7 @@ class QuotationForm(tk.Toplevel):
             text="",
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 9),
+            font=T.FONT_SMALL,
             anchor="w",
             wraplength=300
         )
@@ -2485,7 +2589,7 @@ class QuotationForm(tk.Toplevel):
             text="No machine selected",
             bg=self.CARD,
             fg=self.TEXT,
-            font=("Arial", 10, "bold"),
+            font=T.FONT_BODY_B,
             anchor="w",
             justify="left",
             wraplength=300
@@ -2505,7 +2609,7 @@ class QuotationForm(tk.Toplevel):
             text="PRODUCT",
             bg=self.CARD,
             fg=self.MUTED,
-            font=("Arial", 8, "bold")
+            font=T.FONT_LABEL
         )
         self.summary_total_label.pack(
             anchor="w",
@@ -2517,7 +2621,7 @@ class QuotationForm(tk.Toplevel):
             text="₹ 0.00",
             bg=self.CARD,
             fg=self.RED,
-            font=("Arial", 25, "bold"),
+            font=T.FONT_KPI,
             anchor="w"
         )
 
@@ -2530,9 +2634,9 @@ class QuotationForm(tk.Toplevel):
         self.summary_status = tk.Label(
             outer,
             textvariable=self.status_text,
-            bg=self.RED_LIGHT,
-            fg=self.RED_DARK,
-            font=("Arial", 9, "bold"),
+            bg=T.ACCENT_SOFT,
+            fg=T.ACCENT_DARK,
+            font=T.FONT_LABEL,
             anchor="w",
             justify="left",
             wraplength=290
@@ -2567,8 +2671,8 @@ class QuotationForm(tk.Toplevel):
 
         self.navigation = tk.Frame(
             self,
-            bg="white",
-            height=78,
+            bg=T.SURFACE,
+            height=72,
             highlightbackground=self.BORDER,
             highlightthickness=1
         )
@@ -2582,67 +2686,69 @@ class QuotationForm(tk.Toplevel):
 
         left_group = tk.Frame(
             self.navigation,
-            bg="white"
+            bg=T.SURFACE
         )
 
         left_group.pack(
             side="left",
-            padx=26
+            padx=28
         )
 
         self.back_button = tk.Button(
             left_group,
             text="←  Back",
             command=self._back,
-            bg="white",
-            fg=self.TEXT,
-            activebackground="#F3F4F6",
+            bg=T.SURFACE,
+            fg=T.TEXT_BODY,
+            activebackground=T.SURFACE_HOVER,
             activeforeground=self.TEXT,
-            relief="solid",
-            bd=1,
-            highlightthickness=0,
-            width=12,
-            height=2,
-            font=("Arial", 9, "bold"),
+            disabledforeground=T.TEXT_FAINT,
+            relief="flat",
+            bd=0,
+            highlightthickness=1,
+            highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            padx=18,
+            pady=7,
+            font=T.FONT_BODY_B,
             cursor="hand2"
         )
 
         self.back_button.pack(
             side="left",
-            padx=(0, 8),
-            pady=15
+            padx=(0, 8)
         )
 
         self.clear_button = tk.Button(
             left_group,
             text="Clear",
             command=self.clear_form,
-            bg="white",
-            fg=self.MUTED,
-            activebackground="#F3F4F6",
+            bg=T.SURFACE,
+            fg=T.TEXT_MUTED,
+            activebackground=T.SURFACE_HOVER,
             activeforeground=self.TEXT,
             relief="flat",
             bd=0,
-            width=9,
-            height=2,
-            font=("Arial", 9),
+            highlightthickness=0,
+            padx=14,
+            pady=7,
+            font=T.FONT_BODY,
             cursor="hand2"
         )
 
         self.clear_button.pack(
             side="left",
-            padx=4,
-            pady=15
+            padx=4
         )
 
         right_group = tk.Frame(
             self.navigation,
-            bg="white"
+            bg=T.SURFACE
         )
 
         right_group.pack(
             side="right",
-            padx=26
+            padx=28
         )
 
         self.generate_button = tk.Button(
@@ -2656,15 +2762,14 @@ class QuotationForm(tk.Toplevel):
             relief="flat",
             bd=0,
             highlightthickness=0,
-            width=28,
-            height=2,
-            font=("Arial", 10, "bold"),
+            padx=22,
+            pady=8,
+            font=T.FONT_BODY_B,
             cursor="hand2"
         )
 
         self.generate_button.pack(
-            side="right",
-            pady=14
+            side="right"
         )
 
 
@@ -2701,7 +2806,7 @@ class QuotationForm(tk.Toplevel):
 
             self.back_button.configure(
                 state="disabled",
-                fg="#B5B8BD"
+                fg=T.TEXT_FAINT
             )
 
         else:
@@ -2728,9 +2833,7 @@ class QuotationForm(tk.Toplevel):
                 "Continue  →"
             ),
 
-            state="normal",
-
-            width=28
+            state="normal"
         )
 
         try:
@@ -2826,8 +2929,8 @@ class QuotationForm(tk.Toplevel):
 
                 circle.configure(
                     text=str(index),
-                    bg="#E9EBEE",
-                    fg="#737983"
+                    bg=T.NEUTRAL_BG,
+                    fg=T.TEXT_MUTED
                 )
 
                 title.configure(
@@ -3410,24 +3513,24 @@ class QuotationForm(tk.Toplevel):
         )
         preview_win.title(f"{doc_label} Preview")
         preview_win.geometry("850x950")
-        preview_win.configure(bg="#F4F6F8")
+        preview_win.configure(bg=T.BG)
         
         # Use grid layout for guaranteed visibility
         preview_win.grid_rowconfigure(1, weight=1)
         preview_win.grid_columnconfigure(0, weight=1)
         
         # Header
-        tk.Label(preview_win, text=f"{doc_label} Preview", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 16, "bold")).grid(row=0, column=0, pady=10)
+        tk.Label(preview_win, text=f"{doc_label} preview", bg=T.BG, fg=T.TEXT, font=T.FONT_H2).grid(row=0, column=0, pady=10)
         
         # Image Frame
-        image_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        image_frame = tk.Frame(preview_win, bg=T.BG)
         image_frame.grid(row=1, column=0, sticky="nsew", padx=20, pady=10)
         
-        status_label = tk.Label(image_frame, text="Generating PDF... Please wait.", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 12))
+        status_label = tk.Label(image_frame, text="Generating PDF… please wait.", bg=T.BG, fg=T.TEXT_MUTED, font=T.FONT_BODY)
         status_label.pack(expand=True)
         
         # Buttons (row 2)
-        btn_frame = tk.Frame(preview_win, bg="#F4F6F8")
+        btn_frame = tk.Frame(preview_win, bg=T.BG)
         btn_frame.grid(row=2, column=0, pady=10)
         
         # Tk widgets must only be touched from the main thread, so the
@@ -3549,7 +3652,7 @@ class QuotationForm(tk.Toplevel):
                             photo = photo.subsample(2, 2)
                     
                     status_label.pack_forget()
-                    canvas = tk.Canvas(image_frame, bg="#F4F6F8", highlightthickness=0)
+                    canvas = tk.Canvas(image_frame, bg=T.BG, highlightthickness=0)
                     scrollbar = tk.Scrollbar(image_frame, orient="vertical", command=canvas.yview)
                     canvas.configure(yscrollcommand=scrollbar.set)
                     scrollbar.pack(side="right", fill="y")
@@ -3576,7 +3679,7 @@ class QuotationForm(tk.Toplevel):
         # Start generation in background
         threading.Thread(target=do_generate, daemon=True).start()
         
-        gen_btn = tk.Button(btn_frame, text="Generate PDF", bg="#C40000", fg="white", font=("Arial", 10, "bold"), relief="flat", command=lambda: threading.Thread(target=do_generate, daemon=True).start(), padx=20, pady=5)
+        gen_btn = tk.Button(btn_frame, text="Generate PDF", bg=T.ACCENT, fg="white", activebackground=T.ACCENT_DARK, activeforeground="white", font=T.FONT_BODY_B, relief="flat", bd=0, highlightthickness=0, cursor="hand2", command=lambda: threading.Thread(target=do_generate, daemon=True).start(), padx=20, pady=7)
         gen_btn.pack(side="left", padx=10)
         
         def close_preview():
@@ -3590,7 +3693,7 @@ class QuotationForm(tk.Toplevel):
                     pass
 
         preview_win.protocol("WM_DELETE_WINDOW", close_preview)
-        tk.Button(btn_frame, text="Close", bg="#F4F6F8", fg="#2C3E50", font=("Arial", 10), relief="flat", command=close_preview, padx=20, pady=5).pack(side="left", padx=10)
+        tk.Button(btn_frame, text="Close", bg=T.SURFACE, fg=T.TEXT_BODY, activebackground=T.SURFACE_HOVER, activeforeground=T.TEXT, font=T.FONT_BODY, relief="flat", bd=0, highlightthickness=1, highlightbackground=T.BORDER, cursor="hand2", command=close_preview, padx=20, pady=6).pack(side="left", padx=10)
 
 
     def _open_latest_pdf(self):
@@ -3796,41 +3899,85 @@ class QuotationForm(tk.Toplevel):
 
         picker = tk.Toplevel(self)
         picker.title("Pick a saved customer")
-        picker.geometry("620x480")
+        picker.geometry("640x540")
         picker.configure(bg=self.BG)
         picker.transient(self)
         picker.grab_set()
+        W.set_window_icon(picker)
+        W.apply_ttk_theme(picker)
 
         tk.Label(
-            picker, text="SELECT A SAVED CUSTOMER",
-            bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 8, "bold"),
-        ).pack(anchor="w", padx=22, pady=(18, 6))
+            picker, text="SAVED CUSTOMERS",
+            bg=self.BG, fg=T.TEXT_MUTED,
+            font=T.FONT_LABEL,
+        ).pack(anchor="w", padx=24, pady=(20, 2))
+        tk.Label(
+            picker, text="Pick a customer to fill the form",
+            bg=self.BG, fg=T.TEXT,
+            font=T.FONT_H2,
+        ).pack(anchor="w", padx=24, pady=(0, 12))
 
         # ── Search entry (debounced) ──────────────────────────────
         search_var = tk.StringVar()
         search_entry = tk.Entry(
             picker, textvariable=search_var,
-            font=("Arial", 10), relief="solid", bd=1,
+            bg=T.SURFACE, fg=self.TEXT,
+            relief="flat", bd=0,
+            highlightthickness=1, highlightbackground=self.BORDER,
+            highlightcolor=T.FOCUS,
+            font=T.FONT_BODY, insertbackground=self.RED,
         )
-        search_entry.pack(fill="x", padx=22, pady=(0, 8))
+        search_entry.pack(fill="x", padx=24, ipady=6, pady=(0, 4))
         search_entry.focus_set()
 
         tk.Label(
-            picker, text="Type name, company or phone…",
-            bg=self.BG, fg=self.MUTED, font=("Arial", 8),
-        ).pack(anchor="w", padx=24, pady=(0, 6))
+            picker, text="Type a name, company or phone number",
+            bg=self.BG, fg=T.TEXT_FAINT, font=T.FONT_TINY,
+        ).pack(anchor="w", padx=26, pady=(0, 10))
+
+        btn_row = tk.Frame(picker, bg=T.SURFACE,
+                           highlightbackground=self.BORDER,
+                           highlightthickness=1)
+        btn_row.pack(side="bottom", fill="x")
+
+        tk.Button(
+            btn_row, text="Cancel", command=picker.destroy,
+            bg=T.SURFACE, fg=T.TEXT_BODY,
+            activebackground=T.SURFACE_HOVER,
+            activeforeground=T.TEXT,
+            relief="flat", bd=0, highlightthickness=1,
+            highlightbackground=self.BORDER,
+            font=T.FONT_BODY, cursor="hand2",
+            padx=20, pady=7,
+        ).pack(side="right", padx=(8, 24), pady=14)
+
+        tk.Button(
+            btn_row, text="Use selected",
+            command=lambda: apply_selection(),
+            bg=self.RED, fg="white",
+            activebackground=self.RED_DARK,
+            activeforeground="white",
+            relief="flat", bd=0, highlightthickness=0,
+            font=T.FONT_BODY_B, cursor="hand2",
+            padx=22, pady=8,
+        ).pack(side="right", pady=14)
+
+        list_wrap = tk.Frame(
+            picker, bg=T.SURFACE,
+            highlightbackground=self.BORDER, highlightthickness=1,
+        )
+        list_wrap.pack(fill="both", expand=True, padx=24, pady=(0, 16))
 
         listbox = tk.Listbox(
-            picker,
-            bg="white", fg=self.TEXT,
-            relief="solid", bd=1,
-            font=("Arial", 10),
+            list_wrap,
+            bg=T.SURFACE, fg=self.TEXT,
+            relief="flat", bd=0, highlightthickness=0,
+            font=T.FONT_BODY,
             activestyle="none",
-            selectbackground=self.RED_LIGHT,
+            selectbackground=T.ACCENT_SOFT,
             selectforeground=self.TEXT,
         )
-        listbox.pack(fill="both", expand=True, padx=22, pady=(0, 12))
+        listbox.pack(fill="both", expand=True, padx=2, pady=2)
 
         def customer_value(record, *keys):
             for key in keys:
@@ -3902,32 +4049,6 @@ class QuotationForm(tk.Toplevel):
 
             self._update_summary()
             picker.destroy()
-
-        btn_row = tk.Frame(picker, bg=self.CARD,
-                           highlightbackground=self.BORDER,
-                           highlightthickness=1)
-        btn_row.pack(side="bottom", fill="x")
-
-        tk.Button(
-            btn_row, text="Cancel", command=picker.destroy,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6",
-            activeforeground=self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            width=14, height=2,
-        ).pack(side="right", padx=(8, 22), pady=14)
-
-        tk.Button(
-            btn_row, text="Use Selected",
-            command=apply_selection,
-            bg=self.RED, fg="white",
-            activebackground=self.RED_DARK,
-            activeforeground="white",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 10, "bold"), cursor="hand2",
-            width=18, height=2,
-        ).pack(side="right", pady=14)
 
         listbox.bind("<Double-Button-1>", lambda e: apply_selection())
 

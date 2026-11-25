@@ -9,6 +9,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 from datetime import date
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
 
 PROJECT_ROOT = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..")
@@ -52,22 +55,23 @@ def _text(v):
 
 class MonthlyReport(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_LIGHT = "#FFF3F3"
-    SOFT = "#F8F9FA"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_LIGHT = T.ACCENT_SOFT
+    SOFT = T.SURFACE_ALT
 
     def __init__(self, parent):
         super().__init__(parent)
 
         self.title("CRYSTAL | Monthly Report")
-        self.geometry("1100x720")
-        self.minsize(950, 620)
+        self.geometry("1180x740")
+        self.minsize(1000, 640)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -89,7 +93,7 @@ class MonthlyReport(tk.Toplevel):
         self.to_var = tk.StringVar(value="")
         self.years = years
 
-        self._configure_style()
+        W.apply_ttk_theme(self)
         self._build_interface()
         self._reload()
 
@@ -99,118 +103,85 @@ class MonthlyReport(tk.Toplevel):
         except Exception:
             pass
 
-    def _configure_style(self):
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except Exception:
-            pass
-        style.configure(
-            "MR.Treeview",
-            background="white", fieldbackground="white",
-            foreground=self.TEXT, rowheight=24,
-            borderwidth=0, font=("Arial", 9),
-        )
-        style.configure(
-            "MR.Treeview.Heading",
-            background="#F0F1F3", foreground=self.TEXT,
-            relief="flat", font=("Arial", 9, "bold"),
-        )
-
     # --------------------------------------------------------
     # UI BUILD
     # --------------------------------------------------------
 
     def _build_interface(self):
-        head = tk.Frame(self, bg=self.BG)
-        head.pack(fill="x", padx=28, pady=(18, 6))
-        tk.Label(
-            head, text="Monthly Report",
-            bg=self.BG, fg=self.TEXT,
-            font=("Arial", 16, "bold"),
-        ).pack(side="left")
-        tk.Label(
-            head, text="Business summary & yearly totals",
-            bg=self.BG, fg=self.MUTED,
-            font=("Arial", 9),
-        ).pack(side="left", padx=(12, 0), pady=(8, 0))
+        header = W.PageHeader(
+            self, title="Monthly Report",
+            subtitle="Business summary and yearly totals",
+            meta="—", padx=28,
+        )
+        header.pack(fill="x")
+        self.period_meta = header.meta_label
 
         # ---- filter bar ----
-        filt = tk.Frame(self, bg=self.BG)
-        filt.pack(fill="x", padx=28, pady=(6, 10))
-
-        tk.Label(filt, text="Year", bg=self.BG, fg=self.MUTED,
-                 font=("Arial", 8, "bold")).pack(side="left", padx=(0, 6))
-        year_cb = ttk.Combobox(
-            filt, textvariable=self.year_var, values=self.years,
-            state="readonly", width=8, font=("Arial", 9),
+        filt = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
         )
-        year_cb.pack(side="left", ipady=3)
+        filt.pack(fill="x", padx=28, pady=(14, 10))
+        row = tk.Frame(filt, bg=T.SURFACE)
+        row.pack(fill="x", padx=14, pady=10)
+
+        def _label(text, pad=(0, 5)):
+            tk.Label(row, text=text.upper(), bg=T.SURFACE,
+                     fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(
+                side="left", padx=pad)
+
+        _label("Year")
+        year_cb = ttk.Combobox(
+            row, textvariable=self.year_var, values=self.years,
+            state="readonly", width=6, font=T.FONT_SMALL,
+        )
+        year_cb.pack(side="left", ipady=4)
         year_cb.bind("<<ComboboxSelected>>", lambda _e: self._reload())
 
-        tk.Label(filt, text="Month", bg=self.BG, fg=self.MUTED,
-                 font=("Arial", 8, "bold")).pack(side="left", padx=(14, 6))
+        _label("Month", (10, 5))
         month_cb = ttk.Combobox(
-            filt, textvariable=self.month_var, values=list(MONTH_NAMES),
-            state="readonly", width=12, font=("Arial", 9),
+            row, textvariable=self.month_var, values=list(MONTH_NAMES),
+            state="readonly", width=10, font=T.FONT_SMALL,
         )
-        month_cb.pack(side="left", ipady=3)
+        month_cb.pack(side="left", ipady=4)
         month_cb.bind("<<ComboboxSelected>>", lambda _e: self._reload())
 
-        tk.Label(filt, text="From", bg=self.BG, fg=self.MUTED,
-                 font=("Arial", 8, "bold")).pack(side="left", padx=(14, 6))
-        tk.Entry(
-            filt, textvariable=self.from_var, width=12,
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 10), insertbackground=self.RED,
-        ).pack(side="left", ipady=4)
+        _label("From", (10, 5))
+        W.SearchEntry(
+            row, textvariable=self.from_var, width=11,
+            placeholder="dd-mm-yyyy", show_icon=False,
+        ).pack(side="left")
 
-        tk.Label(filt, text="To", bg=self.BG, fg=self.MUTED,
-                 font=("Arial", 8, "bold")).pack(side="left", padx=(10, 6))
-        tk.Entry(
-            filt, textvariable=self.to_var, width=12,
-            bg="white", fg=self.TEXT, relief="solid", bd=1,
-            font=("Arial", 10), insertbackground=self.RED,
-        ).pack(side="left", ipady=4)
+        _label("To", (8, 5))
+        W.SearchEntry(
+            row, textvariable=self.to_var, width=11,
+            placeholder="dd-mm-yyyy", show_icon=False,
+        ).pack(side="left")
 
-        tk.Button(
-            filt, text="Apply", command=self._reload,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=12, pady=4,
+        W.PrimaryButton(
+            row, "Apply", self._reload, padx=12, pady=7,
         ).pack(side="left", padx=(10, 0))
-
-        tk.Button(
-            filt, text="Reset", command=self._reset,
-            bg="white", fg=self.MUTED,
-            activebackground="#F3F4F6",
-            relief="flat", bd=0, highlightthickness=0,
-            font=("Arial", 9), cursor="hand2",
-            padx=12, pady=4,
+        W.GhostButton(
+            row, "Reset", self._reset, padx=11, pady=7,
         ).pack(side="left", padx=(6, 0))
 
-        # ---- export buttons (moved up so always visible) ----
-        tk.Button(
-            filt, text="Export CSV", command=self._export_csv,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6",
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=12, pady=4,
-        ).pack(side="right")
+        # ---- action bar (bottom first) ----
+        abar = tk.Frame(
+            self, bg=T.SURFACE, height=64,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        abar.pack(side="bottom", fill="x")
+        abar.pack_propagate(False)
+        W.GhostButton(
+            abar, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=13)
+        W.GhostButton(
+            abar, "Export CSV", self._export_csv, padx=14, pady=7,
+        ).pack(side="right", padx=(0, 10), pady=13)
+        W.GhostButton(
+            abar, "Export PDF", self._export_pdf, padx=14, pady=7,
+        ).pack(side="right", pady=13)
 
-        tk.Button(
-            filt, text="Export PDF", command=self._export_pdf,
-            bg="white", fg=self.TEXT,
-            activebackground="#F3F4F6",
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=12, pady=4,
-        ).pack(side="right", padx=(0, 8))
-
-        # ---- scrollable body ----
         body = tk.Frame(self, bg=self.BG)
         body.pack(fill="both", expand=True, padx=28, pady=(0, 10))
 
@@ -223,18 +194,20 @@ class MonthlyReport(tk.Toplevel):
 
         self.summary_title = tk.Label(
             sum_card, text="Summary",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 11, "bold"), anchor="w",
+            bg=self.CARD, fg=T.TEXT,
+            font=T.FONT_H3, anchor="w",
         )
-        self.summary_title.pack(anchor="w", padx=16, pady=(12, 6))
+        self.summary_title.pack(anchor="w", padx=18, pady=(12, 2))
 
         grid = tk.Frame(sum_card, bg=self.CARD)
-        grid.pack(fill="x", padx=16, pady=(0, 14))
+        grid.pack(fill="x", padx=18, pady=(0, 14))
+        for col in range(4):
+            grid.columnconfigure(col, weight=1, uniform="stat")
 
         self.lbl_count = self._stat_cell(grid, "Total quotations", "0", 0, 0)
-        self.lbl_total = self._stat_cell(grid, "Total value", "Rs. 0.00", 0, 1)
-        self.lbl_avg = self._stat_cell(grid, "Average value", "Rs. 0.00", 1, 0)
-        self.lbl_max = self._stat_cell(grid, "Highest value", "Rs. 0.00", 1, 1)
+        self.lbl_total = self._stat_cell(grid, "Total value", "₹ 0.00", 0, 1)
+        self.lbl_avg = self._stat_cell(grid, "Average value", "₹ 0.00", 0, 2)
+        self.lbl_max = self._stat_cell(grid, "Highest value", "₹ 0.00", 0, 3)
 
         # two-column: top customers + top models
         cols = tk.Frame(body, bg=self.BG)
@@ -248,11 +221,13 @@ class MonthlyReport(tk.Toplevel):
         )
         cust_card.grid(row=0, column=0, sticky="nsew", padx=(0, 5))
         tk.Label(
-            cust_card, text="Top Customers",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 11, "bold"), anchor="w",
-        ).pack(anchor="w", padx=14, pady=(12, 6))
-        self.cust_tree = self._make_mini_tree(cust_card, ("Customer", "Q", "Total"))
+            cust_card, text="Top customers",
+            bg=self.CARD, fg=T.TEXT,
+            font=T.FONT_H3, anchor="w",
+        ).pack(anchor="w", padx=16, pady=(12, 6))
+        self.cust_tree = self._make_mini_tree(cust_card, ("Customer", "Qty", "Total"))
+        self.cust_note = self._empty_note(
+            cust_card, "No customer activity in this period.")
 
         model_card = tk.Frame(
             cols, bg=self.CARD,
@@ -260,11 +235,13 @@ class MonthlyReport(tk.Toplevel):
         )
         model_card.grid(row=0, column=1, sticky="nsew", padx=(5, 0))
         tk.Label(
-            model_card, text="Top Models",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 11, "bold"), anchor="w",
-        ).pack(anchor="w", padx=14, pady=(12, 6))
-        self.model_tree = self._make_mini_tree(model_card, ("Model", "Q", "Total"))
+            model_card, text="Top models",
+            bg=self.CARD, fg=T.TEXT,
+            font=T.FONT_H3, anchor="w",
+        ).pack(anchor="w", padx=16, pady=(12, 6))
+        self.model_tree = self._make_mini_tree(model_card, ("Model", "Qty", "Total"))
+        self.model_note = self._empty_note(
+            model_card, "No model activity in this period.")
 
         # 12-month breakdown card
         year_card = tk.Frame(
@@ -274,82 +251,77 @@ class MonthlyReport(tk.Toplevel):
         year_card.pack(fill="both", expand=True)
 
         self.year_title = tk.Label(
-            year_card, text="12-Month Breakdown",
-            bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 11, "bold"), anchor="w",
+            year_card, text="12-Month breakdown",
+            bg=self.CARD, fg=T.TEXT,
+            font=T.FONT_H3, anchor="w",
         )
-        self.year_title.pack(anchor="w", padx=14, pady=(12, 6))
+        self.year_title.pack(anchor="w", padx=16, pady=(12, 6))
 
         year_cols = ("month", "count", "value")
         self.year_tree = ttk.Treeview(
-            year_card, columns=year_cols, show="headings",
-            style="MR.Treeview", height=8,
+            year_card, columns=year_cols, show="headings", height=3,
         )
-        self.year_tree.heading("month", text="Month")
-        self.year_tree.heading("count", text="Quotations")
-        self.year_tree.heading("value", text="Total value")
-        self.year_tree.column("month", width=200, anchor="w")
+        self.year_tree.heading("month", text="Month", anchor="w")
+        self.year_tree.heading("count", text="Quotations", anchor="e")
+        self.year_tree.heading("value", text="Total value", anchor="e")
+        self.year_tree.column("month", width=220, anchor="w", stretch=True)
         self.year_tree.column("count", width=120, anchor="e")
-        self.year_tree.column("value", width=200, anchor="e")
+        self.year_tree.column("value", width=160, anchor="e")
+        self.year_tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.year_tree.tag_configure("oddrow", background=T.SURFACE)
 
         vsb = ttk.Scrollbar(year_card, orient="vertical",
                             command=self.year_tree.yview)
         self.year_tree.configure(yscrollcommand=vsb.set)
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=(0, 2))
         self.year_tree.pack(side="left", fill="both", expand=True,
-                            padx=(14, 0), pady=(0, 14))
-        vsb.pack(side="right", fill="y", pady=(0, 14), padx=(0, 14))
-
-        # ---- action bar ----
-        abar = tk.Frame(
-            self, bg=self.CARD, height=60,
-            highlightbackground=self.BORDER, highlightthickness=1,
-        )
-        abar.pack(side="bottom", fill="x")
-        abar.pack_propagate(False)
-
-        right = tk.Frame(abar, bg=self.CARD)
-        right.pack(side="right", padx=22)
-        self._btn(right, "Close", self.destroy).pack(side="right", pady=14)
+                            padx=2, pady=(0, 2))
 
     def _stat_cell(self, parent, label, value, row, col):
         cell = tk.Frame(parent, bg=self.CARD)
-        cell.grid(row=row, column=col, sticky="w", padx=(0, 40), pady=(0, 8))
+        cell.grid(row=row, column=col, sticky="w", padx=(0, 24), pady=(4, 10))
         tk.Label(
-            cell, text=label, bg=self.CARD, fg=self.MUTED,
-            font=("Arial", 8, "bold"), anchor="w",
+            cell, text=label.upper(), bg=self.CARD, fg=self.MUTED,
+            font=T.FONT_LABEL, anchor="w",
         ).pack(anchor="w")
         val_lbl = tk.Label(
-            cell, text=value, bg=self.CARD, fg=self.TEXT,
-            font=("Arial", 14, "bold"), anchor="w",
+            cell, text=value, bg=self.CARD, fg=T.TEXT,
+            font=T.FONT_H1, anchor="w",
         )
         val_lbl.pack(anchor="w")
         return val_lbl
 
+    def _empty_note(self, parent, text):
+        return tk.Label(
+            parent, text=text, bg=self.CARD, fg=T.TEXT_FAINT,
+            font=T.FONT_SMALL,
+        )
+
+    def _toggle_note(self, note, visible):
+        try:
+            if visible:
+                note.place(relx=0.5, rely=0.66, anchor="center")
+                note.lift()
+            else:
+                note.place_forget()
+        except Exception:
+            pass
+
     def _make_mini_tree(self, parent, headings):
         cols = ("c1", "c2", "c3")
         tree = ttk.Treeview(
-            parent, columns=cols, show="headings",
-            style="MR.Treeview", height=5,
+            parent, columns=cols, show="headings", height=3,
         )
-        tree.heading("c1", text=headings[0])
-        tree.heading("c2", text=headings[1])
-        tree.heading("c3", text=headings[2])
-        tree.column("c1", width=220, anchor="w")
+        tree.heading("c1", text=headings[0], anchor="w")
+        tree.heading("c2", text=headings[1], anchor="e")
+        tree.heading("c3", text=headings[2], anchor="e")
+        tree.column("c1", width=200, anchor="w", stretch=True)
         tree.column("c2", width=50, anchor="e")
-        tree.column("c3", width=120, anchor="e")
+        tree.column("c3", width=110, anchor="e")
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
         tree.pack(fill="x", padx=14, pady=(0, 14))
         return tree
-
-    def _btn(self, parent, text, command, *, danger=False):
-        return tk.Button(
-            parent, text=text, command=command,
-            bg="white", fg=self.RED if danger else self.TEXT,
-            activebackground=self.RED_LIGHT if danger else "#F3F4F6",
-            activeforeground=self.RED if danger else self.TEXT,
-            relief="solid", bd=1, highlightthickness=0,
-            font=("Arial", 9, "bold"), cursor="hand2",
-            padx=14, pady=6,
-        )
 
     # --------------------------------------------------------
     # DATA
@@ -419,6 +391,11 @@ class MonthlyReport(tk.Toplevel):
 
         # update summary card
         self.summary_title.configure(text=f"Summary — {period_label}")
+        try:
+            if self.period_meta is not None:
+                self.period_meta.configure(text=period_label)
+        except Exception:
+            pass
         self.lbl_count.configure(text=str(summary["count"]))
         self.lbl_total.configure(text=_money(summary["total_value"]))
         self.lbl_avg.configure(text=_money(summary["average_value"]))
@@ -427,19 +404,24 @@ class MonthlyReport(tk.Toplevel):
         # top customers / models
         for t in self.cust_tree.get_children():
             self.cust_tree.delete(t)
-        for c in summary["top_customers"]:
+        for i, c in enumerate(summary["top_customers"]):
             self.cust_tree.insert(
                 "", "end",
                 values=(c["name"], str(c["count"]), _money(c["value"])),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
             )
 
         for t in self.model_tree.get_children():
             self.model_tree.delete(t)
-        for mm in summary["top_models"]:
+        for i, mm in enumerate(summary["top_models"]):
             self.model_tree.insert(
                 "", "end",
                 values=(mm["name"], str(mm["count"]), _money(mm["value"])),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
             )
+
+        self._toggle_note(self.cust_note, not summary["top_customers"])
+        self._toggle_note(self.model_note, not summary["top_models"])
 
         # 12-month breakdown
         try:
@@ -447,13 +429,13 @@ class MonthlyReport(tk.Toplevel):
         except Exception:
             breakdown = []
 
-        self.year_title.configure(text=f"12-Month Breakdown — {y}")
+        self.year_title.configure(text=f"12-Month breakdown — {y}")
         for t in self.year_tree.get_children():
             self.year_tree.delete(t)
 
         total_count = 0
         total_value = 0.0
-        for row in breakdown:
+        for i, row in enumerate(breakdown):
             total_count += row["count"]
             total_value += row["total_value"]
             self.year_tree.insert(
@@ -463,6 +445,7 @@ class MonthlyReport(tk.Toplevel):
                     str(row["count"]),
                     _money(row["total_value"]),
                 ),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
             )
         self.year_tree.insert(
             "", "end",
@@ -470,7 +453,8 @@ class MonthlyReport(tk.Toplevel):
             tags=("total",),
         )
         try:
-            self.year_tree.tag_configure("total", font=("Arial", 9, "bold"))
+            self.year_tree.tag_configure(
+                "total", font=T.FONT_BODY_B, background=T.SURFACE_ALT)
         except Exception:
             pass
 

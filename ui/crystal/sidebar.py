@@ -59,7 +59,7 @@ class Sidebar(tk.Frame):
                                        lambda _k: on_quit(), danger=True)
 
         # ─── Quit App ───
-        self._quit_app = self._make_item(self, "_quit_app", "⏻", "Quit App",
+        self._quit_app = self._make_item(self, "_quit_app", "✕", "Quit App",
                                          lambda _k: on_quit(),
                                          danger=True)
 

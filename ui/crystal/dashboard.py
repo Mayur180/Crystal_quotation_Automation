@@ -28,6 +28,36 @@ from ui.crystal import widgets as W
 from ui.crystal.sidebar import Sidebar
 
 
+def _bind_all(widget, command):
+    widget.bind("<Button-1>", lambda e: command())
+    for child in widget.winfo_children():
+        _bind_all(child, command)
+
+
+class _KpiCard(tk.Frame):
+    def __init__(self, parent, *, icon, label, value, accent=None):
+        super().__init__(parent, bg=T.SURFACE,
+                         highlightbackground=T.BORDER, highlightthickness=1)
+
+        tk.Frame(self, bg=accent or T.BORDER_HARD, width=4).pack(side="left", fill="y")
+
+        body = tk.Frame(self, bg=T.SURFACE)
+        body.pack(side="left", fill="both", expand=True, padx=16, pady=12)
+
+        top = tk.Frame(body, bg=T.SURFACE)
+        top.pack(fill="x")
+        self.value_label = tk.Label(
+            top, text=value, bg=T.SURFACE, fg=accent or T.TEXT,
+            font=(T.FONT_FAMILY, 21, "bold"), anchor="w",
+        )
+        self.value_label.pack(side="left")
+        tk.Label(top, text=icon, bg=T.SURFACE, fg=T.TEXT_FAINT,
+                 font=("Segoe UI Emoji", 13)).pack(side="right")
+
+        tk.Label(body, text=label.upper(), bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_LABEL, anchor="w").pack(anchor="w", pady=(2, 0))
+
+
 class Dashboard(tk.Tk):
     def __init__(self, *, username="Admin", module="Crystal", on_logout=None):
         super().__init__()
@@ -126,49 +156,27 @@ class Dashboard(tk.Tk):
         tk.Frame(bar, bg=T.BORDER, height=1).pack(side="bottom", fill="x")
 
         left = tk.Frame(bar, bg=T.SURFACE)
-        left.pack(side="left", fill="y", padx=(20, 0))
+        left.pack(side="left", fill="y", padx=(16, 0))
 
         W.IconButton(left, "☰", self._sidebar.toggle).pack(side="left", pady=12)
         tk.Label(left, text="Dashboard", bg=T.SURFACE, fg=T.TEXT,
-                 font=T.FONT_H2).pack(side="left", padx=(12, 0))
+                 font=T.FONT_H2).pack(side="left", padx=(10, 0))
 
-        # Global Search Bar
-        search_frame = tk.Frame(bar, bg=T.SURFACE)
-        search_frame.pack(side="left", padx=15)
-        
-        tk.Label(search_frame, text="🔍", bg=T.SURFACE, fg=T.TEXT_MUTED,
-                 font=("Arial", 12)).pack(side="left", padx=(0, 5))
-        
+        # Global search
         self._search_var = tk.StringVar()
-        search_entry = tk.Entry(
-            search_frame,
-            textvariable=self._search_var,
-            font=("Arial", 10),
-            width=30,
-            relief="solid",
-            bd=1
+        self._search_box = W.SearchEntry(
+            bar, textvariable=self._search_var, width=30,
+            placeholder="Search quotes, customers, products…",
+            on_submit=self._do_global_search, bg=T.SURFACE_ALT,
         )
-        search_entry.pack(side="left", pady=15)
-        search_entry.bind("<Return>", lambda e: self._do_global_search())
+        self._search_box.pack(side="left", padx=(20, 0), pady=13)
 
         right = tk.Frame(bar, bg=T.SURFACE)
-        right.pack(side="right", fill="y", padx=(0, 20))
-        
-        # Refresh Button
-        tk.Button(
-            right, 
-            text="🔄 Refresh", 
-            bg=T.BG, fg=T.TEXT, 
-            font=("Arial", 9, "bold"), 
-            relief="flat", 
-            cursor="hand2",
-            command=self._refresh_dashboard
-        ).pack(side="right", padx=(0, 10), pady=15)
+        right.pack(side="right", fill="y", padx=(0, 16))
 
-        W.IconButton(right, "🔔", lambda: None).pack(side="right", pady=12)
-
+        # User chip (rightmost)
         chip = tk.Frame(right, bg=T.SURFACE_ALT, cursor="hand2")
-        chip.pack(side="right", padx=(0, 8))
+        chip.pack(side="right", padx=(8, 0))
         tk.Label(chip, text="👤", bg=T.SURFACE_ALT, fg=T.TEXT_BODY,
                  font=T.FONT_EMOJI).pack(side="left", padx=(10, 6), pady=8)
         tk.Label(chip, text=self._username, bg=T.SURFACE_ALT, fg=T.TEXT,
@@ -176,10 +184,16 @@ class Dashboard(tk.Tk):
         if self._on_logout:
             chip.bind("<Button-1>", lambda e: self._on_logout())
 
+        W.IconButton(right, "🔔", lambda: None).pack(side="right", padx=(0, 6))
+
+        refresh = W.GhostButton(right, "Refresh", self._refresh_dashboard,
+                                icon="🔄", padx=12, pady=7)
+        refresh.pack(side="right", padx=(0, 8), pady=12)
+
         # Pending sheet-sync indicator (only visible while pushes are queued)
         self._sync_chip = tk.Label(
-            right, text="", bg=T.SURFACE, fg=T.TEXT_BODY,
-            font=("Arial", 9, "bold"), cursor="hand2", padx=8, pady=6,
+            right, text="", bg=T.WARNING_BG, fg=T.WARNING,
+            font=T.FONT_TINY, cursor="hand2", padx=8, pady=5,
         )
         self._sync_chip.bind("<Button-1>", lambda e: self._sync_now(manual=True))
         self._refresh_sync_chip()
@@ -204,7 +218,7 @@ class Dashboard(tk.Tk):
             if n:
                 self._sync_chip.config(text=f"⏳ {n} to sync")
                 if not self._sync_chip.winfo_ismapped():
-                    self._sync_chip.pack(side="right", padx=(0, 12), pady=15)
+                    self._sync_chip.pack(side="right", padx=(0, 10), pady=15)
             else:
                 self._sync_chip.pack_forget()
         except Exception:
@@ -265,46 +279,42 @@ class Dashboard(tk.Tk):
         pad = 28
         summary = self._summary_cache or self._quick_summary()
 
-        # ─── KPI row ───
-        kpi_row = tk.Frame(self._body, bg=T.BG)
-        kpi_row.pack(fill="x", padx=pad, pady=(pad, 0))
+        # ─── KPI grid (3 × 2, never clips) ───
+        kpi_grid = tk.Frame(self._body, bg=T.BG)
+        kpi_grid.pack(fill="x", padx=pad, pady=(pad, 0))
+        for col in range(3):
+            kpi_grid.grid_columnconfigure(col, weight=1, uniform="kpi")
 
         self._kpi_cards = {}
         kpis = [
             ("📦", "products", summary.get("products"), "Products",     T.ACCENT),
             ("👥", "customers", summary.get("customers"), "Customers",   None),
             ("📄", "quotes", get_latest_quotation_number() or summary.get("quotes"), "Quotations",  None),
-            ("🧾", "proformas", summary.get("proformas"), "Proformas",  "#8E44AD"),
-            ("📈", "conversion_rate", summary.get("conversion_rate"), "Conversion %", "#27AE60"),
-            ("⏰", "pending_followups", summary.get("pending_followups"), "Follow-ups", "#E67E22"),
+            ("🧾", "proformas", summary.get("proformas"), "Proformas",  None),
+            ("📈", "conversion_rate", summary.get("conversion_rate"), "Conversion %", None),
+            ("⏰", "pending_followups", summary.get("pending_followups"), "Follow-ups", None),
         ]
         for i, (icon, key, val, label, accent) in enumerate(kpis):
-            card_wrap = tk.Frame(kpi_row, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1)
-            card_wrap.pack(side="left", fill="both", expand=True, padx=(0 if i == 0 else 8, 0))
-            
-            if label == "Follow-ups":
-                card_wrap.configure(cursor="hand2")
-                for w in (card_wrap,):
-                    w.bind("<Button-1>", lambda e: self._show_pending_followups())
-                def bind_children(parent, cmd):
-                    for child in parent.winfo_children():
-                        child.bind("<Button-1>", lambda e: cmd())
-                        bind_children(child, cmd)
-            
-            icon_lbl = tk.Label(card_wrap, text=icon, bg=T.SURFACE, fg=T.TEXT_BODY, font=("Arial", 24))
-            icon_lbl.pack(side="left", padx=(12, 6), pady=20)
-            
-            card = W.StatCard(card_wrap, value=self._kpi_text(key, val), label=label, accent_color=accent)
-            card.pack(side="left", fill="both", expand=True, pady=10, padx=(0, 20))
+            card = _KpiCard(kpi_grid, icon=icon, label=label, accent=accent,
+                            value=self._kpi_text(key, val))
+            card.grid(row=i // 3, column=i % 3, sticky="nsew",
+                      padx=(0 if i % 3 == 0 else 7, 0 if i % 3 == 2 else 7),
+                      pady=(0, 14))
             self._kpi_cards[key] = card
+
+            if key == "pending_followups":
+                card.configure(cursor="hand2")
+                _bind_all(card, self._show_pending_followups)
 
         # ─── Two-column row ───
         two_col = tk.Frame(self._body, bg=T.BG)
         two_col.pack(fill="both", expand=True, padx=pad, pady=(24, pad))
+        two_col.grid_columnconfigure(0, weight=1)
+        two_col.grid_rowconfigure(0, weight=1)
 
         # Left: Recent Activity
         left = tk.Frame(two_col, bg=T.BG)
-        left.pack(side="left", fill="both", expand=True)
+        left.grid(row=0, column=0, sticky="nsew")
         
         tk.Label(left, text="Recent Quotations", bg=T.BG, fg=T.TEXT,
                  font=T.FONT_H2).pack(anchor="w")
@@ -315,9 +325,9 @@ class Dashboard(tk.Tk):
         self._recent_box.pack(fill="both", expand=True)
         self._render_recent(self._recent_box, summary.get("recent"))
 
-        # Right: Quick Actions
+        # Right: Quick Actions (natural width, left column absorbs the rest)
         right = tk.Frame(two_col, bg=T.BG)
-        right.pack(side="right", fill="both", expand=True, padx=(24, 0))
+        right.grid(row=0, column=1, sticky="nsew", padx=(24, 0))
         
         tk.Label(right, text="Quick Actions", bg=T.BG, fg=T.TEXT,
                  font=T.FONT_H2).pack(anchor="w")
@@ -331,20 +341,44 @@ class Dashboard(tk.Tk):
         ]
         self._products_sub_lbl = None
         for icon, title, subtitle, cmd in actions:
-            card = tk.Frame(right, bg=T.SURFACE, cursor="hand2", highlightbackground=T.BORDER, highlightthickness=1)
+            card = tk.Frame(right, bg=T.SURFACE, cursor="hand2",
+                            highlightbackground=T.BORDER, highlightthickness=1)
             card.pack(fill="x", pady=6)
-            
-            tk.Label(card, text=icon, bg=T.SURFACE, fg=T.ACCENT, font=("Arial", 18)).pack(side="left", padx=16, pady=12)
+
+            tk.Label(card, text=icon, bg=T.SURFACE, fg=T.ACCENT,
+                     font=("Segoe UI Emoji", 16)).pack(side="left", padx=(16, 12), pady=12)
             box = tk.Frame(card, bg=T.SURFACE)
             box.pack(side="left", fill="x", expand=True)
-            tk.Label(box, text=title, bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B).pack(anchor="w")
-            sub_lbl = tk.Label(box, text=subtitle, bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY)
+            tk.Label(box, text=title, bg=T.SURFACE, fg=T.TEXT,
+                     font=T.FONT_BODY_B).pack(anchor="w", pady=(2, 0))
+            sub_lbl = tk.Label(box, text=subtitle, bg=T.SURFACE, fg=T.TEXT_MUTED,
+                               font=T.FONT_SMALL)
             sub_lbl.pack(anchor="w")
+            tk.Label(card, text="›", bg=T.SURFACE, fg=T.TEXT_FAINT,
+                     font=(T.FONT_FAMILY, 15, "bold")).pack(side="right", padx=(8, 14))
             if title == "Manage Products":
                 self._products_sub_lbl = sub_lbl
-            
-            for w in (card, box, *box.winfo_children()):
+
+            hover_widgets = [card, box, *box.winfo_children(), *card.winfo_children()]
+
+            def _enter(_e=None, ws=hover_widgets):
+                for w in ws:
+                    try:
+                        w.configure(bg=T.SURFACE_HOVER)
+                    except Exception:
+                        pass
+
+            def _leave(_e=None, ws=hover_widgets):
+                for w in ws:
+                    try:
+                        w.configure(bg=T.SURFACE)
+                    except Exception:
+                        pass
+
+            for w in hover_widgets:
                 w.bind("<Button-1>", lambda e, c=cmd: c())
+                w.bind("<Enter>", _enter)
+                w.bind("<Leave>", _leave)
 
         if self._summary_cache is None:
             self._start_summary_load()
@@ -508,20 +542,56 @@ class Dashboard(tk.Tk):
             btn.pack(pady=10, ipadx=10, ipady=5)
             return
 
-        for r in recent:
-            row = tk.Frame(box, bg=T.SURFACE, highlightbackground=T.BORDER, highlightthickness=1, cursor="hand2")
-            row.pack(fill="x", pady=2)
+        table = tk.Frame(box, bg=T.SURFACE, highlightbackground=T.BORDER,
+                         highlightthickness=1)
+        table.pack(fill="x")
 
-            lbl_num = tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT, font=T.FONT_BODY_B)
-            lbl_num.pack(side="left", padx=10, pady=6)
+        for idx, r in enumerate(recent):
+            if idx:
+                tk.Frame(table, bg=T.BORDER, height=1).pack(fill="x")
 
-            lbl_cust = tk.Label(row, text=r["customer"] or "—", bg=T.SURFACE, fg=T.TEXT_BODY, font=T.FONT_BODY)
-            lbl_cust.pack(side="left", padx=10)
+            row = tk.Frame(table, bg=T.SURFACE, cursor="hand2")
+            row.pack(fill="x")
 
-            # Make the row clickable (left and right click)
-            for w in (row, lbl_num, lbl_cust):
+            lbl_num = tk.Label(row, text=r["number"], bg=T.SURFACE, fg=T.TEXT,
+                               font=T.FONT_BODY_B, width=16, anchor="w")
+            lbl_num.pack(side="left", padx=(14, 8), pady=10)
+
+            customer = r["customer"] or "—"
+            if len(customer) > 30:
+                customer = customer[:29].rstrip() + "…"
+            lbl_cust = tk.Label(row, text=customer, bg=T.SURFACE,
+                                fg=T.TEXT_BODY, font=T.FONT_BODY,
+                                anchor="w", width=30)
+            lbl_cust.pack(side="left", fill="x", expand=True)
+
+            try:
+                amount = f"₹ {float(r.get('total') or 0):,.2f}"
+            except (TypeError, ValueError):
+                amount = "—"
+            lbl_amt = tk.Label(row, text=amount, bg=T.SURFACE, fg=T.TEXT,
+                               font=T.FONT_BODY_B, anchor="e")
+            lbl_amt.pack(side="right", padx=(8, 14))
+
+            lbl_date = tk.Label(row, text=r.get("date") or "", bg=T.SURFACE,
+                                fg=T.TEXT_MUTED, font=T.FONT_SMALL, anchor="e")
+            lbl_date.pack(side="right", padx=(8, 12))
+
+            widgets_in_row = (row, lbl_num, lbl_cust, lbl_amt, lbl_date)
+
+            def _enter(_e=None, ws=widgets_in_row):
+                for w in ws:
+                    w.configure(bg=T.SURFACE_HOVER)
+
+            def _leave(_e=None, ws=widgets_in_row):
+                for w in ws:
+                    w.configure(bg=T.SURFACE)
+
+            for w in widgets_in_row:
                 w.bind("<Button-1>", lambda e, num=r["number"]: self._show_quotation_items(num))
                 w.bind("<Button-3>", lambda e, num=r["number"]: self._show_context_menu(e, num))
+                w.bind("<Enter>", _enter)
+                w.bind("<Leave>", _leave)
 
     def _sync_customers_async(self):
         """Merge sheet customers into the local cache once, off the UI thread."""

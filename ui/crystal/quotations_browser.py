@@ -6,15 +6,23 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 from datetime import datetime
 
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
+
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 
 class QuotationsBrowser(tk.Toplevel):
-    BG = "#F4F5F7"; CARD = "#FFFFFF"; TEXT = "#17191D"
-    MUTED = "#747A84"; BORDER = "#E1E4E8"; SOFT = "#F7F8FA"
-    RED = "#C8102E"; RED_DARK = "#A00D25"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    BORDER = T.BORDER
+    SOFT = T.SURFACE_ALT
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
 
     DATE_OPTIONS = [("Last 7 days", 7), ("Last 30 days", 30),
                     ("Last 90 days", 90), ("All time", None)]
@@ -22,25 +30,16 @@ class QuotationsBrowser(tk.Toplevel):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.title("CRYSTAL | Quotations")
+        self.title("CRYSTAL | Cloud Quotations")
         self.configure(bg=self.BG)
-        try:
-            from ui.common.ui_helpers import set_window_icon
-            set_window_icon(self)
-        except Exception:
-            pass
-        self.update_idletasks()
-        try:
-            sw = self.winfo_screenwidth(); sh = self.winfo_screenheight()
-        except Exception:
-            sw, sh = 1366, 768
-        w = min(1200, max(900, sw - 120))
-        h = min(760, max(600, sh - 120))
-        x = max(0, (sw - w) // 2); y = max(0, (sh - h) // 2 - 20)
-        self.geometry("%dx%d+%d+%d" % (w, h, x, y))
-        self.minsize(900, 560)
-        self.transient(parent); self.grab_set()
-        self._rows = []; self._loading = False
+        W.set_window_icon(self)
+        self.geometry("1180x720")
+        self.minsize(1000, 600)
+        self.transient(parent)
+        self.grab_set()
+        self._rows = []
+        self._loading = False
+        W.apply_ttk_theme(self)
         self._build()
         try:
             from ui.common.ui_helpers import install_modal_shortcuts
@@ -50,100 +49,131 @@ class QuotationsBrowser(tk.Toplevel):
         self.after(80, self._refresh)
 
     def _build(self):
-        header = tk.Frame(self, bg=self.CARD, height=72)
-        header.pack(fill="x"); header.pack_propagate(False)
-        brand = tk.Frame(header, bg=self.CARD); brand.pack(side="left", padx=26)
-        tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 20, "bold")).pack(side="left", pady=20)
-        tk.Label(brand, text="  /  Quotations (Sheet)", bg=self.CARD,
-                 fg=self.MUTED, font=("Arial", 11)).pack(side="left", pady=24)
-        tk.Frame(self, bg=self.RED, height=3).pack(fill="x")
+        header = W.PageHeader(
+            self, title="Cloud Quotations",
+            subtitle="Quotations stored in the Google Sheet",
+            meta="—", padx=28,
+        )
+        header.pack(fill="x")
+        self.count_label = header.meta_label
 
-        filters = tk.Frame(self, bg=self.CARD, height=60)
-        filters.pack(fill="x"); filters.pack_propagate(False)
-        inner = tk.Frame(filters, bg=self.CARD)
-        inner.pack(fill="x", padx=26, pady=12)
+        # ---- filters ----
+        filt = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        filt.pack(fill="x", padx=28, pady=(14, 10))
+        row = tk.Frame(filt, bg=T.SURFACE)
+        row.pack(fill="x", padx=14, pady=10)
 
-        tk.Label(inner, text="User:", bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 9)).pack(side="left")
+        self.refresh_btn = W.PrimaryButton(
+            row, "Refresh", self._refresh, padx=14, pady=7,
+        )
+        self.refresh_btn.pack(side="right")
+
+        def _label(text, pad=(0, 6)):
+            tk.Label(row, text=text.upper(), bg=T.SURFACE,
+                     fg=T.TEXT_MUTED, font=T.FONT_LABEL).pack(
+                side="left", padx=pad)
+
+        _label("User")
         self.user_var = tk.StringVar(value="All")
-        cbu = ttk.Combobox(inner, textvariable=self.user_var,
-                           values=self.USER_OPTIONS, state="readonly", width=12)
-        cbu.pack(side="left", padx=(6, 18))
+        cbu = ttk.Combobox(
+            row, textvariable=self.user_var, values=self.USER_OPTIONS,
+            state="readonly", width=10, font=T.FONT_SMALL,
+        )
+        cbu.pack(side="left", ipady=4)
         cbu.bind("<<ComboboxSelected>>", lambda e: self._refresh())
 
-        tk.Label(inner, text="Date:", bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 9)).pack(side="left")
+        _label("Date", (12, 6))
         self.date_var = tk.StringVar(value=self.DATE_OPTIONS[1][0])
-        cbd = ttk.Combobox(inner, textvariable=self.date_var,
-                           values=[o[0] for o in self.DATE_OPTIONS],
-                           state="readonly", width=14)
-        cbd.pack(side="left", padx=(6, 18))
+        cbd = ttk.Combobox(
+            row, textvariable=self.date_var,
+            values=[o[0] for o in self.DATE_OPTIONS],
+            state="readonly", width=13, font=T.FONT_SMALL,
+        )
+        cbd.pack(side="left", ipady=4)
         cbd.bind("<<ComboboxSelected>>", lambda e: self._refresh())
 
-        tk.Label(inner, text="Search:", bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 9)).pack(side="left")
+        _label("Search", (12, 6))
         self.search_var = tk.StringVar()
-        se = tk.Entry(inner, textvariable=self.search_var, width=28,
-                      relief="solid", bd=1)
-        se.pack(side="left", padx=(6, 18), ipady=3)
-        se.bind("<Return>", lambda e: self._refresh())
+        se = W.SearchEntry(
+            row, textvariable=self.search_var,
+            placeholder="Quote no., customer, model…",
+        )
+        se.pack(side="left", fill="x", expand=True)
+        se.entry.bind("<Return>", lambda e: self._refresh())
 
-        self.refresh_btn = tk.Button(
-            inner, text="Refresh", command=self._refresh,
-            bg=self.RED, fg="white", activebackground=self.RED_DARK,
-            activeforeground="white", relief="flat", bd=0,
-            highlightthickness=0, font=("Arial", 9, "bold"),
-            cursor="hand2", padx=14, pady=6)
-        self.refresh_btn.pack(side="left")
+        # ---- footer (bottom first) ----
+        foot = tk.Frame(
+            self, bg=T.SURFACE, height=64,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        foot.pack(side="bottom", fill="x")
+        foot.pack_propagate(False)
+        self.status_var = tk.StringVar(value="Ready.")
+        tk.Label(
+            foot, textvariable=self.status_var, bg=T.SURFACE,
+            fg=T.TEXT_MUTED, font=T.FONT_SMALL, anchor="w",
+        ).pack(side="left", padx=22, pady=18)
+        W.GhostButton(
+            foot, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right", padx=22, pady=13)
 
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
-
-        body = tk.Frame(self, bg=self.BG)
-        body.pack(fill="both", expand=True, padx=18, pady=12)
+        # ---- table ----
+        card = tk.Frame(
+            self, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True, padx=28, pady=(0, 14))
 
         cols = ("date", "user", "quot", "customer", "company",
                 "model", "total", "status")
-        heads = ("Date", "User", "Quotation No", "Customer",
-                 "Company", "Model", "Grand Total", "Status")
-        widths = (90, 70, 150, 160, 130, 120, 110, 80)
+        heads = {
+            "date": "Date", "user": "User", "quot": "Quotation No.",
+            "customer": "Customer", "company": "Company",
+            "model": "Model", "total": "Grand Total", "status": "Status",
+        }
+        widths = {
+            "date": 100, "user": 80, "quot": 160, "customer": 210,
+            "company": 210, "model": 140, "total": 120, "status": 90,
+        }
+        anchors = {"total": "e", "status": "center"}
 
-        st = ttk.Style()
-        try: st.theme_use("clam")
-        except Exception: pass
-        st.configure("QB.Treeview", background=self.CARD,
-                     fieldbackground=self.CARD, foreground=self.TEXT,
-                     rowheight=26, borderwidth=0)
-        st.configure("QB.Treeview.Heading", background=self.SOFT,
-                     foreground=self.TEXT, font=("Arial", 9, "bold"))
-        st.map("QB.Treeview", background=[("selected", self.RED)],
-               foreground=[("selected", "white")])
+        self.tree = ttk.Treeview(card, columns=cols, show="headings",
+                                 height=12)
+        for c in cols:
+            self.tree.heading(c, text=heads[c],
+                              anchor=anchors.get(c, "w"))
+            self.tree.column(c, width=widths[c],
+                             anchor=anchors.get(c, "w"),
+                             stretch=(c in ("customer", "company")))
+        self.tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        self.tree.tag_configure("oddrow", background=T.SURFACE)
 
-        wrap = tk.Frame(body, bg=self.BORDER)
-        wrap.pack(fill="both", expand=True)
-        self.tree = ttk.Treeview(wrap, columns=cols, show="headings",
-                                 style="QB.Treeview", height=18)
-        for c, h, w in zip(cols, heads, widths):
-            self.tree.heading(c, text=h)
-            self.tree.column(c, width=w, anchor="w")
-        vsb = ttk.Scrollbar(wrap, orient="vertical", command=self.tree.yview)
+        vsb = ttk.Scrollbar(card, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=vsb.set)
-        self.tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=(0, 2))
+        self.tree.pack(side="left", fill="both", expand=True,
+                       padx=2, pady=(0, 2))
         self.tree.bind("<Double-1>", self._on_double)
 
-        status = tk.Frame(self, bg=self.CARD, height=40,
-                          highlightbackground=self.BORDER, highlightthickness=1)
-        status.pack(side="bottom", fill="x"); status.pack_propagate(False)
-        self.status_var = tk.StringVar(value="Ready.")
-        tk.Label(status, textvariable=self.status_var, bg=self.CARD,
-                 fg=self.MUTED, font=("Arial", 9), anchor="w").pack(
-            side="left", padx=18, pady=11)
-        tk.Button(status, text="Close", command=self.destroy,
-                  bg="white", fg=self.TEXT, activebackground="#F3F4F6",
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9, "bold"), cursor="hand2",
-                  padx=14, pady=4).pack(side="right", padx=18, pady=8)
+        self._empty = W.EmptyState(
+            card, icon="☁", title="No quotations",
+            hint="Adjust the filters, or refresh from the Sheet.",
+        )
+
+    def _set_empty(self, visible, title=None, hint=None):
+        try:
+            if visible:
+                if title:
+                    self._empty.set_text(title, hint)
+                self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                self._empty.lift()
+            else:
+                self._empty.place_forget()
+        except Exception:
+            pass
 
     def _since_days(self):
         for name, days in self.DATE_OPTIONS:
@@ -152,13 +182,21 @@ class QuotationsBrowser(tk.Toplevel):
         return 30
 
     def _refresh(self):
-        if self._loading: return
+        if self._loading:
+            return
         self._loading = True
-        self.status_var.set("Fetching from Google Sheet...")
-        self.refresh_btn.configure(state="disabled")
+        self.status_var.set("Fetching from Google Sheet…")
+        self._set_empty(
+            True, "Fetching quotations…",
+            "Reading the latest rows from the Google Sheet.")
+        try:
+            self.refresh_btn.set_enabled(False)
+        except Exception:
+            pass
         user = self.user_var.get()
         since = self._since_days()
         search = self.search_var.get()
+
         def worker():
             try:
                 from app.services.google_sheet_reader import fetch_quotations
@@ -166,40 +204,65 @@ class QuotationsBrowser(tk.Toplevel):
                                              search=search)
             except Exception as e:
                 rows, err = [], "%s: %s" % (type(e).__name__, e)
-            try: self.after(0, lambda: self._apply(rows, err))
-            except Exception: pass
+            try:
+                self.after(0, lambda: self._apply(rows, err))
+            except Exception:
+                pass
+
         threading.Thread(target=worker, daemon=True).start()
 
     def _apply(self, rows, err):
         self._loading = False
-        try: self.refresh_btn.configure(state="normal")
-        except Exception: pass
+        try:
+            self.refresh_btn.set_enabled(True)
+        except Exception:
+            pass
         for iid in self.tree.get_children():
             self.tree.delete(iid)
         if err:
             self.status_var.set("Error: " + err)
+            if self.count_label is not None:
+                self.count_label.configure(text="—")
+            self._set_empty(
+                True, "Could not load quotations",
+                "Check your connection, then press Refresh.")
             return
+
         self._rows = rows or []
-        for r in self._rows:
+        for i, r in enumerate(self._rows):
             total = r.get("Grand Total")
             try:
-                ts = ("\u20b9 %.2f" % float(total)) if total not in (None, "") else ""
+                ts = ("\u20b9 %.2f" % float(total)) if total not in (None, "") else "—"
             except Exception:
-                ts = str(total or "")
-            self.tree.insert("", "end", values=(
-                r.get("_date") or r.get("Date") or "",
-                r.get("User") or "", r.get("Quotation No") or "",
-                r.get("Customer") or "", r.get("Company") or "",
-                r.get("Model") or "", ts, r.get("Status") or ""))
+                ts = str(total or "—")
+            self.tree.insert(
+                "", "end",
+                values=(
+                    r.get("_date") or r.get("Date") or "—",
+                    r.get("User") or "—",
+                    r.get("Quotation No") or "—",
+                    r.get("Customer") or "—",
+                    r.get("Company") or "—",
+                    r.get("Model") or "—",
+                    ts,
+                    r.get("Status") or "—",
+                ),
+                tags=("evenrow" if i % 2 == 0 else "oddrow",),
+            )
+        if self.count_label is not None:
+            self.count_label.configure(text=f"{len(self._rows):,} row(s)")
         self.status_var.set(
             "Last refreshed: %s  \u2022  %d row(s)" % (
                 datetime.now().strftime("%H:%M:%S"), len(self._rows)))
+        self._set_empty(not self._rows)
 
     def _on_double(self, _e):
         sel = self.tree.selection()
-        if not sel: return
+        if not sel:
+            return
         v = self.tree.item(sel[0], "values")
-        if not v: return
+        if not v:
+            return
         messagebox.showinfo(
             "Quotation detail",
             "Quotation No: %s\nDate:         %s\nUser:         %s\n"

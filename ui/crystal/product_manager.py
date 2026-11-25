@@ -12,7 +12,11 @@ import os
 import sys
 import tkinter as tk
 from tkinter import ttk, messagebox
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
+
+from ui.crystal import theme as T
+from ui.crystal import widgets as W
 
 
 PROJECT_ROOT = os.path.abspath(
@@ -54,6 +58,23 @@ def _money(value):
         return f"₹ {Decimal(str(value)):,.0f}"
     except (InvalidOperation, ValueError, TypeError):
         return "₹ 0"
+
+
+def _short_name(value, limit=64):
+    text = str(value or "").strip()
+    return text if len(text) <= limit else text[:limit - 1].rstrip() + "…"
+
+
+def _friendly_ts(value):
+    text = str(value or "").strip()
+    for fmt, size in (("%Y-%m-%dT%H:%M:%S", 19),
+                      ("%Y-%m-%d %H:%M:%S", 19),
+                      ("%Y-%m-%dT%H:%M:%S.%f", 26)):
+        try:
+            return datetime.strptime(text[:size], fmt).strftime("%d-%m-%Y %H:%M")
+        except ValueError:
+            continue
+    return text or "—"
 
 
 # ============================================================
@@ -273,25 +294,26 @@ class ProductEditDialog(tk.Toplevel):
 
 class ProductManager(tk.Toplevel):
 
-    BG = "#F4F5F7"
-    CARD = "#FFFFFF"
-    TEXT = "#17191D"
-    MUTED = "#747A84"
-    LIGHT_MUTED = "#9BA1AA"
-    BORDER = "#E1E4E8"
-    RED = "#C40000"
-    RED_DARK = "#980000"
-    RED_LIGHT = "#FFF3F3"
-    SOFT = "#F8F9FA"
-    GREEN = "#16804B"
+    BG = T.BG
+    CARD = T.SURFACE
+    TEXT = T.TEXT
+    MUTED = T.TEXT_MUTED
+    LIGHT_MUTED = T.TEXT_FAINT
+    BORDER = T.BORDER
+    RED = T.ACCENT
+    RED_DARK = T.ACCENT_DARK
+    RED_LIGHT = T.ACCENT_SOFT
+    SOFT = T.SURFACE_ALT
+    GREEN = T.SUCCESS
 
     def __init__(self, parent):
         super().__init__(parent)
 
         self.title("CRYSTAL | Products")
-        self.geometry("1180x760")
-        self.minsize(1000, 640)
+        self.geometry("1180x700")
+        self.minsize(1000, 600)
         self.configure(bg=self.BG)
+        W.set_window_icon(self)
 
         self.transient(parent)
         self.grab_set()
@@ -299,7 +321,7 @@ class ProductManager(tk.Toplevel):
         self.current_tab = "products"
         self.selected_key = None
 
-        self._configure_style()
+        W.apply_ttk_theme(self)
         self._build_interface()
         self.after(50, self._reload)
 
@@ -310,140 +332,91 @@ class ProductManager(tk.Toplevel):
         except Exception:
             pass
 
-    def _configure_style(self):
-        style = ttk.Style(self)
-        try:
-            style.theme_use("clam")
-        except tk.TclError:
-            pass
-
-        style.configure("PM.Treeview",
-                        background="white", fieldbackground="white",
-                        foreground=self.TEXT, borderwidth=1,
-                        relief="solid", rowheight=28, font=("Arial", 9))
-        style.configure("PM.Treeview.Heading",
-                        background=self.SOFT, foreground=self.TEXT,
-                        font=("Arial", 9, "bold"), relief="flat")
-        style.map("PM.Treeview",
-                  background=[("selected", self.RED_LIGHT)],
-                  foreground=[("selected", self.TEXT)])
-
     def _build_interface(self):
 
-        # Header
-        header = tk.Frame(self, bg=self.CARD, height=78)
-        header.pack(fill="x")
-        header.pack_propagate(False)
-
-        brand = tk.Frame(header, bg=self.CARD)
-        brand.pack(side="left", padx=28)
-
-        tk.Label(brand, text="CRYSTAL", bg=self.CARD, fg=self.RED,
-                 font=("Arial", 22, "bold")).pack(side="left", pady=22)
-        tk.Label(brand, text="  /  Products & Prices",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 11)).pack(side="left", pady=26)
-
-        right = tk.Frame(header, bg=self.CARD)
-        right.pack(side="right", padx=28)
-
-        self.count_label = tk.Label(right, text="", bg=self.CARD,
-                                    fg=self.MUTED, font=("Arial", 9))
-        self.count_label.pack(anchor="e", pady=26)
-
-        # Search Bar
-        search_frame = tk.Frame(header, bg=self.CARD)
-        search_frame.pack(side="right", padx=10)
-        
-        tk.Label(search_frame, text="🔍", bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 12)).pack(side="left", padx=(0, 5))
-        
-        self._search_var = tk.StringVar()
-        search_entry = tk.Entry(
-            search_frame,
-            textvariable=self._search_var,
-            font=("Arial", 10),
-            width=28,
-            relief="solid",
-            bd=1
+        header = W.PageHeader(
+            self, title="Products & Prices",
+            subtitle="Catalog models, categories and prices",
+            meta="Loading…", padx=28,
         )
-        search_entry.pack(side="left", pady=26, ipady=4)
-        search_entry.bind("<KeyRelease>", lambda e: self._filter_products())
+        header.pack(fill="x")
+        self.count_label = header.meta_label
 
-        tk.Frame(header, bg=self.RED, height=3).pack(side="bottom", fill="x")
+        toolbar = tk.Frame(self, bg=self.BG)
+        toolbar.pack(fill="x", padx=28, pady=(14, 10))
 
-        # Tabs
-        tab_bar = tk.Frame(self, bg=self.CARD, height=52)
-        tab_bar.pack(fill="x")
-        tab_bar.pack_propagate(False)
-
-        inner = tk.Frame(tab_bar, bg=self.CARD)
-        inner.pack(padx=28, pady=8)
+        tabs = tk.Frame(
+            toolbar, bg=self.CARD,
+            highlightbackground=self.BORDER, highlightthickness=1,
+        )
+        tabs.pack(side="left")
 
         self.tab_buttons = {}
         for key, label in [("products", "Products"),
-                            ("backups", "Backups")]:
-            btn = tk.Button(inner, text=label,
-                            command=lambda k=key: self._switch_tab(k),
-                            bg=self.SOFT, fg=self.TEXT,
-                            activebackground="#ECEEF1",
-                            activeforeground=self.TEXT,
-                            relief="solid", bd=1, highlightthickness=0,
-                            font=("Arial", 9, "bold"),
-                            cursor="hand2", padx=14, pady=6)
-            btn.pack(side="left", padx=(0, 6))
+                           ("backups", "Backups")]:
+            btn = tk.Button(
+                tabs, text=label,
+                command=lambda k=key: self._switch_tab(k),
+                bg=self.SOFT, fg=T.TEXT_BODY,
+                activebackground=T.SURFACE_HOVER,
+                activeforeground=self.TEXT,
+                relief="flat", bd=0, highlightthickness=0,
+                font=T.FONT_LABEL, cursor="hand2", padx=18, pady=8,
+            )
+            btn.pack(side="left")
             self.tab_buttons[key] = btn
 
-        tk.Frame(self, bg=self.BORDER, height=1).pack(fill="x")
+        self._search_var = tk.StringVar()
+        search = W.SearchEntry(
+            toolbar, textvariable=self._search_var, width=30,
+            placeholder="Search model, category or name…", bg=self.CARD,
+        )
+        search.pack(side="right")
+        search.entry.bind("<KeyRelease>",
+                          lambda e: self._filter_products(), add="+")
 
-        # Bottom action bar
-        bar = tk.Frame(self, bg=self.CARD, height=70,
+        self._build_footer()
+
+        self.body = tk.Frame(self, bg=self.BG)
+        self.body.pack(fill="both", expand=True, padx=28, pady=(0, 12))
+
+    def _build_footer(self):
+        bar = tk.Frame(self, bg=self.CARD, height=68,
                        highlightbackground=self.BORDER,
                        highlightthickness=1)
         bar.pack(side="bottom", fill="x")
         bar.pack_propagate(False)
 
         left = tk.Frame(bar, bg=self.CARD)
-        left.pack(side="left", padx=22)
+        left.pack(side="left", padx=22, pady=15)
 
-        self._btn(left, "➕ Add New Product", self._add_new_product, primary=True).pack(side="left", padx=(0, 8))
-        self.edit_btn = self._btn(left, "Edit Selected", self._edit_selected,
-                                   primary=True)
-        self.edit_btn.pack(side="left", pady=14)
-
-        self.bulk_btn = self._btn(left, "Bulk Adjust…", self._bulk_adjust)
-        self.bulk_btn.pack(side="left", padx=(8, 0), pady=14)
-
-        self._btn(left, "Reload", self._reload).pack(
-            side="left", padx=(8, 0), pady=14)
+        W.PrimaryButton(
+            left, "Add product", self._add_new_product,
+            icon="+", padx=14, pady=7,
+        ).pack(side="left")
+        self.edit_btn = W.GhostButton(
+            left, "Edit selected", self._edit_selected, padx=12, pady=7,
+        )
+        self.edit_btn.pack(side="left", padx=(8, 0))
+        self.bulk_btn = W.GhostButton(
+            left, "Bulk adjust…", self._bulk_adjust, padx=12, pady=7,
+        )
+        self.bulk_btn.pack(side="left", padx=(8, 0))
+        W.GhostButton(
+            left, "Reload", self._reload, padx=12, pady=7,
+        ).pack(side="left", padx=(8, 0))
 
         right_side = tk.Frame(bar, bg=self.CARD)
-        right_side.pack(side="right", padx=22)
+        right_side.pack(side="right", padx=22, pady=15)
+        W.GhostButton(
+            right_side, "Close", self.destroy, padx=18, pady=7,
+        ).pack(side="right")
 
-        self._btn(right_side, "Close", self.destroy).pack(
-            side="right", pady=14)
-
-        # Content area
-        self.body = tk.Frame(self, bg=self.BG)
-        self.body.pack(fill="both", expand=True, padx=28, pady=14)
-
-
-    def _btn(self, parent, text, command, primary=False, danger=False):
-        if primary:
-            bg, fg = self.RED, "white"
-            active_bg = self.RED_DARK
-            relief, bd = "flat", 0
-        else:
-            bg, fg = "white", (self.RED if danger else self.TEXT)
-            active_bg = self.RED_LIGHT if danger else "#F3F4F6"
-            relief, bd = "solid", 1
-
-        return tk.Button(parent, text=text, command=command,
-                         bg=bg, fg=fg,
-                         activebackground=active_bg, activeforeground=fg,
-                         relief=relief, bd=bd, highlightthickness=0,
-                         font=("Arial", 9, "bold"), cursor="hand2",
-                         padx=14, pady=6)
+    def _set_count(self, count, noun="product"):
+        if self.count_label is not None:
+            self.count_label.configure(
+                text=f"{count:,} {noun}{'s' if count != 1 else ''}"
+            )
 
     def _switch_tab(self, key):
         self.current_tab = key
@@ -452,6 +425,8 @@ class ProductManager(tk.Toplevel):
 
     def _filter_products(self):
         """Filter the product table based on the search query."""
+        if self.current_tab != "products":
+            return
         query = self._search_var.get().strip().lower()
         
         # Clear the table
@@ -471,22 +446,29 @@ class ProductManager(tk.Toplevel):
         count = 0
         for p in self._all_products:
             model = str(p.get("model", "")).lower()
-            name = str(p.get("name", "")).lower()
+            name = str(p.get("name") or p.get("product_name") or "").lower()
             category = str(p.get("category", "")).lower()
-            
+
             if not query or query in model or query in name or query in category:
                 self.tree.insert("", "end", values=(
                     p.get("model", ""),
                     p.get("category", ""),
-                    p.get("name", ""),
-                    f"₹{float(p.get('price', 0)):,.0f}",
-                    p.get("status", "Active"),
-                ))
+                    _short_name(p.get("name") or p.get("product_name", "")),
+                    _money(p.get("price", 0)),
+                    p.get("status") or "Active",
+                ), tags=("evenrow" if count % 2 else "oddrow",))
                 count += 1
-        
-        # Update the count label if it exists
-        if hasattr(self, '_count_label'):
-            self._count_label.config(text=f"{count} product(s)")
+
+        self._set_count(count)
+        if getattr(self, "_empty", None) is not None:
+            try:
+                if count:
+                    self._empty.place_forget()
+                else:
+                    self._empty.place(relx=0.5, rely=0.5, anchor="center")
+                    self._empty.lift()
+            except Exception:
+                pass
 
     def _reload(self):
         # Load all products into memory for fast filtering
@@ -494,7 +476,6 @@ class ProductManager(tk.Toplevel):
             from app.services.catalog_service import load_catalog
             catalog = load_catalog() or {}
             self._all_products = catalog.get("products", [])
-            print(f"[products] Loaded {len(self._all_products)} products into memory.")
         except Exception as e:
             print(f"[products] Could not load catalog: {e}")
             self._all_products = []
@@ -505,21 +486,14 @@ class ProductManager(tk.Toplevel):
 
         for key, btn in self.tab_buttons.items():
             if key == self.current_tab:
-                btn.configure(bg=self.RED, fg="white",
-                              activebackground=self.RED_DARK,
-                              activeforeground="white")
+                btn.configure(bg=T.ACCENT_SOFT, fg=T.ACCENT)
             else:
-                btn.configure(bg=self.SOFT, fg=self.TEXT,
-                              activebackground="#ECEEF1",
-                              activeforeground=self.TEXT)
+                btn.configure(bg=self.SOFT, fg=T.TEXT_BODY)
 
-        # Toggle enabled/disabled buttons per tab
-        if self.current_tab == "backups":
-            self.edit_btn.configure(state="disabled", fg=self.LIGHT_MUTED)
-            self.bulk_btn.configure(state="disabled", fg=self.LIGHT_MUTED)
-        else:
-            self.edit_btn.configure(state="normal", fg="white")
-            self.bulk_btn.configure(state="normal", fg=self.TEXT)
+        # Edit / bulk actions only apply to the catalog tab
+        on_products = self.current_tab == "products"
+        self.edit_btn.set_enabled(on_products)
+        self.bulk_btn.set_enabled(on_products)
 
         if self.current_tab == "products":
             self._render_products()
@@ -543,19 +517,32 @@ class ProductManager(tk.Toplevel):
     # PRODUCTS
     # --------------------------------------------------------
 
+    def _table_card(self):
+        card = tk.Frame(
+            self.body, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True)
+        return card
+
+    def _fill_products(self, tree, products):
+        for idx, p in enumerate(products):
+            tree.insert("", "end", iid=f"row_{idx}", values=(
+                p.get("model", ""),
+                p.get("category", ""),
+                _short_name(p.get("name") or p.get("product_name", "")),
+                _money(p.get("price", 0)),
+                p.get("status") or "Active",
+            ), tags=("evenrow" if idx % 2 else "oddrow",))
+
     def _render_products(self):
 
-        try:
-            catalog = load_catalog() or {}
-            products = catalog.get("products", []) or []
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            products = []
+        products = self._all_products
+
+        card = self._table_card()
 
         cols = ("model", "category", "name", "price", "status")
-        tree = ttk.Treeview(self.body, columns=cols, show="headings",
-                            style="PM.Treeview", height=16)
+        tree = ttk.Treeview(card, columns=cols, show="headings", height=12)
 
         headings = {
             "model": "Model",
@@ -565,55 +552,41 @@ class ProductManager(tk.Toplevel):
             "status": "Status",
         }
         widths = {
-            "model": 120, "category": 200, "name": 260,
-            "price": 130, "status": 100,
+            "model": 130, "category": 190, "name": 300,
+            "price": 120, "status": 100,
         }
 
         for c in cols:
-            tree.heading(c, text=headings[c])
-            tree.column(c, width=widths[c], anchor="w",
-                        stretch=(c in ("category", "name")))
+            tree.heading(c, text=headings[c],
+                         anchor="e" if c == "price" else "w")
+            tree.column(
+                c, width=widths[c],
+                anchor="e" if c == "price" else "w",
+                stretch=(c == "name"),
+            )
 
-        for _item in tree.get_children():
-            tree.delete(_item)
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
 
-        for idx, p in enumerate(products):
-            try:
-                model_val = p.get("model", "")
-                tree.insert("", "end", iid=f"row_{idx}",
-                            values=(
-                                p.get("model", ""),
-                                p.get("category", ""),
-                                p.get("name") or p.get("product_name", ""),
-                                _money(p.get("price", 0)),
-                                p.get("status", ""),
-                            ))
-            except Exception as e:
-                import traceback
-                traceback.print_exc()
+        self._fill_products(tree, products)
 
-        vsb = ttk.Scrollbar(self.body, orient="vertical",
-                            command=tree.yview)
+        vsb = ttk.Scrollbar(card, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
 
         tree.bind("<<TreeviewSelect>>", self._on_select)
         tree.bind("<Double-1>", lambda e: self._edit_selected())
 
         self.tree = tree
-        actual_rows = len(tree.get_children())
-        
-        # Check tree visibility
-        tree.update_idletasks()
-        
-        # Show first row
-        children = tree.get_children()
-        if children:
-            first = children[0]
-            vals = tree.item(first, 'values')
-        
-        self.count_label.configure(text=f"{len(products)} product(s)")
+        self._set_count(len(products))
+
+        self._empty = W.EmptyState(
+            card, icon="📦", title="No products found",
+            hint="Try a different search, or add a new product.",
+        )
+        if not products:
+            self._empty.place(relx=0.5, rely=0.5, anchor="center")
 
         # Keyboard shortcuts
         self._install_tree_shortcuts(tree, self._edit_selected)
@@ -624,37 +597,60 @@ class ProductManager(tk.Toplevel):
 
     def _render_backups(self):
 
+        self._empty = None
         backups = list_backups() if list_backups else []
 
-        cols = ("timestamp", "filename")
-        tree = ttk.Treeview(self.body, columns=cols, show="headings",
-                            style="PM.Treeview", height=16)
+        card = self._table_card()
 
-        for c in cols:
-            tree.heading(c, text=c.title())
-            tree.column(c, width=280, anchor="w",
+        tool = tk.Frame(card, bg=T.SURFACE)
+        tool.pack(fill="x", padx=14, pady=(12, 8))
+        tk.Label(
+            tool, text="Restoring replaces the current catalog with the selected backup.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(side="left")
+        W.PrimaryButton(
+            tool, "Restore selected", self._restore_selected,
+            padx=14, pady=7,
+        ).pack(side="right")
+
+        tk.Frame(card, bg=T.BORDER, height=1).pack(fill="x")
+
+        tree_wrap = tk.Frame(card, bg=T.SURFACE)
+        tree_wrap.pack(fill="both", expand=True)
+
+        cols = ("timestamp", "filename")
+        tree = ttk.Treeview(tree_wrap, columns=cols, show="headings", height=12)
+
+        for c, title, width in (("timestamp", "Created", 180),
+                                ("filename", "Backup file", 420)):
+            tree.heading(c, text=title)
+            tree.column(c, width=width, anchor="w",
                         stretch=(c == "filename"))
 
-        for ts, path in backups:
-            tree.insert("", "end", iid=str(path),
-                        values=(ts, path.name))
+        tree.tag_configure("evenrow", background=T.SURFACE_ALT)
+        tree.tag_configure("oddrow", background=T.SURFACE)
 
-        vsb = ttk.Scrollbar(self.body, orient="vertical",
-                            command=tree.yview)
+        for idx, (ts, path) in enumerate(backups):
+            tree.insert("", "end", iid=str(path),
+                        values=(_friendly_ts(ts), path.name),
+                        tags=("evenrow" if idx % 2 else "oddrow",))
+
+        vsb = ttk.Scrollbar(tree_wrap, orient="vertical", command=tree.yview)
         tree.configure(yscrollcommand=vsb.set)
-        tree.pack(side="left", fill="both", expand=True)
-        vsb.pack(side="right", fill="y")
+        vsb.pack(side="right", fill="y", padx=(0, 2), pady=2)
+        tree.pack(side="left", fill="both", expand=True, padx=2, pady=2)
 
         tree.bind("<<TreeviewSelect>>", self._on_select)
         tree.bind("<Double-1>", lambda e: self._restore_selected())
 
-        # Restore button
-        restore_btn = self._btn(self.body, "Restore Selected Backup",
-                                 self._restore_selected, primary=True)
-        restore_btn.pack(side="bottom", anchor="w", pady=(10, 0))
-
         self.tree = tree
-        self.count_label.configure(text=f"{len(backups)} backup file(s)")
+        self._set_count(len(backups), "backup file")
+
+        if not backups:
+            W.EmptyState(
+                tree_wrap, icon="🗄", title="No backups yet",
+                hint="A backup is created automatically before catalog changes.",
+            ).place(relx=0.5, rely=0.5, anchor="center")
 
         # Keyboard shortcuts
         self._install_tree_shortcuts(tree, self._restore_selected)
@@ -679,31 +675,53 @@ class ProductManager(tk.Toplevel):
         
         dialog = tk.Toplevel(self)
         dialog.title("Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}")
-        dialog.geometry("650x450")
-        dialog.configure(bg=self.BG)
+        dialog.geometry("680x480")
+        dialog.configure(bg=T.SURFACE)
         dialog.transient(self)
         dialog.grab_set()
-        
-        main_frame = tk.Frame(dialog, bg=self.BG, padx=20, pady=20)
-        main_frame.pack(fill="both", expand=True)
-        
-        # Title
-        tk.Label(main_frame, text="Add New Product" if mode == "add" else f"Edit Product: {product.get('model', '')}",
-                 bg=self.BG, fg=self.TEXT, font=("Arial", 14, "bold")).grid(row=0, column=0, columnspan=4, pady=(0, 15), sticky="w")
-        
+        W.set_window_icon(dialog)
+        W.apply_ttk_theme(dialog)
+
+        head = tk.Frame(dialog, bg=T.SURFACE)
+        head.pack(fill="x", padx=22, pady=(18, 0))
+        tk.Label(
+            head,
+            text="Add new product" if mode == "add"
+            else f"Edit product · {product.get('model', '')}",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H2,
+        ).pack(anchor="w")
+        tk.Label(
+            head, text="Catalog details used on quotations and proforma invoices.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(anchor="w", pady=(2, 0))
+        tk.Frame(dialog, bg=T.ACCENT, height=2).pack(fill="x", padx=22, pady=(12, 0))
+
+        main_frame = tk.Frame(dialog, bg=T.BG)
+        main_frame.pack(fill="both", expand=True, padx=22, pady=14)
+
+        card = tk.Frame(
+            main_frame, bg=T.SURFACE,
+            highlightbackground=T.BORDER, highlightthickness=1,
+        )
+        card.pack(fill="both", expand=True)
+
         fields = {}
         field_list = [
-            ("Model", "model"), ("Category", "category"), ("Product Name", "name"), ("Price (Rs)", "price"),
-            ("HSN/SAC Code", "hsn"), ("Unit", "unit"), ("Tax %", "tax_percent"),
+            ("Model", "model"), ("Category", "category"),
+            ("Product name", "name"), ("Price (₹)", "price"),
+            ("HSN/SAC code", "hsn"), ("Unit", "unit"), ("Tax %", "tax_percent"),
         ]
-        
-        # Place 7 fields in 2 columns (Left: 4, Right: 3)
+
         for i, (label_text, key) in enumerate(field_list):
             col_offset = 0 if i < 4 else 2
-            row = (i % 4) + 1
-            
-            tk.Label(main_frame, text=label_text, bg=self.BG, fg=self.TEXT, font=("Arial", 9, "bold")).grid(row=row, column=col_offset, sticky="w", padx=(0, 10), pady=5)
-            
+            row = (i % 4)
+
+            tk.Label(
+                card, text=label_text, bg=T.SURFACE, fg=T.TEXT_BODY,
+                font=T.FONT_LABEL, anchor="w",
+            ).grid(row=row, column=col_offset, sticky="w",
+                   padx=(20, 10), pady=(12, 0))
+
             var = tk.StringVar()
             fields[key] = var
             if product:
@@ -715,27 +733,42 @@ class ProductManager(tk.Toplevel):
                     val = product.get(key, "")
                     if val is not None:
                         var.set(str(val))
-                        
-            entry = tk.Entry(main_frame, textvariable=var, font=("Arial", 10), relief="solid", bd=1, width=20)
-            entry.grid(row=row, column=col_offset + 1, sticky="ew", pady=5, ipady=2)
+
+            entry = W.SearchEntry(
+                card, textvariable=var, placeholder="", show_icon=False,
+            )
+            entry.grid(row=row, column=col_offset + 1, sticky="ew",
+                       padx=(0, 20), pady=(12, 0))
             if mode == "edit" and key == "model":
-                entry.config(state="disabled")
-        
-        # Description spans both columns at the bottom
-        tk.Label(main_frame, text="Description", bg=self.BG, fg=self.TEXT, font=("Arial", 9, "bold")).grid(row=5, column=0, sticky="nw", pady=5)
-        text_widget = tk.Text(main_frame, height=3, font=("Arial", 10), relief="solid", bd=1)
-        text_widget.grid(row=5, column=1, columnspan=3, sticky="ew", pady=5)
+                entry.entry.configure(state="disabled",
+                                      disabledbackground=T.SURFACE_ALT)
+
+        tk.Label(
+            card, text="Description", bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_LABEL, anchor="w",
+        ).grid(row=5, column=0, sticky="nw", padx=(20, 10), pady=(12, 0))
+
+        notes_wrap = tk.Frame(card, bg=T.BORDER_HARD)
+        notes_wrap.grid(row=5, column=1, columnspan=3, sticky="ew",
+                        padx=(0, 20), pady=(12, 14))
+        notes_inner = tk.Frame(notes_wrap, bg=T.SURFACE)
+        notes_inner.pack(fill="both", expand=True, padx=1, pady=1)
+        text_widget = tk.Text(
+            notes_inner, height=4, font=T.FONT_BODY,
+            bg=T.SURFACE, fg=T.TEXT, bd=0, highlightthickness=0,
+            insertbackground=T.TEXT, wrap="word",
+        )
+        text_widget.pack(side="left", fill="both", expand=True, padx=8, pady=6)
         if product:
             text_widget.insert("1.0", str(product.get("description") or ""))
         fields["description_widget"] = text_widget
-        
-        main_frame.grid_columnconfigure(1, weight=1)
-        main_frame.grid_columnconfigure(3, weight=1)
-        
-        # Buttons
-        btn_frame = tk.Frame(main_frame, bg=self.BG)
-        btn_frame.grid(row=6, column=0, columnspan=4, pady=(20, 0), sticky="e")
-        
+
+        card.grid_columnconfigure(1, weight=1)
+        card.grid_columnconfigure(3, weight=1)
+
+        btn_frame = tk.Frame(main_frame, bg=T.BG)
+        btn_frame.pack(fill="x", pady=(12, 0))
+
         def save():
             model = fields["model"].get().strip()
             if not model:
@@ -772,8 +805,12 @@ class ProductManager(tk.Toplevel):
             except Exception as e:
                 messagebox.showerror("Error", f"Could not save: {e}", parent=dialog)
         
-        tk.Button(btn_frame, text="Cancel", command=dialog.destroy, bg=self.BG, fg=self.TEXT, relief="flat", padx=15, pady=5).pack(side="right")
-        tk.Button(btn_frame, text="Save", command=save, bg=self.RED, fg="white", font=("Arial", 10, "bold"), relief="flat", padx=15, pady=5).pack(side="right", padx=(0, 10))
+        W.GhostButton(
+            btn_frame, "Cancel", dialog.destroy, padx=18, pady=7,
+        ).pack(side="right")
+        W.PrimaryButton(
+            btn_frame, "Save product", save, padx=18, pady=7,
+        ).pack(side="right", padx=(0, 8))
 
 
     def _edit_selected(self):
@@ -830,22 +867,28 @@ class ProductManager(tk.Toplevel):
 
         dialog = tk.Toplevel(self)
         dialog.title("Bulk Price Adjust")
-        dialog.geometry("440x320")
-        dialog.configure(bg=self.BG)
+        dialog.geometry("460x360")
+        dialog.configure(bg=T.SURFACE)
         dialog.transient(self)
         dialog.grab_set()
+        W.set_window_icon(dialog)
+        W.apply_ttk_theme(dialog)
 
-        card = tk.Frame(dialog, bg=self.CARD,
-                        highlightbackground=self.BORDER,
-                        highlightthickness=1)
-        card.pack(fill="both", expand=True, padx=18, pady=18)
+        inner = tk.Frame(dialog, bg=T.SURFACE)
+        inner.pack(fill="both", expand=True, padx=24, pady=18)
 
-        inner = tk.Frame(card, bg=self.CARD)
-        inner.pack(fill="both", expand=True, padx=20, pady=18)
+        tk.Label(
+            inner, text="Bulk price adjust",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H2,
+        ).pack(anchor="w")
+        tk.Label(
+            inner, text="Apply one percentage change to a category or the whole catalog.",
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+        ).pack(anchor="w", pady=(2, 14))
 
-        tk.Label(inner, text="Apply to Category",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold")).pack(anchor="w", pady=(0, 4))
+        tk.Label(inner, text="CATEGORY",
+                 bg=T.SURFACE, fg=T.TEXT_BODY,
+                 font=T.FONT_LABEL).pack(anchor="w", pady=(0, 4))
 
         catalog = load_catalog() or {}
         categories = sorted({p.get("category", "")
@@ -854,23 +897,23 @@ class ProductManager(tk.Toplevel):
         category_var = tk.StringVar(value="ALL")
         combo = ttk.Combobox(inner, textvariable=category_var,
                              values=["ALL"] + categories,
-                             state="readonly",
-                             style="Crystal.TCombobox")
-        combo.pack(fill="x", pady=(0, 14))
+                             state="readonly", font=T.FONT_BODY)
+        combo.pack(fill="x", ipady=4, pady=(0, 14))
 
-        tk.Label(inner, text="Adjustment (%)",
-                 bg=self.CARD, fg=self.TEXT,
-                 font=("Arial", 9, "bold")).pack(anchor="w", pady=(0, 4))
+        tk.Label(inner, text="ADJUSTMENT (%)",
+                 bg=T.SURFACE, fg=T.TEXT_BODY,
+                 font=T.FONT_LABEL).pack(anchor="w", pady=(0, 4))
 
         pct_var = tk.StringVar(value="5")
-        tk.Entry(inner, textvariable=pct_var, bg="white", fg=self.TEXT,
-                 relief="solid", bd=1, font=("Arial", 10),
-                 insertbackground=self.RED).pack(fill="x", ipady=6)
+        pct_entry = W.SearchEntry(
+            inner, textvariable=pct_var, placeholder="", show_icon=False,
+        )
+        pct_entry.pack(fill="x")
 
         tk.Label(inner,
-                 text="Use positive to increase, negative to decrease.",
-                 bg=self.CARD, fg=self.MUTED,
-                 font=("Arial", 8, "italic")).pack(anchor="w", pady=(4, 0))
+                 text="Positive increases prices; negative decreases them.",
+                 bg=T.SURFACE, fg=T.TEXT_MUTED,
+                 font=T.FONT_TINY).pack(anchor="w", pady=(6, 0))
 
         def apply_bulk():
             cat = category_var.get()
@@ -892,22 +935,15 @@ class ProductManager(tk.Toplevel):
             dialog.destroy()
             self._reload()
 
-        btn_row = tk.Frame(card, bg=self.CARD)
-        btn_row.pack(side="bottom", fill="x", padx=20, pady=(0, 18))
+        btn_row = tk.Frame(inner, bg=T.SURFACE)
+        btn_row.pack(side="bottom", fill="x", pady=(18, 0))
 
-        tk.Button(btn_row, text="Cancel", command=dialog.destroy,
-                  bg="white", fg=self.TEXT,
-                  activebackground="#F3F4F6", activeforeground=self.TEXT,
-                  relief="solid", bd=1, highlightthickness=0,
-                  font=("Arial", 9), cursor="hand2",
-                  width=12, height=2).pack(side="right", padx=(8, 0))
-
-        tk.Button(btn_row, text="Apply", command=apply_bulk,
-                  bg=self.RED, fg="white",
-                  activebackground=self.RED_DARK, activeforeground="white",
-                  relief="flat", bd=0, highlightthickness=0,
-                  font=("Arial", 10, "bold"), cursor="hand2",
-                  width=14, height=2).pack(side="right")
+        W.GhostButton(
+            btn_row, "Cancel", dialog.destroy, padx=18, pady=7,
+        ).pack(side="right")
+        W.PrimaryButton(
+            btn_row, "Apply", apply_bulk, padx=18, pady=7,
+        ).pack(side="right", padx=(0, 8))
 
         # Escape closes the bulk dialog
         try:
