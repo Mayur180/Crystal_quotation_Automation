@@ -27,6 +27,11 @@ from ui.crystal import theme as T
 from ui.crystal import widgets as W
 from ui.crystal.sidebar import Sidebar
 
+try:
+    from app.config import APP_VERSION
+except Exception:
+    APP_VERSION = "5.0"
+
 
 def _bind_all(widget, command):
     widget.bind("<Button-1>", lambda e: command())
@@ -61,7 +66,7 @@ class _KpiCard(tk.Frame):
 class Dashboard(tk.Tk):
     def __init__(self, *, username="Admin", module="Crystal", on_logout=None):
         super().__init__()
-        self.title(f"CRYSTAL | ARMATECH ASSOCIATES — Quotation Manager v4.0")
+        self.title(f"CRYSTAL | ARMATECH ASSOCIATES — Quotation Manager v{APP_VERSION}")
         self.geometry("1280x800")
         self.configure(bg=T.BG)
         self.minsize(1100, 700)

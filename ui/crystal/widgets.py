@@ -140,6 +140,9 @@ class _BaseButton(tk.Frame):
         if self._icon:
             self._icon.configure(fg=self._fg if enabled else T.TEXT_MUTED)
 
+    def set_text(self, text):
+        self._label.configure(text=text)
+
 
 class PrimaryButton(_BaseButton):
     def __init__(self, parent, text, command, *, icon=None, **kw):
@@ -464,6 +467,12 @@ def apply_ttk_theme(root):
     st.configure("Horizontal.TScrollbar", width=10,
                  background=T.BORDER, troughcolor=T.SURFACE_ALT,
                  bordercolor=T.SURFACE, arrowcolor=T.TEXT_MUTED)
+    st.configure(
+        "Crystal.Horizontal.TProgressbar",
+        troughcolor=T.SURFACE_ALT, background=T.ACCENT,
+        bordercolor=T.BORDER, lightcolor=T.ACCENT, darkcolor=T.ACCENT,
+        thickness=6,
+    )
 
 
 # ═══════════════════════════════════════════════════════════

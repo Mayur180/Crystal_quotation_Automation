@@ -2,6 +2,11 @@
 import tkinter as tk
 from ui.crystal import theme as T
 
+try:
+    from app.config import APP_VERSION
+except Exception:
+    APP_VERSION = "5.0"
+
 
 def get_nav_items(is_admin=False):
     items = [
@@ -62,6 +67,10 @@ class Sidebar(tk.Frame):
         self._quit_app = self._make_item(self, "_quit_app", "✕", "Quit App",
                                          lambda _k: on_quit(),
                                          danger=True)
+
+        tk.Label(self, text=f"Version {APP_VERSION}", bg=T.SURFACE,
+                 fg=T.TEXT_FAINT, font=T.FONT_TINY, anchor="w").pack(
+            fill="x", side="bottom", padx=24, pady=(0, 14))
 
         # mark active
         self.set_active(active_key)

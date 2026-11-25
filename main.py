@@ -1,6 +1,6 @@
 """
 CRYSTAL / ARMATECH ASSOCIATES
-Main entry point — v4 multi-module launcher.
+Main entry point — v5 multi-module launcher.
 
 Flow:
   Login → (Launcher if multi-module) → Dashboard
@@ -77,7 +77,8 @@ def _phase_login():
 
     result = {"session": None}
     root = tk.Tk()
-    root.title("CRYSTAL v4 — Login")
+    from app.version_service import version_label
+    root.title(f"CRYSTAL {version_label()} — Login")
     root.geometry("700x600")
     root.configure(bg="#F4F6F8")
     _center_window(root, 700, 600)
@@ -113,7 +114,8 @@ def _phase_launcher(session):
 
     result = {"module": None, "action": "exit"}
     root = tk.Tk()
-    root.title("CRYSTAL v4 — Choose Module")
+    from app.version_service import version_label
+    root.title(f"CRYSTAL {version_label()} — Choose Module")
     root.geometry("900x650")
     root.configure(bg="#F4F6F8")
     _center_window(root, 900, 650)
@@ -273,6 +275,12 @@ def main():
     try:
         from app.services import paths
         paths.seed_data_on_first_run()
+    except Exception:
+        pass
+
+    try:
+        from app.version_service import write_startup_marker
+        write_startup_marker()
     except Exception:
         pass
 

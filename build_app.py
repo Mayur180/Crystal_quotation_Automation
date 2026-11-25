@@ -42,4 +42,7 @@ for icon_path in ('assets/crystal.ico', 'assets/logo/LOGO.ico'):
         args.insert(4, f'--icon={icon_path}')
         break
 
+if os.path.exists('assets/windows_version_v5.txt'):
+    args.insert(4, '--version-file=assets/windows_version_v5.txt')
+
 PyInstaller.__main__.run(args)

@@ -1,4 +1,6 @@
-APP_VERSION = "3.0"
+APP_VERSION = "5.0"
+
+APP_VERSION_NAME = "Version 5"
 
 PROJECT_NAME = "CRYSTAL Quotation Automation"
 
