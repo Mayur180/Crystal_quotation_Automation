@@ -82,13 +82,23 @@ def send_to_sheet(data):
         with urllib.request.urlopen(req, timeout=15) as resp:
             body = resp.read().decode("utf-8", errors="replace")
             if resp.status == 200:
-                print(f"[google-sheet] sent OK: {data.get('quotation_number')}")
+                server_error = None
                 try:
-                    from app.services.sync_queue import flush_async
-                    flush_async()
-                except Exception:
+                    result = json.loads(body or "{}")
+                    if isinstance(result, dict) and \
+                            str(result.get("status", "")).lower() == "error":
+                        server_error = result.get("message") or "unknown error"
+                except (ValueError, TypeError):
                     pass
-                return True
+                if server_error is None:
+                    print(f"[google-sheet] sent OK: {data.get('quotation_number')}")
+                    try:
+                        from app.services.sync_queue import flush_async
+                        flush_async()
+                    except Exception:
+                        pass
+                    return True
+                print(f"[google-sheet] server rejected: {server_error}")
             else:
                 print(f"[google-sheet] HTTP {resp.status}: {body[:200]}")
     except urllib.error.HTTPError as e:

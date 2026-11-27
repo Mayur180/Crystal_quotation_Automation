@@ -69,6 +69,8 @@ def _phase_login():
             user = find_user_by_username(saved_session.username)
             if user and user.get("is_active", True):
                 print(f"[auto-login] Welcome back, {saved_session.username}!")
+                from app.services.auth_service import _log_login_to_sheet
+                _log_login_to_sheet(saved_session)
                 return saved_session
             clear_session()
             print("[auto-login] Session invalid, please log in again.")
