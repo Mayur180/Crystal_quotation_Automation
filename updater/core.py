@@ -24,10 +24,10 @@ DATA_DIR_NAME = "data"
 MARKER_REL = Path(DATA_DIR_NAME) / "version.json"
 LOG_REL = Path(DATA_DIR_NAME) / "logs" / "update.log"
 BACKUP_REL = Path(DATA_DIR_NAME) / "backups" / "updates"
-UPDATER_ID = "CRYSTAL_Update_v5"
+UPDATER_ID = "CRYSTAL_Update_v6"
 
-DEFAULT_VERSION = "5.0"
-DEFAULT_VERSION_NAME = "Version 5"
+DEFAULT_VERSION = "6.0"
+DEFAULT_VERSION_NAME = "Version 6"
 
 CREATE_NO_WINDOW = 0x08000000
 
@@ -466,7 +466,7 @@ def install_update(install_dir: Path, payload: Path, *,
         if actual.lower() != expected_sha256.lower():
             raise UpdateError(
                 "The update package failed its integrity check.\n"
-                "Copy CRYSTAL_Update_v5.exe again and retry.")
+                f"Copy {UPDATER_ID}.exe again and retry.")
         say("Package checksum verified.")
 
     try:
@@ -487,9 +487,9 @@ def install_update(install_dir: Path, payload: Path, *,
     backup = backup_exe(install_dir, previous_version)
     say(f"Backup saved: {backup}")
 
-    tmp = install_dir / (APP_EXE_NAME + ".v5.new")
+    tmp = install_dir / (APP_EXE_NAME + ".update.new")
     try:
-        say("Installing Version 5...")
+        say(f"Installing {DEFAULT_VERSION_NAME}...")
         try:
             shutil.copy2(payload, tmp)
         except OSError as exc:

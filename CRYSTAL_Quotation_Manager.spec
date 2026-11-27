@@ -74,5 +74,5 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=['assets/logo/LOGO.ico'],
-    version='assets/windows_version_v5.txt',
+    version='assets/windows_version_v6.txt',
 )
