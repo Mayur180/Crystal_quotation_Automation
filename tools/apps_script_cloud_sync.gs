@@ -407,6 +407,48 @@ function handleGetCatalog() {
   }
 }
 
+// Replace the shared product catalog. The desktop app sends the full
+// catalog; the sheet keeps only the columns every PC needs for quotations.
+function handleCatalogBulk(data) {
+  return withScriptLock_(function () {
+    var products = data.products;
+    if (!products || !products.length) {
+      throw new Error("No products supplied.");
+    }
+    if (products.length > 30000) {
+      throw new Error("Too many products: " + products.length);
+    }
+
+    var sheet = ensureSheet("Catalog", CATALOG_HEADERS);
+    var seen = {};
+    var rows = [];
+    for (var i = 0; i < products.length; i++) {
+      var p = products[i] || {};
+      var model = cleanString_(p.model);
+      if (!model || seen[model]) continue;
+      seen[model] = true;
+      rows.push([
+        model,
+        cleanString_(pick_(p, ["name", "product_name"])),
+        cleanString_(p.description),
+        Number(p.price || p.rate || 0) || 0,
+        cleanString_(p.category),
+        cleanString_(p.hsn),
+        cleanString_(p.unit),
+        cleanString_(pick_(p, ["tax_percent", "tax"]))
+      ]);
+    }
+    if (!rows.length) throw new Error("No valid products supplied.");
+
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 1) {
+      sheet.getRange(2, 1, lastRow - 1, CATALOG_HEADERS.length).clearContent();
+    }
+    sheet.getRange(2, 1, rows.length, CATALOG_HEADERS.length).setValues(rows);
+    return respond({ status: "ok", count: rows.length });
+  });
+}
+
 
 // -----------------------------------------------------------------------------
 // QUOTATIONS
@@ -1032,6 +1074,7 @@ function doPost(e) {
     if (action === "update_status") return handleUpdateStatus(data);
     if (action === "user") return handleUser(data);
     if (action === "lead" || action === "lead_update") return handleLead(data);
+    if (action === "catalog_bulk") return handleCatalogBulk(data);
     if (action === "login") return handleLogin(data);
 
     return respond({

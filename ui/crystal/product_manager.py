@@ -408,6 +408,16 @@ class ProductManager(tk.Toplevel):
         W.GhostButton(
             right_side, "Close", self.destroy, padx=18, pady=7,
         ).pack(side="right")
+        self.sync_pull_btn = W.GhostButton(
+            right_side, "Download from cloud", self._pull_catalog,
+            padx=12, pady=7,
+        )
+        self.sync_pull_btn.pack(side="right", padx=(0, 8))
+        self.sync_push_btn = W.GhostButton(
+            right_side, "Upload to cloud", self._push_catalog,
+            padx=12, pady=7,
+        )
+        self.sync_push_btn.pack(side="right", padx=(0, 8))
 
     def _set_count(self, count, noun="product"):
         if self.count_label is not None:
@@ -466,6 +476,78 @@ class ProductManager(tk.Toplevel):
                     self._empty.lift()
             except Exception:
                 pass
+
+    def _push_catalog(self):
+        if not messagebox.askyesno(
+            "Upload catalog",
+            "Replace the shared product catalog on Google Sheets with this "
+            "PC's catalog?\n\nOther PCs get these products when they choose "
+            "'Download from cloud'. This PC's catalog is not changed.",
+            parent=self,
+        ):
+            return
+        self._run_catalog_sync("push")
+
+    def _pull_catalog(self):
+        if not messagebox.askyesno(
+            "Download catalog",
+            "Merge the shared product catalog from Google Sheets into this "
+            "PC?\n\nNew products are added and matching models get the "
+            "shared price and details. A backup of this PC's catalog is "
+            "saved first.",
+            parent=self,
+        ):
+            return
+        self._run_catalog_sync("pull")
+
+    def _run_catalog_sync(self, direction):
+        import threading
+
+        if getattr(self, "_syncing", False):
+            return
+        self._syncing = True
+        for btn in (self.sync_push_btn, self.sync_pull_btn):
+            try:
+                btn.set_enabled(False)
+            except Exception:
+                pass
+
+        def work():
+            try:
+                if direction == "push":
+                    from app.services.catalog_sync_service import (
+                        push_catalog_to_cloud,
+                    )
+                    count = push_catalog_to_cloud()
+                    msg = f"Uploaded {count:,} products to the shared catalog."
+                else:
+                    from app.services.catalog_sync_service import (
+                        pull_catalog_from_cloud,
+                    )
+                    added, updated, total = pull_catalog_from_cloud()
+                    msg = (
+                        f"Added {added:,} new products, updated {updated:,}. "
+                        f"Catalog now has {total:,} products."
+                    )
+                self.after(0, lambda: self._sync_done(msg, None))
+            except Exception as exc:
+                err = str(exc)
+                self.after(0, lambda: self._sync_done(None, err))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def _sync_done(self, msg, err):
+        self._syncing = False
+        for btn in (self.sync_push_btn, self.sync_pull_btn):
+            try:
+                btn.set_enabled(True)
+            except Exception:
+                pass
+        if err:
+            messagebox.showerror("Catalog sync", err, parent=self)
+            return
+        messagebox.showinfo("Catalog sync", msg, parent=self)
+        self._reload()
 
     def _reload(self):
         # Load all products into memory for fast filtering
@@ -793,11 +875,15 @@ class ProductManager(tk.Toplevel):
             try:
                 if mode == "add":
                     from app.services.catalog_admin_service import add_product
-                    add_product(product_data)
+                    ok, err = add_product(product_data)
+                    if not ok:
+                        raise RuntimeError(err)
                     messagebox.showinfo("Success", f"Product '{model}' added.", parent=dialog)
                 else:
                     from app.services.catalog_admin_service import update_product
-                    update_product(model, product_data)
+                    ok, err = update_product(model, product_data)
+                    if not ok:
+                        raise RuntimeError(err)
                     messagebox.showinfo("Success", f"Product '{model}' updated.", parent=dialog)
                 dialog.destroy()
                 self._reload()

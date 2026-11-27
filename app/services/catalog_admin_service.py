@@ -132,6 +132,18 @@ def _write_catalog(catalog):
     os.replace(tmp, _catalog_file())
 
 
+def save_catalog(catalog):
+    """Replace the whole catalog after taking a backup. Returns (ok, err)."""
+    if not isinstance(catalog, dict) or not isinstance(catalog.get("products"), list):
+        return False, "catalog must contain a products list"
+    try:
+        make_backup()
+        _write_catalog(catalog)
+        return True, ""
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"
+
+
 def list_backups():
     """Return list of (timestamp_str, Path) sorted newest first."""
     _ensure_dirs()
@@ -291,36 +303,43 @@ if __name__ == "__main__":
 
     print("=" * 60)
 
-def add_product(product: dict) -> bool:
-    """Add a new product to the Crystal catalog.
-    
-    Returns True if successful, False otherwise.
+def add_product(product: dict):
+    """Add a new product to the current module's catalog.
+
+    Returns (ok, err) — callers show `err` verbatim when ok is False.
     """
+    model = _text((product or {}).get("model"))
+    if not model:
+        return False, "Model is required."
+
     try:
-        import json
-        from app.services.paths import get_data_root
-        
-        catalog_file = get_data_root() / "Crystal" / "catalog.json"
-        if not catalog_file.exists():
-            catalog_file.parent.mkdir(parents=True, exist_ok=True)
-            data = {"products": [], "accessories": []}
-        else:
-            data = json.loads(catalog_file.read_text(encoding="utf-8"))
-        
-        products = data.get("products", [])
-        
-        # Check if model already exists
-        model = product.get("model", "").strip()
-        if any(p.get("model") == model for p in products):
-            raise ValueError(f"Model '{model}' already exists.")
-        
-        # Add new product
-        products.append(product)
-        data["products"] = products
-        
-        catalog_file.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
-        print(f"[catalog] Added new product: {model}")
-        return True
-    except Exception as e:
-        print(f"[catalog] Error adding product: {e}")
-        return False
+        catalog = load_catalog()
+        if not isinstance(catalog, dict):
+            catalog = {"products": [], "accessories": []}
+        products = catalog.get("products")
+        if not isinstance(products, list):
+            products = catalog["products"] = []
+
+        if any(
+            isinstance(p, dict) and _text(p.get("model")).lower() == model.lower()
+            for p in products
+        ):
+            return False, f"Model '{model}' already exists."
+
+        item = dict(product)
+        item["model"] = model
+        name = _text(item.get("product_name")) or _text(item.get("name"))
+        if name:
+            item["name"] = name
+            item["product_name"] = name
+        price = _dec(item.get("price", item.get("rate")), Decimal("0"))
+        item["price"] = float(price)
+        item.setdefault("rate", float(price))
+        item.setdefault("status", "Active")
+
+        products.append(item)
+        make_backup()
+        _write_catalog(catalog)
+        return True, ""
+    except Exception as exc:
+        return False, f"{type(exc).__name__}: {exc}"

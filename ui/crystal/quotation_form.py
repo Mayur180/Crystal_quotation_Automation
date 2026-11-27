@@ -1568,7 +1568,18 @@ class QuotationForm(tk.Toplevel):
         self.category_combo.pack(fill="x", pady=(6, 16))
         self.category_combo.bind("<<ComboboxSelected>>", self._category_changed)
 
-        tk.Label(top, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED, font=T.FONT_LABEL).pack(anchor="w")
+        model_head = tk.Frame(top, bg=self.CARD)
+        model_head.pack(fill="x")
+        tk.Label(model_head, text="SELECT MODEL", bg=self.CARD, fg=self.MUTED,
+                 font=T.FONT_LABEL).pack(side="left")
+        W.GhostButton(
+            model_head, "Edit product", self._quick_edit_product,
+            padx=10, pady=3,
+        ).pack(side="right")
+        W.GhostButton(
+            model_head, "New product", self._quick_add_product,
+            padx=10, pady=3,
+        ).pack(side="right", padx=(0, 6))
         self.model_combo = ttk.Combobox(top, textvariable=self.model, values=self._get_models(self.category.get()), state="normal", style="Crystal.TCombobox", width=50)
         self.model_combo.pack(fill="x", pady=(6, 16))
         self.model_combo.bind("<<ComboboxSelected>>", self._model_changed)
@@ -1746,6 +1757,192 @@ class QuotationForm(tk.Toplevel):
             f"{item.get('raw_discount', 0)}%" if item.get('disc_mode') == "Percentage (%)" else f"₹{item['discount']:,.0f}",
             f"₹{item['total']:,.0f}"
             ), tags=("evenrow" if i % 2 == 0 else "oddrow",))
+
+    # ────────────────────────────────────────────────────────
+    # QUICK PRODUCT ACTIONS (Step 2)
+    # ────────────────────────────────────────────────────────
+
+    def _quick_add_product(self):
+        self._open_quick_product(None)
+
+    def _quick_edit_product(self):
+        model = self.model.get().strip()
+        if not model:
+            messagebox.showinfo("Edit product", "Select a model first.",
+                                parent=self)
+            return
+        product = None
+        try:
+            from app.services.catalog_service import get_products
+            wanted = model.lower()
+            for p in get_products():
+                if str(p.get("model", "")).strip().lower() == wanted:
+                    product = p
+                    break
+        except Exception:
+            pass
+        if not product:
+            messagebox.showerror(
+                "Edit product",
+                f"Could not find {model} in the catalog.", parent=self,
+            )
+            return
+        self._open_quick_product(product)
+
+    def _open_quick_product(self, product):
+        from app.services.catalog_admin_service import add_product, update_product
+
+        editing = product is not None
+        initial = product or {}
+
+        dialog = tk.Toplevel(self)
+        dialog.title("Edit product" if editing else "New product")
+        dialog.configure(bg=T.SURFACE)
+        dialog.transient(self)
+        dialog.withdraw()
+        W.set_window_icon(dialog)
+        W.apply_ttk_theme(dialog)
+
+        head = tk.Frame(dialog, bg=T.SURFACE)
+        head.pack(fill="x", padx=22, pady=(18, 0))
+        tk.Label(
+            head, text="Edit product" if editing else "New product",
+            bg=T.SURFACE, fg=T.TEXT, font=T.FONT_H2,
+        ).pack(anchor="w")
+        tk.Label(
+            head,
+            text=(f"Catalog details · {initial.get('model', '')}" if editing
+                  else "Saved to the catalog and ready for this quotation."),
+            bg=T.SURFACE, fg=T.TEXT_MUTED, font=T.FONT_SMALL,
+            wraplength=500, justify="left",
+        ).pack(anchor="w", pady=(2, 0))
+        tk.Frame(dialog, bg=T.ACCENT, height=2).pack(fill="x", padx=22, pady=(12, 0))
+
+        footer = tk.Frame(dialog, bg=T.SURFACE)
+        footer.pack(side="bottom", fill="x", padx=22, pady=(10, 14))
+        tk.Frame(dialog, bg=T.BORDER, height=1).pack(side="bottom", fill="x")
+
+        body = tk.Frame(dialog, bg=T.SURFACE)
+        body.pack(fill="both", expand=True, padx=22, pady=(12, 6))
+        body.grid_columnconfigure(1, weight=1)
+
+        fields, widgets = {}, {}
+
+        def add_row(row, label, key, values=None):
+            tk.Label(
+                body, text=label, bg=T.SURFACE, fg=T.TEXT_BODY,
+                font=T.FONT_LABEL, anchor="w",
+            ).grid(row=row, column=0, sticky="w", padx=(0, 12), pady=6)
+            var = tk.StringVar()
+            fields[key] = var
+            if values is not None:
+                widget = ttk.Combobox(
+                    body, textvariable=var, values=values, state="normal",
+                    style="Crystal.TCombobox", font=T.FONT_BODY,
+                )
+            else:
+                widget = W.SearchEntry(
+                    body, textvariable=var, placeholder="", show_icon=False,
+                )
+            widget.grid(row=row, column=1, sticky="ew", pady=6)
+            widgets[key] = widget
+
+        add_row(0, "Model", "model")
+        add_row(1, "Category", "category", values=self._get_categories())
+        add_row(2, "Product name", "name")
+        add_row(3, "Price (₹)", "price")
+        add_row(4, "HSN/SAC", "hsn")
+        add_row(5, "Unit", "unit")
+        add_row(6, "Tax %", "tax_percent")
+
+        fields["model"].set(str(initial.get("model", "")))
+        fields["category"].set(
+            str(initial.get("category") or self.category.get() or ""))
+        fields["name"].set(
+            str(initial.get("product_name") or initial.get("name") or ""))
+        fields["price"].set(str(
+            initial.get("price") if initial.get("price") is not None
+            else initial.get("rate", "")))
+        fields["hsn"].set(str(initial.get("hsn", "")))
+        fields["unit"].set(str(initial.get("unit") or "NOS"))
+        fields["tax_percent"].set(str(initial.get("tax_percent") or "18"))
+
+        tk.Label(
+            body, text="Description", bg=T.SURFACE, fg=T.TEXT_BODY,
+            font=T.FONT_LABEL, anchor="nw",
+        ).grid(row=7, column=0, sticky="nw", padx=(0, 12), pady=6)
+        desc = tk.Text(
+            body, height=3, font=T.FONT_BODY, bg=T.SURFACE, fg=T.TEXT,
+            bd=0, highlightthickness=1, highlightbackground=T.BORDER,
+            highlightcolor=T.FOCUS, wrap="word", insertbackground=T.TEXT,
+        )
+        desc.grid(row=7, column=1, sticky="ew", pady=6)
+        desc.insert("1.0", str(initial.get("description") or ""))
+
+        if editing:
+            # Model is the catalog key and cannot be renamed here.
+            try:
+                widgets["model"].entry.configure(state="readonly")
+            except Exception:
+                pass
+
+        def save():
+            model = fields["model"].get().strip()
+            if not model:
+                messagebox.showerror("Product", "Model is required.",
+                                     parent=dialog)
+                return
+            try:
+                price = float(fields["price"].get().strip() or "0")
+            except ValueError:
+                messagebox.showerror("Product", "Price must be a number.",
+                                     parent=dialog)
+                return
+            data = {
+                "model": model,
+                "category": fields["category"].get().strip() or "Uncategorized",
+                "name": fields["name"].get().strip(),
+                "product_name": fields["name"].get().strip(),
+                "description": desc.get("1.0", "end").strip(),
+                "price": price,
+                "hsn": fields["hsn"].get().strip() or "85059000",
+                "unit": fields["unit"].get().strip() or "NOS",
+                "tax_percent": fields["tax_percent"].get().strip() or "18",
+                "status": "Active",
+            }
+            try:
+                if editing:
+                    ok, err = update_product(str(initial.get("model", "")), data)
+                else:
+                    ok, err = add_product(data)
+            except Exception as exc:
+                ok, err = False, str(exc)
+            if not ok:
+                messagebox.showerror("Product", str(err), parent=dialog)
+                return
+            dialog.destroy()
+            self._after_quick_product(data["model"], data["category"])
+
+        W.GhostButton(
+            footer, "Cancel", dialog.destroy, padx=18, pady=7,
+        ).pack(side="right")
+        W.PrimaryButton(
+            footer, "Save product", save, padx=18, pady=7,
+        ).pack(side="right", padx=(0, 8))
+
+        W.fit_toplevel(dialog, 560)
+        dialog.deiconify()
+        dialog.grab_set()
+
+    def _after_quick_product(self, model, category):
+        categories = self._get_categories()
+        if category and category not in categories:
+            categories.append(category)
+        self.category_combo["values"] = categories
+        self.category.set(category)
+        self.model_combo["values"] = self._get_models(category)
+        self.model.set(model)
+        self._model_changed()
 
     def _get_categories(self):
 
