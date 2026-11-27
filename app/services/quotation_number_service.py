@@ -153,6 +153,53 @@ def _counter_block(data, key):
     return block if isinstance(block, dict) else {}
 
 
+_CLOUD_MAX = {"at": 0.0, "quotes": 0, "proforma": 0}
+_CLOUD_MAX_TTL = 60.0
+
+
+def _cloud_last_serial(series):
+    """Highest serial the shared sheet has issued for a Crystal series.
+
+    Cached for a minute so opening the form does not hammer the webhook.
+    Fails soft to the cached value (0 if never fetched).
+    """
+    import time
+
+    try:
+        from app.services.paths import get_active_module
+        if str(get_active_module()) != "Crystal":
+            return 0
+    except Exception:
+        return 0
+
+    now = time.time()
+    if now - _CLOUD_MAX["at"] < _CLOUD_MAX_TTL:
+        return int(_CLOUD_MAX.get(series, 0))
+
+    try:
+        import requests
+        from app.services.cloud_sync import APPS_SCRIPT_URL
+
+        response = requests.get(f"{APPS_SCRIPT_URL}?action=list", timeout=6)
+        rows = (response.json() or {}).get("rows", []) if response.ok else []
+        fy = re.escape(FINANCIAL_YEAR)
+        quotes_re = re.compile(r"^CRY/" + fy + r"/(\d{3})(?:-R\d+)?$")
+        prof_re = re.compile(r"^PI/" + fy + r"/(\d{3})(?:-R\d+)?$")
+        quotes = proforma = 0
+        for row in rows:
+            number = str(row.get("Quotation No", "")).strip().upper()
+            match = quotes_re.match(number)
+            if match:
+                quotes = max(quotes, int(match.group(1)))
+            match = prof_re.match(number)
+            if match:
+                proforma = max(proforma, int(match.group(1)))
+        _CLOUD_MAX.update({"at": now, "quotes": quotes, "proforma": proforma})
+    except Exception:
+        pass
+    return int(_CLOUD_MAX.get(series, 0))
+
+
 def _next_serial(key):
     """Increment and persist the counter for ``key`` (None = quotations)."""
     data = _load_counter()
@@ -166,6 +213,11 @@ def _next_serial(key):
     # New financial year resets that counter only.
     if str(block.get("financial_year", "")) != FINANCIAL_YEAR:
         last_number = 0
+
+    # Numbers must stay unique across PCs; the shared sheet is the register.
+    cloud_last = _cloud_last_serial("proforma" if key == "proforma" else "quotes")
+    if cloud_last > last_number:
+        last_number = cloud_last
 
     last_number += 1
     new_block = {
