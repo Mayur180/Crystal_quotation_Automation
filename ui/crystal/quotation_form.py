@@ -541,6 +541,9 @@ class QuotationForm(tk.Toplevel):
         self.packing_mode = tk.StringVar(value="Percentage (%)")
         self.packing_value = tk.StringVar(value="3.5")
 
+        # Files the user wants appended to the generated PDF.
+        self._attachments = []
+
         # Compatibility variable retained for older generator calls.
         self.packing_percent = tk.StringVar(value="3.5")
 
@@ -2390,6 +2393,156 @@ class QuotationForm(tk.Toplevel):
             if not is_grand_total:
                 tk.Frame(table_frame, bg=self.BORDER, height=1).pack(fill="x", padx=10)
 
+        # --- Attachments (appended to the generated PDF) ---
+        attach_head = tk.Frame(card, bg=self.CARD)
+        attach_head.pack(fill="x", padx=20, pady=(0, 4))
+        tk.Label(
+            attach_head, text="ATTACHMENTS (OPTIONAL)", bg=self.CARD,
+            fg=self.MUTED, font=T.FONT_LABEL,
+        ).pack(side="left")
+        W.GhostButton(
+            attach_head, "Add files…", self._add_attachments, padx=12, pady=4,
+        ).pack(side="right")
+        tk.Label(
+            card,
+            text="PDF, Word, Excel or image files are appended after the "
+                 "quotation pages in the generated PDF.",
+            bg=self.CARD, fg=T.TEXT_FAINT, font=T.FONT_SMALL,
+            wraplength=760, justify="left",
+        ).pack(anchor="w", padx=20, pady=(0, 6))
+
+        self._attach_list = tk.Frame(card, bg=self.CARD)
+        self._attach_list.pack(fill="x", padx=20, pady=(0, 8))
+        self._refresh_attachment_rows()
+
+    # ────────────────────────────────────────────────────────
+    # ATTACHMENTS (Step 3)
+    # ────────────────────────────────────────────────────────
+
+    def _add_attachments(self):
+        from tkinter import filedialog
+
+        patterns = (
+            "*.pdf *.doc *.docx *.xls *.xlsx *.ppt *.pptx *.rtf *.txt "
+            "*.csv *.png *.jpg *.jpeg *.bmp *.tif *.tiff *.webp"
+        )
+        paths = filedialog.askopenfilenames(
+            parent=self,
+            title="Attach files to the PDF",
+            filetypes=[
+                ("Documents & images", patterns),
+                ("All files", "*.*"),
+            ],
+        )
+        for path in paths:
+            if path and path not in self._attachments:
+                self._attachments.append(path)
+        self._refresh_attachment_rows()
+
+    def _remove_attachment(self, index):
+        try:
+            del self._attachments[index]
+        except IndexError:
+            return
+        self._refresh_attachment_rows()
+
+    def _refresh_attachment_rows(self):
+        frame = getattr(self, "_attach_list", None)
+        if frame is None or not frame.winfo_exists():
+            return
+        for child in frame.winfo_children():
+            child.destroy()
+        if not self._attachments:
+            tk.Label(
+                frame, text="No files attached.", bg=self.CARD,
+                fg=T.TEXT_FAINT, font=T.FONT_SMALL,
+            ).pack(anchor="w")
+            return
+        for index, path in enumerate(list(self._attachments)):
+            row = tk.Frame(frame, bg=T.SURFACE_ALT)
+            row.pack(fill="x", pady=2)
+            tk.Label(
+                row, text=os.path.basename(path), bg=T.SURFACE_ALT,
+                fg=T.TEXT_BODY, font=T.FONT_SMALL, anchor="w",
+            ).pack(side="left", padx=10, pady=5)
+            W.GhostButton(
+                row, "Remove",
+                lambda i=index: self._remove_attachment(i),
+                padx=8, pady=2,
+            ).pack(side="right", padx=6, pady=2)
+
+    def _append_attachments_to_pdf(self, pdf_path):
+        """Append the chosen files to the PDF. Returns (added, errors)."""
+        import shutil
+        import tempfile
+
+        import fitz
+
+        errors = []
+        added = 0
+        doc = fitz.open(pdf_path)
+        try:
+            for path in list(getattr(self, "_attachments", [])):
+                src = os.path.abspath(path)
+                name = os.path.basename(src)
+                if not os.path.isfile(src):
+                    errors.append(f"{name}: file not found")
+                    continue
+                ext = os.path.splitext(src)[1].lower()
+                try:
+                    if ext == ".pdf":
+                        with fitz.open(src) as extra:
+                            doc.insert_pdf(extra)
+                        added += 1
+                    elif ext in (".png", ".jpg", ".jpeg", ".bmp", ".tif",
+                                 ".tiff", ".webp", ".gif"):
+                        pix = fitz.Pixmap(src)
+                        rect = fitz.Rect(36, 36, 559, 806)
+                        scale = min(rect.width / pix.width,
+                                    rect.height / pix.height)
+                        w, h = pix.width * scale, pix.height * scale
+                        x0 = rect.x0 + (rect.width - w) / 2
+                        y0 = rect.y0 + (rect.height - h) / 2
+                        page = doc.new_page(width=595, height=842)
+                        page.insert_image(
+                            fitz.Rect(x0, y0, x0 + w, y0 + h), filename=src,
+                        )
+                        added += 1
+                    elif ext in (".doc", ".docx", ".xls", ".xlsx", ".ppt",
+                                 ".pptx", ".rtf", ".odt", ".ods", ".txt",
+                                 ".csv"):
+                        from quotation_generator_crystal import (
+                            _convert_docx_to_pdf,
+                        )
+                        with tempfile.TemporaryDirectory() as tmp:
+                            staged = os.path.join(tmp, name)
+                            shutil.copy2(src, staged)
+                            from pathlib import Path
+                            converted = _convert_docx_to_pdf(Path(staged))
+                            if not converted or not Path(converted).is_file():
+                                raise RuntimeError(
+                                    "could not be converted to PDF "
+                                    "(needs Word or LibreOffice)")
+                            with fitz.open(str(converted)) as extra:
+                                doc.insert_pdf(extra)
+                        added += 1
+                    else:
+                        errors.append(f"{name}: unsupported file type")
+                except Exception as exc:
+                    errors.append(f"{name}: {exc}")
+            if added:
+                tmp_pdf = pdf_path + ".attachments.tmp"
+                doc.save(tmp_pdf, garbage=3, deflate=True)
+                doc.close()
+                os.replace(tmp_pdf, pdf_path)
+                return added, errors
+        finally:
+            try:
+                doc.close()
+            except Exception:
+                pass
+        return added, errors
+
     def _render_terms(self):
 
         self._clear_content()
@@ -3808,7 +3961,18 @@ class QuotationForm(tk.Toplevel):
                         text="PDF could not be generated. The Word file was saved successfully."
                     ))
                     return
-                
+
+                # Append files chosen on the pricing step.
+                attach_errors = []
+                if getattr(self, "_attachments", None):
+                    post_update(lambda: status_label.config(
+                        text="Adding attachments…"))
+                    try:
+                        _added, attach_errors = self._append_attachments_to_pdf(
+                            latest_pdf)
+                    except Exception as exc:
+                        attach_errors = [str(exc)]
+
                 try:
                     import fitz
                 except ImportError:
@@ -3859,6 +4023,17 @@ class QuotationForm(tk.Toplevel):
                     canvas.configure(scrollregion=canvas.bbox("all"))
                     
                     gen_btn.config(state="normal", text="Generate Again")
+
+                    if attach_errors:
+                        try:
+                            messagebox.showwarning(
+                                "Attachments",
+                                "These files were not added to the PDF:\n\n"
+                                + "\n".join(attach_errors),
+                                parent=preview_win,
+                            )
+                        except Exception:
+                            pass
 
                     # The quotation is saved and previewed; take the editor
                     # out of the way so only the preview stays on screen.
