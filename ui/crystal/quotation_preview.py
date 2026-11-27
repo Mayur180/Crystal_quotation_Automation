@@ -159,12 +159,10 @@ class QuotationPreview(tk.Toplevel):
             lambda e: self._canvas.itemconfigure(self._win, width=e.width),
         )
 
-        # Mouse wheel
-        self._canvas.bind_all("<MouseWheel>", self._mousewheel)
-
-    def _mousewheel(self, event):
+        # Wheel is routed through the shared ScrollManager.
         try:
-            self._canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+            from ui.common.scroll_manager import ScrollManager
+            ScrollManager.register(self._canvas, "vertical")
         except Exception:
             pass
 
@@ -523,7 +521,8 @@ class QuotationPreview(tk.Toplevel):
 
     def _close(self):
         try:
-            self._canvas.unbind_all("<MouseWheel>")
+            from ui.common.scroll_manager import ScrollManager
+            ScrollManager.unregister(self._canvas)
         except Exception:
             pass
         try:

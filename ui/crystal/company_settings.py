@@ -116,6 +116,15 @@ class CompanySettings(tk.Toplevel):
         canvas.bind("<Configure>",
                     lambda e: canvas.itemconfigure(canvas_win, width=e.width))
 
+        # Wheel is routed through the shared ScrollManager.
+        try:
+            from ui.common.scroll_manager import ScrollManager
+            ScrollManager.register(canvas, "vertical")
+            self._scroll_canvas = canvas
+            self.bind("<Destroy>", self._on_destroy, add="+")
+        except Exception:
+            pass
+
         # ---- General card ----
         card1 = self._card(inner)
         self._section_title(card1, "General")
@@ -265,6 +274,15 @@ class CompanySettings(tk.Toplevel):
             font=T.FONT_SMALL,
         ).pack(side="left", padx=8)
 
+
+    def _on_destroy(self, event=None):
+        if event is not None and event.widget is not self:
+            return
+        try:
+            from ui.common.scroll_manager import ScrollManager
+            ScrollManager.unregister(self._scroll_canvas)
+        except Exception:
+            pass
 
     def _card(self, parent):
         outer = tk.Frame(parent, bg=self.CARD,
